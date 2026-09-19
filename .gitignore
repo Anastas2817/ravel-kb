@@ -1,69 +1,130 @@
-# Prerequisites
-*.d
+﻿# ============================================================
+# Build artifacts — CMake
+# ============================================================
+build/
+build-*/
+cmake-build-*/
+out/
+install/
+_deps/
 
-# Compiled Object files
-*.slo
-*.lo
+# CMake generated files (если случайно закоммитятся вне build/)
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+cmake_install.cmake
+CTestTestfile.cmake
+Makefile
+*.cmake.in
+!cmake/*.cmake       # наши собственные модули сохраняем
+
+# ============================================================
+# Build artifacts — C++
+# ============================================================
+# Compiled object files
 *.o
 *.obj
+*.lo
+*.slo
+*.ko
 
-# Precompiled Headers
+# Precompiled headers
 *.gch
 *.pch
 
-# Linker files
-*.ilk
-
-# Debugger Files
-*.pdb
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-*.so.*
-
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
+# Static and dynamic libraries
 *.a
 *.lib
+*.so
+*.so.*
+*.dylib
+*.dll
+*.la
+*.lai
 
 # Executables
 *.exe
 *.out
 *.app
+*.run
 
-# Build directories
-build/
-Build/
-build-*/
+# Debug symbols
+*.dSYM/
+*.pdb
+*.ilk
+*.idb
 
-# CMake generated files
-CMakeFiles/
-CMakeCache.txt
-cmake_install.cmake
-Makefile
-install_manifest.txt
+# ============================================================
+# IDE / Editors
+# ============================================================
+# Visual Studio
+.vs/
+*.sln
+*.vcxproj
+*.vcxproj.*
+*.user
+*.suo
+*.ncb
+*.sdf
+*.opensdf
+*.opendb
+*.VC.db
+*.VC.VC.opendb
+
+# Visual Studio Code
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json.example
+!.vscode/launch.json.example
+
+# CLion / JetBrains
+.idea/
+*.iml
+cmake-build-debug/
+cmake-build-release/
+
+# Qt Creator
+*.user.*
+*.autosave
+
+# ============================================================
+# Generated / tooling
+# ============================================================
+# clangd / clang tooling
 compile_commands.json
+.cache/
+.clangd/
 
-# Temporary files
-*.tmp
+# Doxygen output
+docs/html/
+docs/latex/
+docs/xml/
+
+# Coverage (lcov / gcov / gcovr)
+*.gcno
+*.gcda
+*.gcov
+coverage/
+*.info
+
+# ============================================================
+# OS
+# ============================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ============================================================
+# Misc
+# ============================================================
 *.log
+*.tmp
 *.bak
 *.swp
-
-# vcpkg
-vcpkg_installed/
-
-# debug information files
-*.dwo
-
-# test output & cache
-Testing/
-.cache/
+*~
