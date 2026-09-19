@@ -1,4 +1,4 @@
-﻿# ============================================================
+# ============================================================
 # Build artifacts — CMake
 # ============================================================
 build/
@@ -14,9 +14,19 @@ CMakeFiles/
 CMakeScripts/
 cmake_install.cmake
 CTestTestfile.cmake
+DartConfiguration.tcl
 Makefile
 *.cmake.in
 !cmake/*.cmake       # наши собственные модули сохраняем
+
+# CTest: создаёт Testing/ там, откуда запущен ctest (в т.ч. из корня репо)
+Testing/
+
+# Пресеты CMake: общие коммитятся (CMakePresets.json), личные — нет
+CMakeUserPresets.json
+
+# vcpkg (manifest-режим)
+vcpkg_installed/
 
 # ============================================================
 # Build artifacts — C++
@@ -53,6 +63,11 @@ Makefile
 *.pdb
 *.ilk
 *.idb
+
+# MSVC: временные папки инкрементной линковки и дефолтные out-dir'ы
+enc_temp_folder/
+x64/
+Win32/
 
 # ============================================================
 # IDE / Editors
@@ -106,6 +121,10 @@ docs/xml/
 *.gcov
 coverage/
 *.info
+
+# Coverage (LLVM / clang: -fprofile-instr-generate -fcoverage-mapping)
+*.profraw
+*.profdata
 
 # ============================================================
 # OS
