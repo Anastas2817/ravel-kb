@@ -1,4 +1,4 @@
-﻿# Ravel
+# Ravel
 
 **Инструмент для ручного проектирования персональных баз знаний с типизированными связями, пространственной семантикой и иерархической раскладкой.**
 
@@ -96,6 +96,7 @@ ctest --test-dir build -C Release --output-on-failure
 | [docs/architecture.md](docs/architecture.md) | слои, обоснования абстракций, инварианты, паттерны |
 | [docs/roadmap.md](docs/roadmap.md) | MVP-план на 12 недель, метрики успеха |
 | [docs/perspectives.md](docs/perspectives.md) | отдалённые перспективы (фрактальность, алиасы, …) |
+| [docs/research.md](docs/research.md) | исследовательская рамка: типизированная метрика, взвешенная раскладка, link prediction без LLM |
 | `docs/adr/` | ключевые архитектурные решения (рекомендованы, не обязательны) |
 
 Документация API генерируется Doxygen: `doxygen Doxyfile` → `docs/html`.
