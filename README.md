@@ -45,15 +45,17 @@ cmake --build build
 ctest --test-dir build --output-on-failure
 ```
 
-**Windows / Visual Studio 2022.** Да, проект полностью собирается в MSVC: установите Qt 6 через официальный установщик (кит MSVC 2019/2022), затем:
+**Windows / Visual Studio 2022.** Да, проект полностью собирается в MSVC: установите Qt 6 (кит MSVC 2019/2022), затем:
 
 ```powershell
-cmake -B build -G "Visual Studio 17 2022" -DCMAKE_PREFIX_PATH="C:/Qt/6.x/msvc2022_64"
+cmake -B build -G "Visual Studio 17 2022" -DCMAKE_PREFIX_PATH="C:/Users/nexrf/Qt/6.8.3/msvc2022_64"
 cmake --build build --config Release
 ctest --test-dir build -C Release --output-on-failure
 ```
 
-Открыть можно и как `build/ravel-kb.sln`. GoogleTest и nlohmann/json подтягиваются через FetchContent при первой конфигурации (нужен интернет). Для запуска .exe вне IDE: `windeployqt` на собранный бинарник. CI при этом может оставаться на Linux/gcc — ядро портируемо.
+Открыть можно и как `build/ravel-kb.sln`. GoogleTest и nlohmann/json подтягиваются через FetchContent при первой конфигурации (нужен интернет). `windeployqt` запускается автоматически после сборки — собранный `build/bin/Release/ravel.exe` работает вне IDE без дополнительных шагов. CI при этом может оставаться на Linux/gcc — ядро портируемо.
+
+Если официальный установщик Qt недоступен или работает медленно (например, `download.qt.io` не открывается): Qt можно поставить без установщика и регистрации — скачав готовые бинарники с зеркала (например, `ftp.fau.de/qtproject/online/qtsdkrepository/...`) и распаковав их в выбранный каталог. Для разработки на Widgets достаточно архивов `qtbase`, `qttools`, `qtsvg`, `d3dcompiler`, `opengl32sw` (~70 МБ вместо ~2 ГБ полной установки).
 
 ## Статус проекта
 
