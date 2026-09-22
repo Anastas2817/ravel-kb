@@ -1,6 +1,7 @@
-﻿#pragma once // не Google C++ style guide (((
+﻿#pragma once // not Google C++ style guide (((
 
 #include <cstdint>
+#include <initializer_list>
 #include <map>
 #include <optional>
 #include <string>
@@ -19,25 +20,36 @@ class NodeType {
   std::string frame_color_ = "#000000";
 };
 
-class Node {
+class Node { //DTO
  public:
-  Node(NodeId id, std::string title, std::string type)
-    : id_(id)
-    , title_(title)
-    , type_(type)
+   Node(NodeId id, std::string title, std::string type, std::string description = "", double size = 1)
+     : id_(id)
+     , title_(std::move(title))
+     , type_(std::move(type))
+     , description_(std::move(description))
+     , size_(size)
   {
   }
+
+   NodeId get_id() const noexcept { return id_; }
+   std::string get_title() const noexcept { return title_; }
+   std::string get_type() const noexcept { return type_; }
+
+   std::string get_description() const noexcept { return description_; }
+   double get_size() const noexcept { return size_; }
+   std::optional<std::pair<double, double>> get_hand_position() const noexcept { return hand_position_; }
 
  private:
   NodeId id_ = 1;
   std::string title_ = "";
+  std::string type_ = "model";
+
   std::string description_ = "";
   double size_ = 1;
   std::optional<std::pair<double, double>> hand_position_;
-  std::string type_;
 };
 
-class RelationType {
+class RelationType { 
  private:
   std::string name_ = "";
   std::string color_ = "#000000";
@@ -46,33 +58,44 @@ class RelationType {
   bool transitive_ = false;
 };
 
-class Relation {
+class Relation { //DTO
+
  public:
-  Relation(RelationId id, NodeId from, NodeId to, std::string type)
+  Relation(RelationId id, NodeId from, NodeId to, std::string type, std::string description = "")
     : id_(id)
     , from_(from)
     , to_(to)
-    , type_(type)
+    , type_(std::move(type))
+    , description_(std::move(description))
   {
   }
+
+  RelationId get_id() const noexcept { return id_; }
+  NodeId get_from() const noexcept { return from_; }
+  NodeId get_to() const noexcept { return to_; }
+  std::string get_type() const noexcept { return type_; }
+
+  std::string get_description() const noexcept { return description_; }
+
  private:
   RelationId id_ = 1;
+  NodeId from_ = 1;
+  NodeId to_ = 1;
+  std::string type_ = "is_a";
+
   std::string description_ = "";
-  NodeId from_;
-  NodeId to_;
-  std::string type_;
 };
 
 class Graph {
  public:
-  Graph() = default;
-  Graph(const Graph&) = default;
-  Graph(Graph&&) = delete;
-  Graph& operator=(const Graph&) = delete;
-  Graph& operator=(Graph&&) = delete;
-  ~Graph() = default;
+  NodeId get_next_id_node() const noexcept { return next_id_node_; } // question for Storage
+  NodeId get_next_id_node() const noexcept { return next_id_relation_; } // question for Storage
 
-  NodeId get_next_id_node() const noexcept { return next_id_node_; }; // Вопрос к этапу Storage
+  void add_node(Node temp) {}
+  void add_relation(Relation temp) {}
+  void move_node(const std::pair<double, double> pos) {}
+  void delete_node(const NodeId id) {}
+  void delete_nodes(const std::initializer_list<NodeId> ids) {}
 
 private:
   std::unordered_map<std::string, NodeType> ontology_node_;
