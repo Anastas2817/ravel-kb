@@ -4,6 +4,7 @@
 #include <initializer_list>
 #include <map>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -13,8 +14,14 @@ using NodeId = std::uint64_t;
 using RelationId = std::uint64_t;
 
 class NodeType {
+ public:
+  NodeType(std::string color, std::string shape, std::string frame_color)
+    : color_(color)
+    , shape_(shape)
+    , frame_color_(frame_color)
+    { 
+    }
  private:
-  std::string name_ = "";
   std::string color_ = "#000000";
   std::string shape_ = "rect";
   std::string frame_color_ = "#000000";
@@ -31,13 +38,13 @@ class Node { //DTO
   {
   }
 
-   NodeId get_id() const noexcept { return id_; }
-   std::string get_title() const noexcept { return title_; }
-   std::string get_type() const noexcept { return type_; }
+   NodeId Id() const noexcept { return id_; }
+   const std::string& Title() const noexcept { return title_; }
+   const std::string& Type() const noexcept { return type_; }
 
-   std::string get_description() const noexcept { return description_; }
-   double get_size() const noexcept { return size_; }
-   std::optional<std::pair<double, double>> get_hand_position() const noexcept { return hand_position_; }
+   const std::string& Description() const noexcept { return description_; }
+   double Size() const noexcept { return size_; }
+   std::optional<std::pair<double, double>> HandPosition() const { return hand_position_; }
 
  private:
   NodeId id_ = 1;
@@ -46,12 +53,19 @@ class Node { //DTO
 
   std::string description_ = "";
   double size_ = 1;
-  std::optional<std::pair<double, double>> hand_position_;
+  std::optional<std::pair<double, double>> hand_position_ = std::nullopt;
 };
 
 class RelationType { 
+ public:
+  RelationType(std::string color, std::string arrow, bool symmetric, bool transitive)
+    : color_(color)
+    , arrow_(arrow)
+    , symmetric_(symmetric)
+    , transitive_(transitive)
+    { 
+    }
  private:
-  std::string name_ = "";
   std::string color_ = "#000000";
   std::string arrow_ = "solid"; // solid, dashed, dotted
   bool symmetric_ = false;
@@ -59,7 +73,6 @@ class RelationType {
 };
 
 class Relation { //DTO
-
  public:
   Relation(RelationId id, NodeId from, NodeId to, std::string type, std::string description = "")
     : id_(id)
@@ -70,12 +83,12 @@ class Relation { //DTO
   {
   }
 
-  RelationId get_id() const noexcept { return id_; }
-  NodeId get_from() const noexcept { return from_; }
-  NodeId get_to() const noexcept { return to_; }
-  std::string get_type() const noexcept { return type_; }
+  RelationId Id() const noexcept { return id_; }
+  NodeId From() const noexcept { return from_; }
+  NodeId To() const noexcept { return to_; }
+  const std::string& Type() const noexcept { return type_; }
 
-  std::string get_description() const noexcept { return description_; }
+  const std::string& Description() const noexcept { return description_; }
 
  private:
   RelationId id_ = 1;
@@ -88,14 +101,28 @@ class Relation { //DTO
 
 class Graph {
  public:
-  NodeId get_next_id_node() const noexcept { return next_id_node_; } // question for Storage
-  NodeId get_next_id_node() const noexcept { return next_id_relation_; } // question for Storage
+  NodeId NextIdNode() const noexcept { return next_id_node_; } // question for Storage
+  NodeId NextIdRelation() const noexcept { return next_id_relation_; } // question for Storage
 
-  void add_node(Node temp) {}
-  void add_relation(Relation temp) {}
-  void move_node(const std::pair<double, double> pos) {}
-  void delete_node(const NodeId id) {}
-  void delete_nodes(const std::initializer_list<NodeId> ids) {}
+  void AddNodeType(std::string name, std::string color, std::string shape, std::string frame_color) {
+    if (ontology_node_.find(name) != ontology_node_.end()) throw std::logic_error("Graph::AddNodeType try to add the same NodeType");
+    ontology_node_.emplace(name, NodeType(std::move(color), std::move(shape), std::move(frame_color)));
+  }
+  void AddRelationType(std::string name, std::string color, std::string arrow, bool symmetric, bool transitive) {
+    if (ontology_relation_.find(name) != ontology_relation_.end()) throw std::logic_error("Graph::AddRelationType try to add the same RelationType");
+    ontology_relation_.emplace(name, RelationType(std::move(color), std::move(arrow), symmetric, transitive));
+  }
+  const NodeType& ResolveNode(const std::string& name) const { return ontology_node_.at(name); }
+  const RelationType& ResolveRelation(const std::string& name) const { return ontology_relation_.at(name); }
+
+  const Node& GetNode(NodeId id) const { if (HasNode(id)) { return nodes_[id]; } else throw std::out_of_range("Graph::Node try to access deleted Node"); }
+  NodeId AddNode(std::string title, std::string type, std::string description = "", double size = 1, std::optional<std::pair<double, double>> hand_position = std::nullopt);
+  bool HasNode(NodeId id) const { return access_.find(id) != access_.end(); }
+  void AddRelation(NodeId from, NodeId to, std::string type, std::string description = "") {}
+  //void add_node_and_relations(Node temp, std::initializer_list<Relation> relations) {}
+  void MoveNode(NodeId id, const std::pair<double, double> pos) {}
+  void DeleteNodes(const std::initializer_list<NodeId> ids) {}
+  // доступ к окрестности узла
 
 private:
   std::unordered_map<std::string, NodeType> ontology_node_;
