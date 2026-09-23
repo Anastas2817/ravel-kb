@@ -1,7 +1,6 @@
 ﻿#pragma once // not Google C++ style guide (((
 
 #include <cstdint>
-#include <initializer_list>
 #include <map>
 #include <optional>
 #include <stdexcept>
@@ -120,10 +119,12 @@ class Graph {
   NodeId AddNode(std::string title, std::string type, std::string description = "", double size = 1, std::optional<std::pair<double, double>> hand_position = std::nullopt);
   bool HasNode(NodeId id) const { return access_.find(id) != access_.end(); }
   RelationId AddRelation(NodeId from, NodeId to, std::string type, std::string description = "");
+  bool HasRelation(RelationId id) const { if (id >= next_id_relation_) { throw std::out_of_range("Graph::HasRelation id is too big"); } else { return relations_[id - 1].Id() == id; } }
+  const Relation& GetRelation(RelationId id) const { if (HasRelation(id)) { return relations_[id - 1]; } else { throw std::out_of_range("Graph::GetRelation try to access non-existent Relation"); } }
   //void AddNodeWithRelations(std::string title, std::string type, std::string description = "", double size = 1, std::optional<std::pair<double, double>> hand_position = std::nullopt, std::initializer_list<Relation> relations) {}
   void MoveNode(NodeId id, const std::pair<double, double> pos);
-  void DeleteNodes(const std::initializer_list<NodeId> ids);
-  void DeleteRelations(const std::initializer_list<RelationId> ids);
+  void DeleteNodes(std::vector<NodeId> ids);
+  void DeleteRelations(std::vector<RelationId> ids);
   std::vector<RelationId> GetNeighborhood(NodeId id) { if (HasNode(id) == false) { throw std::out_of_range("Graph::GetNeighborhood try to access non-existent Node"); } else { return access_[id]; } }
 
 private:
