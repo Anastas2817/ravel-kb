@@ -29,12 +29,13 @@ class NodeType {
 
 class Node { //DTO
  public:
-   Node(NodeId id, std::string title, std::string type, std::string description = "", double size = 1)
+   Node(NodeId id, std::string title, std::string type, std::string description = "", double size = 1, std::optional<std::pair<double, double>> hand_position = std::nullopt)
      : id_(id)
      , title_(std::move(title))
      , type_(std::move(type))
      , description_(std::move(description))
      , size_(size)
+     , hand_position_(hand_position)
   {
   }
 
@@ -118,10 +119,10 @@ class Graph {
   const Node& GetNode(NodeId id) const { if (HasNode(id)) { return nodes_[id]; } else throw std::out_of_range("Graph::Node try to access deleted Node"); }
   NodeId AddNode(std::string title, std::string type, std::string description = "", double size = 1, std::optional<std::pair<double, double>> hand_position = std::nullopt);
   bool HasNode(NodeId id) const { return access_.find(id) != access_.end(); }
-  void AddRelation(NodeId from, NodeId to, std::string type, std::string description = "") {}
-  //void add_node_and_relations(Node temp, std::initializer_list<Relation> relations) {}
-  void MoveNode(NodeId id, const std::pair<double, double> pos) {}
-  void DeleteNodes(const std::initializer_list<NodeId> ids) {}
+  RelationId AddRelation(NodeId from, NodeId to, std::string type, std::string description = "");
+  //void AddNodeWithRelations(std::string title, std::string type, std::string description = "", double size = 1, std::optional<std::pair<double, double>> hand_position = std::nullopt, std::initializer_list<Relation> relations) {}
+  void MoveNode(NodeId id, const std::pair<double, double> pos);
+  void DeleteNodes(const std::initializer_list<NodeId> ids);
   // доступ к окрестности узла
 
 private:
