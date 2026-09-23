@@ -116,14 +116,15 @@ class Graph {
   const NodeType& ResolveNode(const std::string& name) const { return ontology_node_.at(name); }
   const RelationType& ResolveRelation(const std::string& name) const { return ontology_relation_.at(name); }
 
-  const Node& GetNode(NodeId id) const { if (HasNode(id)) { return nodes_[id]; } else throw std::out_of_range("Graph::Node try to access deleted Node"); }
+  const Node& GetNode(NodeId id) const { if (HasNode(id)) { return nodes_[id - 1]; } else { throw std::out_of_range("Graph::GetNode try to access non-existent Node"); } }
   NodeId AddNode(std::string title, std::string type, std::string description = "", double size = 1, std::optional<std::pair<double, double>> hand_position = std::nullopt);
   bool HasNode(NodeId id) const { return access_.find(id) != access_.end(); }
   RelationId AddRelation(NodeId from, NodeId to, std::string type, std::string description = "");
   //void AddNodeWithRelations(std::string title, std::string type, std::string description = "", double size = 1, std::optional<std::pair<double, double>> hand_position = std::nullopt, std::initializer_list<Relation> relations) {}
   void MoveNode(NodeId id, const std::pair<double, double> pos);
   void DeleteNodes(const std::initializer_list<NodeId> ids);
-  // доступ к окрестности узла
+  void DeleteRelations(const std::initializer_list<RelationId> ids);
+  std::vector<RelationId> GetNeighborhood(NodeId id) { if (HasNode(id) == false) { throw std::out_of_range("Graph::GetNeighborhood try to access non-existent Node"); } else { return access_[id]; } }
 
 private:
   std::unordered_map<std::string, NodeType> ontology_node_;

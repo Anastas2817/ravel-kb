@@ -10,8 +10,8 @@ NodeId Graph::AddNode(std::string title, std::string type, std::string descripti
 
 RelationId Graph::AddRelation(NodeId from, NodeId to, std::string type, std::string description) {
   if (ontology_relation_.find(type) == ontology_relation_.end()) throw std::out_of_range("Graph::AddRelation try to create relation with non-existent type");
-  if (not HasNode(from - 1)) throw std::out_of_range("Graph::AddRelation try to create relation with non-existent node from");
-  if (not HasNode(to - 1)) throw std::out_of_range("Graph::AddRelation try to create relation with non-existent node to");
+  if (not HasNode(from)) throw std::out_of_range("Graph::AddRelation try to create relation with non-existent node from");
+  if (not HasNode(to)) throw std::out_of_range("Graph::AddRelation try to create relation with non-existent node to");
   RelationId id = next_id_relation_++;
   relations_.emplace_back(id, from, to, std::move(type), std::move(description));
   access_[from].push_back(id);
@@ -20,7 +20,15 @@ RelationId Graph::AddRelation(NodeId from, NodeId to, std::string type, std::str
 }
 
 void Graph::DeleteNodes(const std::initializer_list<NodeId> ids) {
+  for (NodeId id : ids) {
 
+  }
+}
+
+void Graph::DeleteRelations(const std::initializer_list<RelationId> ids) {
+  for (RelationId id : ids) {
+
+  }
 }
 
 void Graph::MoveNode(NodeId id, const std::pair<double, double> pos) {
