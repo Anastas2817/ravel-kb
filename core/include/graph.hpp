@@ -28,7 +28,7 @@ class NodeType {
 
 class Node { //DTO
  public:
-   Node(NodeId id, std::string title, std::string type, std::string description = "", double size = 1, std::optional<std::pair<double, double>> hand_position = std::nullopt)
+  Node(NodeId id, std::string title, std::string type, std::string description = "", double size = 1, std::optional<std::pair<double, double>> hand_position = std::nullopt)
      : id_(id)
      , title_(std::move(title))
      , type_(std::move(type))
@@ -38,19 +38,23 @@ class Node { //DTO
   {
   }
 
-   NodeId Id() const noexcept { return id_; }
-   const std::string& Title() const noexcept { return title_; }
-   const std::string& Type() const noexcept { return type_; }
+  NodeId Id() const noexcept { return id_; }
+  const std::string& Type() const noexcept { return type_; }
 
-   const std::string& Description() const noexcept { return description_; }
-   double Size() const noexcept { return size_; }
-   std::optional<std::pair<double, double>> HandPosition() const { return hand_position_; }
+  const std::string& Title() const noexcept { return title_; }
+  const std::string& Description() const noexcept { return description_; }
+  double Size() const noexcept { return size_; }
+  std::optional<std::pair<double, double>> HandPosition() const { return hand_position_; }
+
+  void SetHandPosition(std::pair<double, double> hand_position) noexcept { hand_position_ = hand_position; } // тут будет ещё какая-то логика
 
  private:
+  // Идентичность
   NodeId id_ = 1;
-  std::string title_ = "";
   std::string type_ = "model";
 
+  // Локальные данные
+  std::string title_ = "";
   std::string description_ = "";
   double size_ = 1;
   std::optional<std::pair<double, double>> hand_position_ = std::nullopt;
@@ -119,10 +123,10 @@ class Graph {
   NodeId AddNode(std::string title, std::string type, std::string description = "", double size = 1, std::optional<std::pair<double, double>> hand_position = std::nullopt);
   bool HasNode(NodeId id) const { return access_.find(id) != access_.end(); }
   RelationId AddRelation(NodeId from, NodeId to, std::string type, std::string description = "");
-  bool HasRelation(RelationId id) const { if (id >= next_id_relation_) { throw std::out_of_range("Graph::HasRelation id is too big"); } else { return relations_[id - 1].Id() == id; } }
-  const Relation& GetRelation(RelationId id) const { if (HasRelation(id)) { return relations_[id - 1]; } else { throw std::out_of_range("Graph::GetRelation try to access non-existent Relation"); } }
-  //void AddNodeWithRelations(std::string title, std::string type, std::string description = "", double size = 1, std::optional<std::pair<double, double>> hand_position = std::nullopt, std::initializer_list<Relation> relations) {}
-  void MoveNode(NodeId id, const std::pair<double, double> pos);
+  bool HasRelation(RelationId id) const { return relations_[id - 1].Id() == id; }
+  const Relation& GetRelation(RelationId id) const { if (HasRelation(id) && id >= 1 && id < next_id_relation_) { return relations_[id - 1]; } else { throw std::out_of_range("Graph::GetRelation try to access non-existent Relation"); } }
+  NodeId AddNodeWithRelations(std::string title, std::string type, std::vector<std::pair<NodeId, std::string>> froms, std::vector<std::pair<NodeId, std::string>> tos, std::string description = "", double size = 1, std::optional<std::pair<double, double>> hand_position = std::nullopt);
+  std::pair <double, double> MoveNode(NodeId id, std::pair<double, double> pos);
   void DeleteNodes(std::vector<NodeId> ids);
   void DeleteRelations(std::vector<RelationId> ids);
   std::vector<RelationId> GetNeighborhood(NodeId id) { if (HasNode(id) == false) { throw std::out_of_range("Graph::GetNeighborhood try to access non-existent Node"); } else { return access_[id]; } }

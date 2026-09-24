@@ -47,3 +47,19 @@ TEST(GraphDeleteNodes, DeleteAccess) {
   EXPECT_EQ(std::vector<RelationId>{}, g.GetNeighborhood(to2)); // инвариант 3: запись в access_
   EXPECT_EQ(g.NextIdNode(), to2 + 1); // инвариант 1: id не переиспользуются
 }
+
+TEST(GraphMoveNode, SetNewHandPosition) {
+  Graph g;
+  g.AddNodeType("model", "#4a90d9", "rect", "#000000");
+  NodeId id = g.AddNode("Датчик Холла", "model", "лаба по физике", 1, std::pair<double, double>{100, 100});
+  std::pair<double, double> before = g.GetNode(id).HandPosition().value();
+  EXPECT_EQ(before, std::make_pair(100.0 , 100.0));
+  std::pair<double, double> prev = g.MoveNode(id, { -100, -100 });
+  EXPECT_EQ(prev, std::make_pair(100.0, 100.0));
+  EXPECT_TRUE(g.HasNode(id));
+  EXPECT_EQ(g.GetNode(id).HandPosition().value(), std::make_pair(-100.0, -100.0));
+
+  NodeId temp = g.AddNode("Коаксильный кабель", "model");
+  g.DeleteNodes({temp});
+  EXPECT_THROW(g.MoveNode(temp, { -100, 100 }), std::out_of_range);
+}
