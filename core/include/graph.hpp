@@ -3,10 +3,11 @@
 #include <cstdint>
 #include <map>
 #include <optional>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
-#include <utility>
+#include <utility>ё
 #include <vector>
 
 using NodeId = std::uint64_t;
@@ -46,7 +47,7 @@ class Node { //DTO
   double Size() const noexcept { return size_; }
   std::optional<std::pair<double, double>> HandPosition() const { return hand_position_; }
 
-  void SetHandPosition(std::pair<double, double> hand_position) noexcept { hand_position_ = hand_position; } // тут будет ещё какая-то логика
+  void SetHandPosition(std::pair<double, double> hand_position) noexcept { hand_position_ = hand_position; }
 
  private:
   // Идентичность
@@ -109,27 +110,28 @@ class Graph {
   NodeId NextIdRelation() const noexcept { return next_id_relation_; } // question for Storage
 
   void AddNodeType(std::string name, std::string color, std::string shape, std::string frame_color) {
-    if (ontology_node_.find(name) != ontology_node_.end()) throw std::logic_error("Graph::AddNodeType try to add the same NodeType");
+    if (ontology_node_.find(name) != ontology_node_.end()) { throw std::logic_error("Graph::AddNodeType tried to add the same NodeType"); }
     ontology_node_.emplace(name, NodeType(std::move(color), std::move(shape), std::move(frame_color)));
   }
   void AddRelationType(std::string name, std::string color, std::string arrow, bool symmetric, bool transitive) {
-    if (ontology_relation_.find(name) != ontology_relation_.end()) throw std::logic_error("Graph::AddRelationType try to add the same RelationType");
+    if (ontology_relation_.find(name) != ontology_relation_.end()) { throw std::logic_error("Graph::AddRelationType tried to add the same RelationType"); }
     ontology_relation_.emplace(name, RelationType(std::move(color), std::move(arrow), symmetric, transitive));
   }
   const NodeType& ResolveNode(const std::string& name) const { return ontology_node_.at(name); }
   const RelationType& ResolveRelation(const std::string& name) const { return ontology_relation_.at(name); }
 
-  const Node& GetNode(NodeId id) const { if (HasNode(id)) { return nodes_[id - 1]; } else { throw std::out_of_range("Graph::GetNode try to access non-existent Node"); } }
+  const Node& GetNode(NodeId id) const { if (HasNode(id)) { return nodes_[id - 1]; } else { throw std::out_of_range("Graph::GetNode tried to access non-existent Node"); } }
   NodeId AddNode(std::string title, std::string type, std::string description = "", double size = 1, std::optional<std::pair<double, double>> hand_position = std::nullopt);
   bool HasNode(NodeId id) const { return access_.find(id) != access_.end(); }
   RelationId AddRelation(NodeId from, NodeId to, std::string type, std::string description = "");
-  bool HasRelation(RelationId id) const { return relations_[id - 1].Id() == id; }
-  const Relation& GetRelation(RelationId id) const { if (HasRelation(id) && id >= 1 && id < next_id_relation_) { return relations_[id - 1]; } else { throw std::out_of_range("Graph::GetRelation try to access non-existent Relation"); } }
+  bool HasRelation(RelationId id) const noexcept { return ((id >= 1) && (id < next_id_relation_) && (relations_[id - 1].Id() == id)); }
+  const Relation& GetRelation(RelationId id) const { if (HasRelation(id)) { return relations_[id - 1]; } else { throw std::out_of_range("Graph::GetRelation tried to access non-existent Relation"); } }
   NodeId AddNodeWithRelations(std::string title, std::string type, std::vector<std::pair<NodeId, std::string>> froms, std::vector<std::pair<NodeId, std::string>> tos, std::string description = "", double size = 1, std::optional<std::pair<double, double>> hand_position = std::nullopt);
-  std::pair <double, double> MoveNode(NodeId id, std::pair<double, double> pos);
+  std::optional<std::pair<double, double>> MoveNode(NodeId id, std::pair<double, double> pos);
   void DeleteNodes(std::vector<NodeId> ids);
   void DeleteRelations(std::vector<RelationId> ids);
-  std::vector<RelationId> GetNeighborhood(NodeId id) { if (HasNode(id) == false) { throw std::out_of_range("Graph::GetNeighborhood try to access non-existent Node"); } else { return access_[id]; } }
+  const std::vector<RelationId>& GetIncidentRelations(NodeId id) const { if (!HasNode(id)) { throw std::out_of_range("Graph::GetIncidentRelations tried to access non-existent Node"); } else { return access_.at(id); } }
+  std::set<NodeId> GetNeighbors(NodeId id) const;
 
 private:
   std::unordered_map<std::string, NodeType> ontology_node_;
