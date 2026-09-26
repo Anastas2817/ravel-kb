@@ -7,7 +7,7 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
-#include <utility>ё
+#include <utility>
 #include <vector>
 
 using NodeId = std::uint64_t;
