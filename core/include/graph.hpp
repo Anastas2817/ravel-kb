@@ -21,6 +21,11 @@ class NodeType {
     , frame_color_(frame_color)
     { 
     }
+
+  const std::string& Color() const noexcept { return color_; }
+  const std::string& Shape() const noexcept { return shape_; }
+  const std::string& FrameColor() const noexcept { return frame_color_; }
+
  private:
   std::string color_ = "#000000";
   std::string shape_ = "rect";
@@ -70,6 +75,12 @@ class RelationType {
     , transitive_(transitive)
     { 
     }
+
+  const std::string& Color() const noexcept { return color_; }
+  const std::string& Arrow() const noexcept { return arrow_; }
+  bool Symmetric() const noexcept { return symmetric_; }
+  bool Transitive() const noexcept { return transitive_; }
+
  private:
   std::string color_ = "#000000";
   std::string arrow_ = "solid"; // solid, dashed, dotted
