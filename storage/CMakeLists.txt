@@ -41,6 +41,7 @@ endif()
 
 add_library(ravel::storage ALIAS ravel_storage)
 
-# nlohmann/json — header-only; публичная зависимость: заголовки storage
-# подтягивают её вместе с собой.
-target_link_libraries(ravel_storage INTERFACE ravel::core nlohmann_json::nlohmann_json)
+# nlohmann/json — header-only; ravel::core нужен самим исходникам storage
+# (storage.hpp включает graph.hpp), поэтому связь PUBLIC, а не INTERFACE:
+# INTERFACE-зависимости не попадают в include-пути собственной компиляции цели.
+target_link_libraries(ravel_storage PUBLIC ravel::core nlohmann_json::nlohmann_json)
