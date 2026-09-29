@@ -1,4 +1,5 @@
-﻿#pragma once // not Google C++ style guide (((
+#ifndef RAVEL_CORE_INCLUDE_GRAPH_HPP_
+#define RAVEL_CORE_INCLUDE_GRAPH_HPP_
 
 #include <cstdint>
 #include <map>
@@ -10,21 +11,26 @@
 #include <utility>
 #include <vector>
 
+namespace ravel {
+
 using NodeId = std::uint64_t;
 using RelationId = std::uint64_t;
 
 class NodeType {
  public:
   NodeType(std::string color, std::string shape, std::string frame_color)
-    : color_(color)
-    , shape_(shape)
-    , frame_color_(frame_color)
-    { 
-    }
+      : color_(color), shape_(shape), frame_color_(frame_color) {
+  }
 
-  const std::string& Color() const noexcept { return color_; }
-  const std::string& Shape() const noexcept { return shape_; }
-  const std::string& FrameColor() const noexcept { return frame_color_; }
+  const std::string& Color() const noexcept {
+    return color_;
+  }
+  const std::string& Shape() const noexcept {
+    return shape_;
+  }
+  const std::string& FrameColor() const noexcept {
+    return frame_color_;
+  }
 
  private:
   std::string color_ = "#000000";
@@ -32,79 +38,106 @@ class NodeType {
   std::string frame_color_ = "#000000";
 };
 
-class Node { //DTO
+class Node {  // DTO
  public:
-  Node(NodeId id, std::string title, std::string type, std::string description = "", double size = 1, std::optional<std::pair<double, double>> hand_position = std::nullopt)
-     : id_(id)
-     , title_(std::move(title))
-     , type_(std::move(type))
-     , description_(std::move(description))
-     , size_(size)
-     , hand_position_(hand_position)
-  {
+  Node(NodeId id, std::string title, std::string type, std::string description = "",
+       double size = 1, std::optional<std::pair<double, double>> hand_position = std::nullopt)
+      : id_(id),
+        title_(std::move(title)),
+        type_(std::move(type)),
+        description_(std::move(description)),
+        size_(size),
+        hand_position_(hand_position) {
   }
 
-  NodeId Id() const noexcept { return id_; }
-  const std::string& Type() const noexcept { return type_; }
+  NodeId Id() const noexcept {
+    return id_;
+  }
+  const std::string& Type() const noexcept {
+    return type_;
+  }
 
-  const std::string& Title() const noexcept { return title_; }
-  const std::string& Description() const noexcept { return description_; }
-  double Size() const noexcept { return size_; }
-  std::optional<std::pair<double, double>> HandPosition() const { return hand_position_; }
+  const std::string& Title() const noexcept {
+    return title_;
+  }
+  const std::string& Description() const noexcept {
+    return description_;
+  }
+  double Size() const noexcept {
+    return size_;
+  }
+  std::optional<std::pair<double, double>> HandPosition() const {
+    return hand_position_;
+  }
 
-  void SetHandPosition(std::pair<double, double> hand_position) noexcept { hand_position_ = hand_position; }
+  void SetHandPosition(std::pair<double, double> hand_position) noexcept {
+    hand_position_ = hand_position;
+  }
 
  private:
-  // Идентичность
+  // Identity
   NodeId id_ = 1;
   std::string type_ = "model";
 
-  // Локальные данные
+  // Local data
   std::string title_ = "";
   std::string description_ = "";
   double size_ = 1;
   std::optional<std::pair<double, double>> hand_position_ = std::nullopt;
 };
 
-class RelationType { 
+class RelationType {
  public:
   RelationType(std::string color, std::string arrow, bool symmetric, bool transitive)
-    : color_(color)
-    , arrow_(arrow)
-    , symmetric_(symmetric)
-    , transitive_(transitive)
-    { 
-    }
+      : color_(color), arrow_(arrow), symmetric_(symmetric), transitive_(transitive) {
+  }
 
-  const std::string& Color() const noexcept { return color_; }
-  const std::string& Arrow() const noexcept { return arrow_; }
-  bool Symmetric() const noexcept { return symmetric_; }
-  bool Transitive() const noexcept { return transitive_; }
+  const std::string& Color() const noexcept {
+    return color_;
+  }
+  const std::string& Arrow() const noexcept {
+    return arrow_;
+  }
+  bool Symmetric() const noexcept {
+    return symmetric_;
+  }
+  bool Transitive() const noexcept {
+    return transitive_;
+  }
 
  private:
   std::string color_ = "#000000";
-  std::string arrow_ = "solid"; // solid, dashed, dotted
+  std::string arrow_ = "solid";  // solid, dashed, dotted
   bool symmetric_ = false;
   bool transitive_ = false;
 };
 
-class Relation { //DTO
+class Relation {  // DTO
  public:
   Relation(RelationId id, NodeId from, NodeId to, std::string type, std::string description = "")
-    : id_(id)
-    , from_(from)
-    , to_(to)
-    , type_(std::move(type))
-    , description_(std::move(description))
-  {
+      : id_(id),
+        from_(from),
+        to_(to),
+        type_(std::move(type)),
+        description_(std::move(description)) {
   }
 
-  RelationId Id() const noexcept { return id_; }
-  NodeId From() const noexcept { return from_; }
-  NodeId To() const noexcept { return to_; }
-  const std::string& Type() const noexcept { return type_; }
+  RelationId Id() const noexcept {
+    return id_;
+  }
+  NodeId From() const noexcept {
+    return from_;
+  }
+  NodeId To() const noexcept {
+    return to_;
+  }
+  const std::string& Type() const noexcept {
+    return type_;
+  }
 
-  const std::string& Description() const noexcept { return description_; }
+  const std::string& Description() const noexcept {
+    return description_;
+  }
 
  private:
   RelationId id_ = 1;
@@ -117,46 +150,97 @@ class Relation { //DTO
 
 class Graph {
  public:
-  NodeId NextIdNode() const noexcept { return next_id_node_; } // question for Storage
-  NodeId NextIdRelation() const noexcept { return next_id_relation_; } // question for Storage
+  NodeId NextIdNode() const noexcept {
+    return next_id_node_;
+  }  // question for Storage
+  NodeId NextIdRelation() const noexcept {
+    return next_id_relation_;
+  }  // question for Storage
 
-  void AddNodeType(std::string name, std::string color, std::string shape, std::string frame_color) {
-    if (ontology_node_.find(name) != ontology_node_.end()) { throw std::logic_error("Graph::AddNodeType tried to add the same NodeType"); }
-    ontology_node_.emplace(name, NodeType(std::move(color), std::move(shape), std::move(frame_color)));
+  void AddNodeType(std::string name, std::string color, std::string shape,
+                   std::string frame_color) {
+    if (ontology_node_.find(name) != ontology_node_.end()) {
+      throw std::logic_error("Graph::AddNodeType tried to add the same NodeType");
+    }
+    // TODO: validate color format (#RRGGBB)
+    ontology_node_.emplace(name,
+                           NodeType(std::move(color), std::move(shape), std::move(frame_color)));
   }
-  void AddRelationType(std::string name, std::string color, std::string arrow, bool symmetric, bool transitive) {
-    if (ontology_relation_.find(name) != ontology_relation_.end()) { throw std::logic_error("Graph::AddRelationType tried to add the same RelationType"); }
-    ontology_relation_.emplace(name, RelationType(std::move(color), std::move(arrow), symmetric, transitive));
+  void AddRelationType(std::string name, std::string color, std::string arrow, bool symmetric,
+                       bool transitive) {
+    if (ontology_relation_.find(name) != ontology_relation_.end()) {
+      throw std::logic_error("Graph::AddRelationType tried to add the same RelationType");
+    }
+    // TODO: validate color format (#RRGGBB)
+    ontology_relation_.emplace(
+        name, RelationType(std::move(color), std::move(arrow), symmetric, transitive));
   }
-  const NodeType& ResolveNode(const std::string& name) const { return ontology_node_.at(name); }
-  const RelationType& ResolveRelation(const std::string& name) const { return ontology_relation_.at(name); }
+  const NodeType& ResolveNode(const std::string& name) const {
+    return ontology_node_.at(name);
+  }
+  const RelationType& ResolveRelation(const std::string& name) const {
+    return ontology_relation_.at(name);
+  }
 
-  const Node& GetNode(NodeId id) const { if (HasNode(id)) { return nodes_[id - 1]; } else { throw std::out_of_range("Graph::GetNode tried to access non-existent Node"); } }
-  NodeId AddNode(std::string title, std::string type, std::string description = "", double size = 1, std::optional<std::pair<double, double>> hand_position = std::nullopt);
-  bool HasNode(NodeId id) const { return access_.find(id) != access_.end(); }
+  const Node& GetNode(NodeId id) const {
+    if (HasNode(id)) {
+      return nodes_[id - 1];
+    } else {
+      throw std::out_of_range("Graph::GetNode tried to access non-existent Node");
+    }
+  }
+  NodeId AddNode(std::string title, std::string type, std::string description = "", double size = 1,
+                 std::optional<std::pair<double, double>> hand_position = std::nullopt);
+  bool HasNode(NodeId id) const {
+    return access_.find(id) != access_.end();
+  }
   RelationId AddRelation(NodeId from, NodeId to, std::string type, std::string description = "");
-  bool HasRelation(RelationId id) const noexcept { return ((id >= 1) && (id < next_id_relation_) && (relations_[id - 1].Id() == id)); }
-  const Relation& GetRelation(RelationId id) const { if (HasRelation(id)) { return relations_[id - 1]; } else { throw std::out_of_range("Graph::GetRelation tried to access non-existent Relation"); } }
-  NodeId AddNodeWithRelations(std::string title, std::string type, std::vector<std::pair<NodeId, std::string>> froms, std::vector<std::pair<NodeId, std::string>> tos, std::string description = "", double size = 1, std::optional<std::pair<double, double>> hand_position = std::nullopt);
+  bool HasRelation(RelationId id) const noexcept {
+    return ((id >= 1) && (id < next_id_relation_) && (relations_[id - 1].Id() == id));
+  }
+  const Relation& GetRelation(RelationId id) const {
+    if (HasRelation(id)) {
+      return relations_[id - 1];
+    } else {
+      throw std::out_of_range("Graph::GetRelation tried to access non-existent Relation");
+    }
+  }
+  NodeId AddNodeWithRelations(
+      std::string title, std::string type, std::vector<std::pair<NodeId, std::string>> froms,
+      std::vector<std::pair<NodeId, std::string>> tos, std::string description = "",
+      double size = 1, std::optional<std::pair<double, double>> hand_position = std::nullopt);
   std::optional<std::pair<double, double>> MoveNode(NodeId id, std::pair<double, double> pos);
   void DeleteNodes(std::vector<NodeId> ids);
   void DeleteRelations(std::vector<RelationId> ids);
-  const std::vector<RelationId>& GetIncidentRelations(NodeId id) const { if (!HasNode(id)) { throw std::out_of_range("Graph::GetIncidentRelations tried to access non-existent Node"); } else { return access_.at(id); } }
+  const std::vector<RelationId>& GetIncidentRelations(NodeId id) const {
+    if (!HasNode(id)) {
+      throw std::out_of_range("Graph::GetIncidentRelations tried to access non-existent Node");
+    } else {
+      return access_.at(id);
+    }
+  }
   std::set<NodeId> GetNeighbors(NodeId id) const;
 
-private:
+ private:
   std::unordered_map<std::string, NodeType> ontology_node_;
   std::unordered_map<std::string, RelationType> ontology_relation_;
 
-  // Тип каждого узла и каждого ребра содержится в соответствующем словаре онтологии.
-  std::vector<Node> nodes_; 
-  std::vector<Relation> relations_; // Рёбра ссылаются только на существующие узлы: from и to каждого живого ребра — живые узлы.
+  // The type of every node and every relation is present in the ontology dictionaries.
+  std::vector<Node> nodes_;
+  std::vector<Relation> relations_;  // Relations reference only existing nodes: from and to of
+                                     // every live relation are live nodes.
 
-  // Для любого ребра r и любого узла x: r лежит в `access_[x]` тогда и только тогда, когда x — это from или to ребра r.
-  // `access_` содержит записи ровно для живых узлов: каждый живый узел имеет запись (возможно, с пустым вектором), ни один удалённый — нет.
+  // For any relation r and any node x: r is listed in `access_[x]` if and only if x is from or to
+  // of r. `access_` holds entries exactly for live nodes: every live node has an entry (possibly
+  // with an empty vector), no deleted node has one.
   std::map<NodeId, std::vector<RelationId>> access_;
 
-  // Id не переиспользуются; `next_id_node_` / `next_id_relation_` строго больше всех существующих id своего вида.
+  // Ids are never reused; `next_id_node_` / `next_id_relation_` are strictly greater than all
+  // existing ids of their kind.
   NodeId next_id_node_ = 1;
   RelationId next_id_relation_ = 1;
 };
+
+}  // namespace ravel
+
+#endif  // RAVEL_CORE_INCLUDE_GRAPH_HPP_

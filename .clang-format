@@ -1,0 +1,38 @@
+# Форматирование Ravel по Google C++ Style Guide.
+# Проект заявляет следование гайду (README, CONTRIBUTING.md) — этот файл
+# делает проверку механической вместо ручной. Правила гайда, по которым
+# clang-format не силён (имена, include-гварды, noexcept-политика), остаются
+# на ревью — см. docs/implementation.md, эмпирические правила.
+
+BasedOnStyle: Google
+
+# Отступы и скобки — строго по гайду.
+IndentWidth: 2
+UseTab: Never
+
+# Длина строки: гайд — 80; для сигнатур AddNodeWithRelations это жёстко,
+# поэтому 100 как компромисс проекта. Изменение — через ADR, а не молча.
+ColumnLimit: 100
+
+# Фигурные скобки: гайд требует их всегда, даже у однострочного if.
+InsertBraces: true
+
+# Порядок include: соответствующий .hpp первым, потом C-системные,
+# C++-системные, затем прочие — как требует гайд.
+SortIncludes: CaseSensitive
+IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex: '^"[^"]+"'        # собственные заголовки ("...")
+    Priority: 1
+  - Regex: '^<[a-z_]+>'      # C-системные (<cstdint>, <string.h>)
+    Priority: 2
+  - Regex: '^<[^>]+>'        # C++-системные и прочие (<string>, <gtest/...>)
+    Priority: 3
+
+# Мелочи гайда.
+PointerAlignment: Left
+ReferenceAlignment: Left
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+SpacesBeforeTrailingComments: 2
