@@ -10,7 +10,7 @@
 
 - [x] Неделя 1: модель данных `Graph` (узлы, рёбра, типы), инварианты, генерация `id` (раздельные счётчики `next_id_node` / `next_id_relation`, ADR-001); юнит-тесты на инварианты (GoogleTest, без Qt)
 - [ ] **🚧 в работе** Неделя 2: `JsonStorage`: `format_version`, счётчики `next_id_*`; round-trip тесты (save → load → save)
-- [ ] Неделя 3: тесты на некорректные файлы (битый JSON, дубли `id`, нет `format_version`, `next_id_*` ≤ максимального id своего вида); CI: сборка + тесты на push (GitHub Actions, job `core` без Qt)
+- [ ] Неделя 3: тесты на некорректные файлы (битый JSON, дубли `id`, нет `format_version`, `next_id_*` ≤ максимального id своего вида); CI: сборка + тесты на push (GitHub Actions, job `core` без Qt); C4 component-диаграмма ядра для защиты
 
 ## Этап 2. Канвас (недели 4–5)
 
