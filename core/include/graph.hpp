@@ -1,4 +1,4 @@
-#ifndef RAVEL_CORE_INCLUDE_GRAPH_HPP_
+﻿#ifndef RAVEL_CORE_INCLUDE_GRAPH_HPP_
 #define RAVEL_CORE_INCLUDE_GRAPH_HPP_
 
 #include <cstdint>
@@ -30,6 +30,10 @@ class NodeType {
   }
   const std::string& FrameColor() const noexcept {
     return frame_color_;
+  }
+  bool operator==(const NodeType& other) const {
+    return (color_ == other.color_) && (shape_ == other.shape_) &&
+           (frame_color_ == other.frame_color_);
   }
 
  private:
@@ -104,6 +108,10 @@ class RelationType {
   bool Transitive() const noexcept {
     return transitive_;
   }
+  bool operator==(const RelationType& other) const {
+    return (color_ == other.color_) && (arrow_ == other.arrow_) && (symmetric_ == other.symmetric_) 
+      && (transitive_ == other.transitive_);
+  }
 
  private:
   std::string color_ = "#000000";
@@ -148,14 +156,36 @@ class Relation {  // DTO
   std::string description_ = "";
 };
 
+
+struct GraphSnapshot {
+  std::unordered_map<std::string, NodeType> ontology_node;
+  std::unordered_map<std::string, RelationType> ontology_relation;
+
+  std::vector<Node> nodes;
+  std::vector<Relation> relations;
+
+  NodeId next_id_node = 1;
+  RelationId next_id_relation = 1;
+};
+
 class Graph {
  public:
   NodeId NextIdNode() const noexcept {
     return next_id_node_;
-  }  // question for Storage
+  }
   NodeId NextIdRelation() const noexcept {
     return next_id_relation_;
-  }  // question for Storage
+  }
+  const std::unordered_map<std::string, NodeType>& OntologyNode() const noexcept { /// @return Const
+    /// reference to the type dictionary. Lifetime is bound to *this; do not store the reference 
+    /// beyond the Graph's lifetime.
+    return ontology_node_;
+  }
+  const std::unordered_map<std::string, RelationType>& OntologyRelation() const noexcept { /// @return
+    /// Const reference to the type dictionary. Lifetime is bound to *this; do not store the reference
+    /// beyond the Graph's lifetime.
+    return ontology_relation_;
+  }
 
   void AddNodeType(std::string name, std::string color, std::string shape,
                    std::string frame_color) {
@@ -220,6 +250,8 @@ class Graph {
     }
   }
   std::set<NodeId> GetNeighbors(NodeId id) const;
+
+  static Graph FromSnapshot(const GraphSnapshot& src);
 
  private:
   std::unordered_map<std::string, NodeType> ontology_node_;

@@ -1,4 +1,4 @@
-#pragma warning(disable : 26495 26439)
+﻿#pragma warning(disable : 26495 26439)
 
 #include "graph.hpp"
 
@@ -7,6 +7,9 @@
 using ravel::Graph;
 using ravel::NodeId;
 using ravel::RelationId;
+using ravel::GraphSnapshot;
+using ravel::NodeType;
+using ravel::RelationType;
 
 TEST(GraphAddNode, CreatesAccessEntryAndBumpsCounter) {
   Graph g;
@@ -151,3 +154,78 @@ TEST(GraphAddNodeWithRelations, CreatesAccessEntry) {
   EXPECT_EQ(g.NextIdNode(), test + 1);
   EXPECT_EQ(g.NextIdRelation(), kAddedRelations + 1);
 }
+
+TEST(GraphFromSnapshot, ValidGraphWithCorrectInvariantsAndHoles) {
+  GraphSnapshot src;
+  src.next_id_node = 9;
+  src.next_id_relation = 5;
+
+  src.ontology_node.emplace("model", NodeType("#000000", "rect", "#000000"));
+  src.ontology_relation.emplace("has_special_case", RelationType("#000000", "solid", false, true));
+
+  const NodeId kAliveNode1 = 1;
+  const NodeId kAliveNode2 = 2;
+  const NodeId kAliveNode3 = 5;
+  src.nodes.emplace_back(kAliveNode1, "Ряд Дирихле", "model");
+  const double size = 4.0;
+  const std::pair<double, double> hand_position{4.0, 8.0};
+  src.nodes.emplace_back(kAliveNode2, "Гармонический ряд", "model", "1/n", size, hand_position);
+  src.nodes.emplace_back(kAliveNode3, "Телескопический ряд", "model");
+  const RelationId kAliveRelation = 3;
+  src.relations.emplace_back(kAliveRelation, kAliveNode1, kAliveNode2, "has_special_case");
+
+  Graph g = Graph::FromSnapshot(src);
+  EXPECT_EQ(g.NextIdNode(), src.next_id_node);
+  EXPECT_EQ(g.NextIdRelation(), src.next_id_relation);
+
+  std::unordered_map<std::string, NodeType> right_node_types;
+  right_node_types.emplace("model", NodeType("#000000", "rect", "#000000"));
+  EXPECT_EQ(g.OntologyNode(), right_node_types);
+
+  std::unordered_map<std::string, RelationType> right_relation_types;
+  right_relation_types.emplace("has_special_case", RelationType("#000000", "solid", false, true));
+  EXPECT_EQ(g.OntologyRelation(), right_relation_types);
+
+  for (NodeId id = 0; id < src.next_id_node; ++id) {
+    if (id == kAliveNode1 || id == kAliveNode2 || id == kAliveNode3) {
+      EXPECT_TRUE(g.HasNode(id));
+    } else {
+      EXPECT_FALSE(g.HasNode(id));
+    }
+  }
+  EXPECT_EQ(g.GetNode(kAliveNode1).Id(), kAliveNode1);
+  EXPECT_EQ(g.GetNode(kAliveNode1).Title(), "Ряд Дирихле");
+  EXPECT_EQ(g.GetNode(kAliveNode1).Type(), "model");
+  EXPECT_EQ(g.GetNode(kAliveNode2).Id(), kAliveNode2);
+  EXPECT_EQ(g.GetNode(kAliveNode2).Title(), "Гармонический ряд");
+  EXPECT_EQ(g.GetNode(kAliveNode2).Type(), "model");
+  EXPECT_EQ(g.GetNode(kAliveNode2).Description(), "1/n");
+  EXPECT_EQ(g.GetNode(kAliveNode2).Size(), size);
+  EXPECT_EQ(g.GetNode(kAliveNode2).HandPosition(), hand_position);
+  EXPECT_EQ(g.GetNode(kAliveNode3).Id(), kAliveNode3);
+  EXPECT_EQ(g.GetNode(kAliveNode3).Title(), "Телескопический ряд");
+  EXPECT_EQ(g.GetNode(kAliveNode3).Type(), "model");
+
+  for (RelationId id = 0; id < src.next_id_relation; ++id) {
+    if (id == kAliveRelation) {
+      EXPECT_TRUE(g.HasRelation(id));
+    } else {
+      EXPECT_FALSE(g.HasRelation(id));
+    }
+  }
+  EXPECT_EQ(g.GetRelation(kAliveRelation).From(), kAliveNode1);
+  EXPECT_EQ(g.GetRelation(kAliveRelation).To(), kAliveNode2);
+  EXPECT_EQ(g.GetRelation(kAliveRelation).Description(), "");
+  EXPECT_EQ(g.GetRelation(kAliveRelation).Type(), "has_special_case");
+
+  EXPECT_EQ(g.GetIncidentRelations(kAliveNode1), std::vector<RelationId>({kAliveRelation}));
+  EXPECT_EQ(g.GetIncidentRelations(kAliveNode2), std::vector<RelationId>({kAliveRelation}));
+  EXPECT_EQ(g.GetIncidentRelations(kAliveNode3), std::vector<RelationId>());
+
+  EXPECT_EQ(g.GetNeighbors(kAliveNode1), std::set<NodeId>({kAliveNode2}));
+  EXPECT_EQ(g.GetNeighbors(kAliveNode2), std::set<NodeId>({kAliveNode1}));
+  EXPECT_EQ(g.GetNeighbors(kAliveNode3), std::set<NodeId>());
+}
+
+// Негативные: счётчик < max id; типа нет в словаре; ребро в неживой узел; 
+// next_id_node = 10'000'000'000'000'000'000

@@ -1,4 +1,4 @@
-#include "graph.hpp"
+﻿#include "graph.hpp"
 
 #include <algorithm>
 
@@ -110,6 +110,15 @@ void Graph::DeleteRelations(std::vector<RelationId> ids) {
       access_[to].erase(std::find(access_[to].begin(), access_[to].end(), id));
     }
     relations_[id - 1] = Relation(0, 0, 0, "");
+  }
+}
+
+Graph Graph::FromSnapshot(const GraphSnapshot& src) {
+  const std::int64_t kMaxEntities = 1000000; // next_id_node и next_id_relation ≤ kMaxEntities, иначе std::runtime_error
+  bool temp = src.next_id_node < kMaxEntities;
+  if (temp) return Graph();
+  else {
+    throw std::runtime_error("Graph::FromSnapshot NodeId > limit = 1 000 000");
   }
 }
 
