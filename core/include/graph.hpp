@@ -16,10 +16,41 @@ namespace ravel {
 using NodeId = std::uint64_t;
 using RelationId = std::uint64_t;
 
+inline bool isValidHexColor(const std::string& color) {
+  if ((color.length() != 7) || (color[0] != '#')) {
+    return false;
+  }
+  for (int i = 1; i < 7; ++i) {
+    if (!std::isxdigit(static_cast<unsigned char>(color[i]))) {
+      return false;
+    }
+  }
+  return true;
+}
+inline bool isValidShape(const std::string& shape) {
+  if ((shape == "rect") || shape == "oval") {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 class NodeType {
  public:
   NodeType(std::string color, std::string shape, std::string frame_color)
-      : color_(color), shape_(shape), frame_color_(frame_color) {
+      : color_(isValidHexColor(color)
+                   ? color
+                   : throw std::logic_error(
+                         "Graph::NodeType tried to create Nodetype with non-existent color")),
+        shape_(isValidShape(shape)
+                   ? shape
+                   : throw std::logic_error(
+                         "Graph::NodeType tried to create Nodetype with non-existent shape")),
+        frame_color_(
+            isValidHexColor(frame_color)
+                ? frame_color
+                : throw std::logic_error(
+                      "Graph::NodeType tried to create Nodetype with non-existent frame_color")) {
   }
 
   const std::string& Color() const noexcept {
@@ -50,7 +81,9 @@ class Node {  // DTO
         title_(std::move(title)),
         type_(std::move(type)),
         description_(std::move(description)),
-        size_(size),
+        size_(size > 0 ? size
+                       : throw std::logic_error(
+                             "Graph::Node tried to create Node with non-positive size")),
         hand_position_(hand_position) {
   }
 
@@ -90,10 +123,27 @@ class Node {  // DTO
   std::optional<std::pair<double, double>> hand_position_ = std::nullopt;
 };
 
+inline bool isValidArrow(const std::string& arrow) {
+  if (arrow == "solid" || arrow == "dashed" || arrow == "dotted") {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 class RelationType {
  public:
   RelationType(std::string color, std::string arrow, bool symmetric, bool transitive)
-      : color_(color), arrow_(arrow), symmetric_(symmetric), transitive_(transitive) {
+      : color_(isValidHexColor(color)
+                   ? color
+                   : throw std::logic_error(
+                         "Graph::RelationType try to create Relationtype with non-existent color")),
+        arrow_(isValidArrow(arrow)
+                   ? arrow
+                   : throw std::logic_error(
+                         "Graph::RelationType try to create Relationtype with non-existent arrow")),
+        symmetric_(symmetric),
+        transitive_(transitive) {
   }
 
   const std::string& Color() const noexcept {
@@ -109,8 +159,8 @@ class RelationType {
     return transitive_;
   }
   bool operator==(const RelationType& other) const {
-    return (color_ == other.color_) && (arrow_ == other.arrow_) && (symmetric_ == other.symmetric_) 
-      && (transitive_ == other.transitive_);
+    return (color_ == other.color_) && (arrow_ == other.arrow_) &&
+           (symmetric_ == other.symmetric_) && (transitive_ == other.transitive_);
   }
 
  private:
@@ -156,7 +206,6 @@ class Relation {  // DTO
   std::string description_ = "";
 };
 
-
 struct GraphSnapshot {
   std::unordered_map<std::string, NodeType> ontology_node;
   std::unordered_map<std::string, RelationType> ontology_relation;
@@ -176,14 +225,16 @@ class Graph {
   NodeId NextIdRelation() const noexcept {
     return next_id_relation_;
   }
-  const std::unordered_map<std::string, NodeType>& OntologyNode() const noexcept { /// @return Const
-    /// reference to the type dictionary. Lifetime is bound to *this; do not store the reference 
+  const std::unordered_map<std::string, NodeType>& OntologyNode()
+      const noexcept {  /// @return Const
+    /// reference to the type dictionary. Lifetime is bound to *this; do not store the reference
     /// beyond the Graph's lifetime.
     return ontology_node_;
   }
-  const std::unordered_map<std::string, RelationType>& OntologyRelation() const noexcept { /// @return
-    /// Const reference to the type dictionary. Lifetime is bound to *this; do not store the reference
-    /// beyond the Graph's lifetime.
+  const std::unordered_map<std::string, RelationType>& OntologyRelation()
+      const noexcept {  /// @return
+    /// Const reference to the type dictionary. Lifetime is bound to *this; do not store the
+    /// reference beyond the Graph's lifetime.
     return ontology_relation_;
   }
 

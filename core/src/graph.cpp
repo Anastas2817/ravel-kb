@@ -1,6 +1,7 @@
 ﻿#include "graph.hpp"
 
 #include <algorithm>
+#include <unordered_set>
 
 namespace ravel {
 
@@ -114,12 +115,84 @@ void Graph::DeleteRelations(std::vector<RelationId> ids) {
 }
 
 Graph Graph::FromSnapshot(const GraphSnapshot& src) {
-  const std::int64_t kMaxEntities = 1000000; // next_id_node и next_id_relation ≤ kMaxEntities, иначе std::runtime_error
-  bool temp = src.next_id_node < kMaxEntities;
-  if (temp) return Graph();
-  else {
-    throw std::runtime_error("Graph::FromSnapshot NodeId > limit = 1 000 000");
+  // validate
+  const std::uint64_t kMaxEntities = 1000000;
+  if (src.next_id_node > kMaxEntities) {
+    throw std::runtime_error("Graph::FromSnapshot next_id_node > limit = 1 000 000");
   }
+  if (src.next_id_relation > kMaxEntities) {
+    throw std::runtime_error("Graph::FromSnapshot next_id_relation > limit = 1 000 000");
+  }
+
+  if (src.next_id_node == 0 || src.next_id_relation == 0) {
+    throw std::runtime_error(
+        "Graph::FromSnapshot Graph with next_id_node = 0 or next_id_relation = 0");
+  }
+  if (src.next_id_node == 1 && src.nodes.empty() && src.next_id_relation == 1 &&
+      src.relations.empty()) {
+    return Graph();
+  }
+  if (src.next_id_node == 1 &&
+      (!src.nodes.empty() || src.next_id_relation != 1 || src.relations.empty())) {
+    throw std::runtime_error("Graph::FromSnapshot Graph with next_id_node = 0 has nodes/relations");
+  }
+  if (src.next_id_relation == 1 && !src.relations.empty()) {
+    throw std::runtime_error("Graph::FromSnapshot Graph with next_id_relation = 0 has relations");
+  }
+  // invariant 1
+  if (!src.relations.empty() && src.nodes.back().Id() >= src.next_id_node) {
+    throw std::runtime_error("Graph::FromSnapshot exists node_id >= next_id_node");
+  }
+  if (!src.relations.empty() && src.relations.back().Id() >= src.next_id_relation) {
+    throw std::runtime_error("Graph::FromSnapshot exists relation_id >= next_id_relation");
+  }
+  // invariant 3 and 4
+  std::unordered_set<NodeId> alive_nodes;
+  for (const Node& i : src.nodes) {
+    if (src.ontology_node.find(i.Type()) == src.ontology_node.end()) {
+      throw std::runtime_error("Graph::FromSnapshot tried to add node with non-existent type");
+    }
+    if (i.Id() == 0 || !alive_nodes.insert(i.Id()).second) {
+      throw std::runtime_error("Graph::FromSnapshot tried to add node with id = 0 or repeated id");
+    }
+  }
+  std::unordered_set<RelationId> alive_relations;
+  for (const Relation& i : src.relations) {
+    if (src.ontology_relation.find(i.Type()) == src.ontology_relation.end()) {
+      throw std::runtime_error("Graph::FromSnapshot tried to add relation with non-existent type");
+    }
+    if (alive_nodes.count(i.From()) != 1) {
+      throw std::runtime_error("Graph::FromSnapshot tried to add relation with non-existent from");
+    }
+    if (alive_nodes.count(i.To()) != 1) {
+      throw std::runtime_error("Graph::FromSnapshot tried to add relation with non-existent to");
+    }
+    if (i.Id() == 0 || !alive_relations.insert(i.Id()).second) {
+      throw std::runtime_error(
+          "Graph::FromSnapshot tried to add relation with id = 0 or repeated id");
+    }
+  }
+  // apply
+  Graph g;
+  g.next_id_node_ = src.next_id_node;
+  g.next_id_relation_ = src.next_id_relation;
+
+  g.ontology_node_ = src.ontology_node;
+  g.ontology_relation_ = src.ontology_relation;
+
+  g.nodes_ = std::vector<Node>(src.next_id_node - 1, Node(0, "", "", ""));
+  for (const Node& node : src.nodes) {
+    g.nodes_[node.Id() - 1] = node;
+    g.access_.try_emplace(node.Id());
+  }
+  g.relations_ = std::vector<Relation>(src.next_id_relation - 1, Relation(0, 0, 0, ""));
+  for (const Relation& relation : src.relations) {
+    g.relations_[relation.Id() - 1] = relation;
+    g.access_[relation.From()].push_back(relation.Id());
+    g.access_[relation.To()].push_back(relation.Id());
+  }
+
+  return g;
 }
 
 }  // namespace ravel

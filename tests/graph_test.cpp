@@ -5,10 +5,10 @@
 #include <gtest/gtest.h>
 
 using ravel::Graph;
-using ravel::NodeId;
-using ravel::RelationId;
 using ravel::GraphSnapshot;
+using ravel::NodeId;
 using ravel::NodeType;
+using ravel::RelationId;
 using ravel::RelationType;
 
 TEST(GraphAddNode, CreatesAccessEntryAndBumpsCounter) {
@@ -24,10 +24,7 @@ TEST(GraphAddNode, CreatesAccessEntryAndBumpsCounter) {
 
 TEST(GraphAddRelation, CreatesAccessEntryCounter) {
   Graph g;
-  g.AddRelationType("has_special_case", "#3hj895", "solid", false,
-                    true);  // здесь хотелось бы "1 является частным случаем 2", но поскольку общее
-                            // сверху, то оно from
-  // TODO JsonStorage: "#3hj895" не валидный формат для цвета
+  g.AddRelationType("has_special_case", "#3ba895", "solid", false, true);
   g.AddNodeType("model", "#4a90d9", "rect", "#000000");
   NodeId from = g.AddNode("Признак Дирихле", "model");
   NodeId to = g.AddNode("Признак Лейбница", "model");
@@ -227,5 +224,195 @@ TEST(GraphFromSnapshot, ValidGraphWithCorrectInvariantsAndHoles) {
   EXPECT_EQ(g.GetNeighbors(kAliveNode3), std::set<NodeId>());
 }
 
-// Негативные: счётчик < max id; типа нет в словаре; ребро в неживой узел; 
-// next_id_node = 10'000'000'000'000'000'000
+TEST(GraphFromSnaphot, EmptySnaphot) {
+  GraphSnapshot src;
+  Graph g = Graph::FromSnapshot(src);
+  EXPECT_EQ(g.NextIdNode(), 1);
+  EXPECT_EQ(g.NextIdRelation(), 1);
+  const std::unordered_map<std::string, NodeType> empty_node_type;
+  EXPECT_EQ(g.OntologyNode(), empty_node_type);
+  const std::unordered_map<std::string, RelationType> empty_relation_type;
+  EXPECT_EQ(g.OntologyRelation(), empty_relation_type);
+  EXPECT_FALSE(g.HasNode(1));
+  EXPECT_FALSE(g.HasRelation(1));
+}
+
+TEST(GraphFromSnapshot, NextLessThanMaxId) {
+  GraphSnapshot src;
+  src.next_id_node = 9;
+  src.next_id_relation = 5;
+
+  src.ontology_node.emplace("model", NodeType("#000000", "rect", "#000000"));
+  src.ontology_relation.emplace("has_special_case", RelationType("#000000", "solid", false, true));
+
+  const NodeId kAliveNode1 = 1;
+  const NodeId kAliveNode2 = 2;
+  const NodeId kAliveNode3 = 11;
+  src.nodes.emplace_back(kAliveNode1, "Ряд Дирихле", "model");
+  const double size = 4.0;
+  const std::pair<double, double> hand_position{4.0, 8.0};
+  src.nodes.emplace_back(kAliveNode2, "Гармонический ряд", "model", "1/n", size, hand_position);
+  src.nodes.emplace_back(kAliveNode3, "Телескопический ряд", "model");
+  const RelationId kAliveRelation = 3;
+  src.relations.emplace_back(kAliveRelation, kAliveNode1, kAliveNode2, "has_special_case");
+
+  EXPECT_THROW(Graph::FromSnapshot(src), std::runtime_error);
+}
+
+TEST(GraphFromSnapshot, InvalidNodeType) {
+  GraphSnapshot src;
+  src.next_id_node = 9;
+  src.next_id_relation = 5;
+
+  src.ontology_node.emplace("model", NodeType("#000000", "rect", "#000000"));
+  src.ontology_relation.emplace("has_special_case", RelationType("#000000", "solid", false, true));
+
+  const NodeId kAliveNode1 = 1;
+  const NodeId kAliveNode2 = 2;
+  const NodeId kAliveNode3 = 5;
+  src.nodes.emplace_back(kAliveNode1, "Ряд Дирихле", "mod");
+  const double size = 4.0;
+  const std::pair<double, double> hand_position{4.0, 8.0};
+  src.nodes.emplace_back(kAliveNode2, "Гармонический ряд", "model", "1/n", size, hand_position);
+  src.nodes.emplace_back(kAliveNode3, "Телескопический ряд", "model");
+  const RelationId kAliveRelation = 3;
+  src.relations.emplace_back(kAliveRelation, kAliveNode1, kAliveNode2, "has_special_case");
+
+  EXPECT_THROW(Graph::FromSnapshot(src), std::runtime_error);
+}
+
+TEST(GraphFromSnapshot, InvalidRelationType) {
+  GraphSnapshot src;
+  src.next_id_node = 9;
+  src.next_id_relation = 5;
+
+  src.ontology_node.emplace("model", NodeType("#000000", "rect", "#000000"));
+  src.ontology_relation.emplace("has_special_case", RelationType("#000000", "solid", false, true));
+
+  const NodeId kAliveNode1 = 1;
+  const NodeId kAliveNode2 = 2;
+  const NodeId kAliveNode3 = 5;
+  src.nodes.emplace_back(kAliveNode1, "Ряд Дирихле", "model");
+  const double size = 4.0;
+  const std::pair<double, double> hand_position{4.0, 8.0};
+  src.nodes.emplace_back(kAliveNode2, "Гармонический ряд", "model", "1/n", size, hand_position);
+  src.nodes.emplace_back(kAliveNode3, "Телескопический ряд", "model");
+  const RelationId kAliveRelation = 3;
+  src.relations.emplace_back(kAliveRelation, kAliveNode1, kAliveNode2, "has_ecial_case");
+
+  EXPECT_THROW(Graph::FromSnapshot(src), std::runtime_error);
+}
+
+TEST(GraphFromSnapshot, RelationToNonExistentTo) {
+  GraphSnapshot src;
+  src.next_id_node = 9;
+  src.next_id_relation = 5;
+
+  src.ontology_node.emplace("model", NodeType("#000000", "rect", "#000000"));
+  src.ontology_relation.emplace("has_special_case", RelationType("#000000", "solid", false, true));
+
+  const NodeId kAliveNode1 = 1;
+  const NodeId kAliveNode2 = 2;
+  const NodeId kAliveNode3 = 5;
+  src.nodes.emplace_back(kAliveNode1, "Ряд Дирихле", "mod");
+  const double size = 4.0;
+  const std::pair<double, double> hand_position{4.0, 8.0};
+  src.nodes.emplace_back(kAliveNode2, "Гармонический ряд", "model", "1/n", size, hand_position);
+  src.nodes.emplace_back(kAliveNode3, "Телескопический ряд", "model");
+  const RelationId kAliveRelation = 3;
+  const NodeId kDead = 56;
+  src.relations.emplace_back(kAliveRelation, kAliveNode1, kDead, "has_special_case");
+
+  EXPECT_THROW(Graph::FromSnapshot(src), std::runtime_error);
+}
+
+TEST(GraphFromSnapshot, RelationToNonExistentFrom) {
+  GraphSnapshot src;
+  src.next_id_node = 9;
+  src.next_id_relation = 5;
+
+  src.ontology_node.emplace("model", NodeType("#000000", "rect", "#000000"));
+  src.ontology_relation.emplace("has_special_case", RelationType("#000000", "solid", false, true));
+
+  const NodeId kAliveNode1 = 1;
+  const NodeId kAliveNode2 = 2;
+  const NodeId kAliveNode3 = 5;
+  src.nodes.emplace_back(kAliveNode1, "Ряд Дирихле", "mod");
+  const double size = 4.0;
+  const std::pair<double, double> hand_position{4.0, 8.0};
+  src.nodes.emplace_back(kAliveNode2, "Гармонический ряд", "model", "1/n", size, hand_position);
+  src.nodes.emplace_back(kAliveNode3, "Телескопический ряд", "model");
+  const RelationId kAliveRelation = 3;
+  const NodeId kDead = 56;
+
+  src.relations.emplace_back(kAliveRelation, kDead, kAliveNode2, "has_special_case");
+
+  EXPECT_THROW(Graph::FromSnapshot(src), std::runtime_error);
+}
+
+TEST(GraphFromSnapshot, NextIdNodeTooBig) {
+  GraphSnapshot src;
+  src.next_id_node = 100000000000000000;
+  src.next_id_relation = 5;
+
+  src.ontology_node.emplace("model", NodeType("#000000", "rect", "#000000"));
+  src.ontology_relation.emplace("has_special_case", RelationType("#000000", "solid", false, true));
+
+  const NodeId kAliveNode1 = 1;
+  const NodeId kAliveNode2 = 2;
+  const NodeId kAliveNode3 = 5;
+  src.nodes.emplace_back(kAliveNode1, "Ряд Дирихле", "mod");
+  const double size = 4.0;
+  const std::pair<double, double> hand_position{4.0, 8.0};
+  src.nodes.emplace_back(kAliveNode2, "Гармонический ряд", "model", "1/n", size, hand_position);
+  src.nodes.emplace_back(kAliveNode3, "Телескопический ряд", "model");
+  const RelationId kAliveRelation = 3;
+  src.relations.emplace_back(kAliveRelation, kAliveNode1, kAliveNode2, "has_special_case");
+
+  EXPECT_THROW(Graph::FromSnapshot(src), std::runtime_error);
+}
+
+TEST(GraphFromSnapshot, RepeatedIdNode) {
+  GraphSnapshot src;
+  src.next_id_node = 100;
+  src.next_id_relation = 5;
+
+  src.ontology_node.emplace("model", NodeType("#000000", "rect", "#000000"));
+  src.ontology_relation.emplace("has_special_case", RelationType("#000000", "solid", false, true));
+
+  const NodeId kAliveNode1 = 1;
+  const NodeId kAliveNode2 = 5;
+  const NodeId kAliveNode3 = 5;
+  src.nodes.emplace_back(kAliveNode1, "Ряд Дирихле", "mod");
+  const double size = 4.0;
+  const std::pair<double, double> hand_position{4.0, 8.0};
+  src.nodes.emplace_back(kAliveNode2, "Гармонический ряд", "model", "1/n", size, hand_position);
+  src.nodes.emplace_back(kAliveNode3, "Телескопический ряд", "model");
+  const RelationId kAliveRelation = 3;
+  src.relations.emplace_back(kAliveRelation, kAliveNode1, kAliveNode2, "has_special_case");
+
+  EXPECT_THROW(Graph::FromSnapshot(src), std::runtime_error);
+}
+
+TEST(GraphFromSnapshot, RepeatedIdRelation) {
+  GraphSnapshot src;
+  src.next_id_node = 100;
+  src.next_id_relation = 5;
+
+  src.ontology_node.emplace("model", NodeType("#000000", "rect", "#000000"));
+  src.ontology_relation.emplace("has_special_case", RelationType("#000000", "solid", false, true));
+
+  const NodeId kAliveNode1 = 1;
+  const NodeId kAliveNode2 = 2;
+  const NodeId kAliveNode3 = 5;
+  src.nodes.emplace_back(kAliveNode1, "Ряд Дирихле", "mod");
+  const double size = 4.0;
+  const std::pair<double, double> hand_position{4.0, 8.0};
+  src.nodes.emplace_back(kAliveNode2, "Гармонический ряд", "model", "1/n", size, hand_position);
+  src.nodes.emplace_back(kAliveNode3, "Телескопический ряд", "model");
+  const RelationId kAliveRelation = 3;
+  src.relations.emplace_back(kAliveRelation, kAliveNode1, kAliveNode2, "has_special_case");
+  src.relations.emplace_back(kAliveRelation, kAliveNode1, kAliveNode3, "has_special_case");
+
+  EXPECT_THROW(Graph::FromSnapshot(src), std::runtime_error);
+}
