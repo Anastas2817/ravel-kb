@@ -1,0 +1,28 @@
+# CI: сборка ядра (core + storage + tests) без Qt.
+# Повторяет локальную сборку MSVC 2022: warnings-as-errors нет, /W4, CTest.
+# UI-слой (Qt 6) намеренно исключён — job `core` по docs/roadmap.md (неделя 3).
+
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  core:
+    name: core (Windows, MSVC 2022, без Qt)
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # VS-генератор не требует vcvars (в отличие от Ninja из build_dev.bat)
+      - name: Configure
+        run: cmake -B build -G "Visual Studio 17 2022" -A x64 -DRAVEL_BUILD_UI=OFF
+
+      - name: Build (Debug)
+        run: cmake --build build --config Debug --parallel
+
+      - name: Test
+        run: ctest --test-dir build -C Debug --output-on-failure
