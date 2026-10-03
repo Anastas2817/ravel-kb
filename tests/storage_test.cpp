@@ -1,95 +1,88 @@
-#pragma warning(disable : 26495 26439)
+﻿#pragma warning(disable : 26495 26439)
 
 #include "storage.hpp"
 
 #include <gtest/gtest.h>
 
+#include <sstream>
+
 using ravel::Graph;
 using ravel::JsonStorage;
 using ravel::NodeId;
 using ravel::RelationId;
+using ravel::GraphSnapshot;
+using ravel::NodeType;
+using ravel::RelationType;
+using ravel::Node;
+using ravel::Relation;
 
 TEST(StorageLoadSave, RoundTrip) {
-  Graph src;
-  src.AddNodeType("model", "#002030", "rect", "#a0500b");
-  src.AddRelationType("reduce_to", "#003d00", "dashed", false, true);
+  GraphSnapshot src;
+  src.ontology_node.emplace("model", NodeType("#002030", "rect", "#a0500b"));
+  src.ontology_relation.emplace("reduce_to", RelationType("#003d00", "dashed", false, true));
 
-  NodeId to1 = src.AddNode("Уравнения с разделяющимися переменными", "model", "f(x)dx=g(y)dy", 2,
-                           std::make_pair(2.0, 3.0));
-  NodeId from1 = src.AddNode("Уравнения, сводящиеся к однородным", "model");
-  NodeId from2 = src.AddNode("Уравнения Бернулли", "model");
-  src.AddNodeWithRelations("Однородные уравнения", "model",
-                           {{from1, "reduce_to"}, {from2, "reduce_to"}}, {{to1, "reduce_to"}});
+  src.nodes.push_back(Node(1, "Уравнения с разделяющимися переменными", "model", "f(x)dx=g(y)dy", 2,
+                           std::make_pair(2.0, 3.0)));
+  src.nodes.push_back(Node(2, "Уравнения, сводящиеся к однородным", "model"));
+  src.nodes.push_back(Node(3, "Уравнения Бернулли", "model"));
+  src.nodes.push_back(Node(4, "Однородные уравнения", "model"));
 
-  std::string saved = JsonStorage::Save(src);
-  Graph dest = JsonStorage::Load(saved);
+  src.relations.push_back(Relation(1, 2, 4, "reduce_to"));
+  src.relations.push_back(Relation(1, 3, 4, "reduce_to"));
+  src.relations.push_back(Relation(1, 4, 1, "reduce_to"));
 
-  EXPECT_EQ(src.NextIdNode(), dest.NextIdNode());
-  EXPECT_EQ(src.NextIdRelation(), dest.NextIdRelation());
+  std::stringstream saved;
+  JsonStorage::Save(src, saved);
+  GraphSnapshot dest = JsonStorage::Load(saved);
+  
+  EXPECT_EQ(src.next_id_node, dest.next_id_node);
+  EXPECT_EQ(src.next_id_relation, dest.next_id_relation);
 
-  EXPECT_EQ(dest.ResolveNode("model").Color(), src.ResolveNode("model").Color());
-  EXPECT_EQ(dest.ResolveNode("model").FrameColor(), src.ResolveNode("model").FrameColor());
-  EXPECT_EQ(dest.ResolveNode("model").Shape(), src.ResolveNode("model").Shape());
-  EXPECT_EQ(dest.ResolveRelation("reduce_to").Arrow(), src.ResolveRelation("reduce_to").Arrow());
-  EXPECT_EQ(dest.ResolveRelation("reduce_to").Color(), src.ResolveRelation("reduce_to").Color());
-  EXPECT_EQ(dest.ResolveRelation("reduce_to").Symmetric(),
-            src.ResolveRelation("reduce_to").Symmetric());
-  EXPECT_EQ(dest.ResolveRelation("reduce_to").Transitive(),
-            src.ResolveRelation("reduce_to").Transitive());
+  EXPECT_EQ(src.ontology_node, dest.ontology_node);
+  EXPECT_EQ(src.ontology_relation, dest.ontology_relation);
 
-  for (NodeId id = 1; id < dest.NextIdNode(); ++id) {  // предусловие строка 17
-    if (!dest.HasNode(id)) {
-      EXPECT_FALSE(src.HasNode(id));
-    } else {
-      EXPECT_EQ(dest.GetNode(id).Description(), src.GetNode(id).Description());
-      EXPECT_EQ(dest.GetNode(id).HandPosition(), src.GetNode(id).HandPosition());
-      EXPECT_EQ(dest.GetNode(id).Size(), src.GetNode(id).Size());
-      EXPECT_EQ(dest.GetNode(id).Title(), src.GetNode(id).Title());
-      EXPECT_EQ(dest.GetNode(id).Type(), src.GetNode(id).Type());
-
-      EXPECT_EQ(dest.GetNeighbors(id), src.GetNeighbors(id));
-      EXPECT_EQ(dest.GetIncidentRelations(id), src.GetIncidentRelations(id));
-    }
-  }
-
-  for (RelationId id = 1; id < dest.NextIdRelation(); ++id) {  // предусловие строка 18
-    if (!dest.HasRelation(id)) {
-      EXPECT_FALSE(src.HasRelation(id));
-    } else {
-      EXPECT_EQ(dest.GetRelation(id).From(), src.GetRelation(id).From());
-      EXPECT_EQ(dest.GetRelation(id).To(), src.GetRelation(id).To());
-      EXPECT_EQ(dest.GetRelation(id).Description(), src.GetRelation(id).Description());
-      EXPECT_EQ(dest.GetRelation(id).Type(), src.GetRelation(id).Type());
-    }
-  }
-
-  EXPECT_EQ(JsonStorage::Save(JsonStorage::Load(JsonStorage::Save(src))), JsonStorage::Save(src));
+  EXPECT_EQ(src.nodes, dest.nodes);
+  EXPECT_EQ(src.relations, dest.relations);
 }
 
-/*
 TEST(StorageLoadSave, ValidEmpty) {
-  Graph src;
-  std::string saved = JsonStorage::Save(src);
-  Graph dest = JsonStorage::Load(saved);
+  GraphSnapshot src;
+  std::stringstream saved;
+  JsonStorage::Save(src, saved);
+  GraphSnapshot dest = JsonStorage::Load(saved);
 
-  const NodeId kStandartIdValue = 1; // implementation: R1/R2
-  EXPECT_EQ(dest.NextIdNode(), kStandartIdValue);
-  EXPECT_EQ(dest.NextIdRelation(), kStandartIdValue);
-  EXPECT_EQ(JsonStorage::Save(JsonStorage::Load(JsonStorage::Save(src))), JsonStorage::Save(src));
+  const NodeId kStandartNodeIdValue = 1; // implementation: R1/R2
+  const NodeId kStandartRelationIdValue = 1; // implementation: R1/R2
+  EXPECT_EQ(dest.next_id_node, kStandartNodeIdValue);
+  EXPECT_EQ(dest.next_id_relation, kStandartRelationIdValue);
 }
 
 TEST(StorageLoadSave, SurvivalOfLoners) {
-  Graph src;
-  src.AddNodeType("model", "#000000", "rect", "#000000");
-  src.AddRelationType("is_a", "#000000", "solid", false, true);
-  // ...
-}
+  GraphSnapshot src;
+  src.ontology_node.emplace("model", NodeType("#002030", "rect", "#a0500b"));
+  src.ontology_relation.emplace("reduce_to", RelationType("#003d00", "dashed", false, true));
+  src.nodes.push_back(Node(1, "Уравнения с разделяющимися переменными", "model", "f(x)dx=g(y)dy", 2,
+                           std::make_pair(2.0, 3.0)));
+  src.nodes.push_back(Node(2, "Уравнения, сводящиеся к однородным", "model"));
+  src.nodes.push_back(Node(3, "Уравнения Бернулли", "model"));
+  src.nodes.push_back(Node(4, "Однородные уравнения", "model"));
 
-TEST(StorageLoadSave, NotSaveDeleted) {
-  // ...
-}
+  src.relations.push_back(Relation(1, 2, 4, "reduce_to"));
+  src.relations.push_back(Relation(1, 3, 4, "reduce_to"));
+  src.relations.push_back(Relation(1, 4, 1, "reduce_to"));
 
-TEST(StorageLoadSave, SameHandPosition) {
-  // ...
+  src.nodes.push_back(Node(5, "Уравнение в полных дифференциалах", "model"));
+
+  std::stringstream saved;
+  JsonStorage::Save(src, saved);
+  GraphSnapshot dest = JsonStorage::Load(saved);
+  
+  EXPECT_EQ(src.next_id_node, dest.next_id_node);
+  EXPECT_EQ(src.next_id_relation, dest.next_id_relation);
+
+  EXPECT_EQ(src.ontology_node, dest.ontology_node);
+  EXPECT_EQ(src.ontology_relation, dest.ontology_relation);
+
+  EXPECT_EQ(src.nodes, dest.nodes);
+  EXPECT_EQ(src.relations, dest.relations);
 }
-*/

@@ -1,18 +1,18 @@
-#ifndef RAVEL_STORAGE_INCLUDE_STORAGE_HPP_
+﻿#ifndef RAVEL_STORAGE_INCLUDE_STORAGE_HPP_
 #define RAVEL_STORAGE_INCLUDE_STORAGE_HPP_
 
 #include "graph.hpp"
 
+#include <istream>
+#include <ostream>
 #include <string>
 
 namespace ravel {
 
 class JsonStorage {
  public:
-  static std::string Save(const Graph& g);
-  static Graph Load(const std::string& Json);
-
- private:
+  static void Save(const GraphSnapshot& g, std::ostream& out);
+  static GraphSnapshot Load(std::istream& in);
 };
 
 }  // namespace ravel

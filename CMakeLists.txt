@@ -1,4 +1,4 @@
-﻿# ============================================================================
+# ============================================================================
 # Ravel — корневой CMakeLists
 #
 # Сборка (Windows 11 + Visual Studio 2022):
@@ -59,8 +59,9 @@ if(MSVC)
     add_compile_options("$<$<CONFIG:Release>:/Zi>")
     add_link_options("$<$<CONFIG:Release>:/DEBUG>" "$<$<CONFIG:Release>:/OPT:REF>" "$<$<CONFIG:Release>:/OPT:ICF>")
 
-    # Временные метки __DATE__/__TIME__ не влияют на инкрементальную линковку
-    add_compile_options(/Zc:__DATE__% /Zc:__TIME__%)
+    # Воспроизводимая сборка: __DATE__/__TIME__ не меняются между пересборками.
+    # (/Zc:__DATE__/% /Zc:__TIME__/% — флаги clang-cl, MSVC их не знает и ругается D9002)
+    add_compile_options(/Brepro)
 endif()
 
 # ---------------------------------------------------------------------------
