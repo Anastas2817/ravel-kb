@@ -12,7 +12,8 @@ on:
 jobs:
   core:
     name: core (Windows, MSVC 2022, без Qt)
-    runs-on: windows-latest
+    # windows-2022 (не latest): на Server 2025 CMake через vswhere не находит VS 2022
+    runs-on: windows-2022
 
     steps:
       - uses: actions/checkout@v4
