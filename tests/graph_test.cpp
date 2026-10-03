@@ -10,6 +10,8 @@ using ravel::NodeId;
 using ravel::NodeType;
 using ravel::RelationId;
 using ravel::RelationType;
+using ravel::Node;
+using ravel::Relation;
 
 TEST(GraphAddNode, CreatesAccessEntryAndBumpsCounter) {
   Graph g;
@@ -415,4 +417,54 @@ TEST(GraphFromSnapshot, RepeatedIdRelation) {
   src.relations.emplace_back(kAliveRelation, kAliveNode1, kAliveNode3, "has_special_case");
 
   EXPECT_THROW(Graph::FromSnapshot(src), std::runtime_error);
+}
+
+TEST(GraphToSnapshot, ValidGraphSnapshotWithdHoles) {
+  Graph src;
+  src.AddRelationType("has_special_case", "#000000", "solid", false, true);
+  src.AddRelationType("boils_down_to", "#000000", "solid", false, true);
+  src.AddNodeType("model", "#4a90d9", "rect", "#000000");
+  NodeId node1 = src.AddNode("Числовой ряд", "model");
+  NodeId node2 = src.AddNode("Функциональный ряд", "model");
+  NodeId node3= src.AddNodeWithRelations(
+      "Ряд", "model", {}, {{node1, "has_special_case"}, {node2, "has_special_case"}});
+  RelationId relation3 = src.AddRelation(node2, node1, "boils_down_to");
+  NodeId node4 = src.AddNode("Признак Дирихле", "model");
+  NodeId deleted5 = src.AddNode("Признак Лейбница", "model");
+  NodeId node6 = src.AddNode("Признак Абеля", "model");
+  RelationId relation4 = src.AddRelation(node1, node4, "has_special_case");
+  [[maybe_unused]] RelationId deleted_rel5 = src.AddRelation(node4, deleted5, "has_special_case");
+  RelationId relation6 = src.AddRelation(node4, node6, "has_special_case");
+  NodeId deleted7 = src.AddNode("Признак Вейерштрасса", "model");
+  NodeId deleted8 = src.AddNode("Признак Коши", "model");
+  [[maybe_unused]] RelationId deleted_rel7 = src.AddRelation(node2, deleted7, "has_special_case");
+  [[maybe_unused]] RelationId deleted_rel8 = src.AddRelation(node2, deleted8, "has_special_case");
+  src.DeleteNodes({deleted5, deleted7, deleted8});
+
+  NodeId right_next_id_node = src.NextIdNode();
+  NodeId right_next_id_relation = src.NextIdRelation();
+  std::unordered_map<std::string, NodeType> right_ontology_node = src.OntologyNode();
+  std::unordered_map<std::string, RelationType> right_ontology_relation = src.OntologyRelation();
+  std::vector<Node> right_nodes;
+  right_nodes.emplace_back(node1, "Числовой ряд", "model");
+  right_nodes.emplace_back(node2, "Функциональный ряд", "model");
+  right_nodes.emplace_back(node3, "Ряд", "model");
+  right_nodes.emplace_back(node4, "Признак Дирихле", "model");
+  right_nodes.emplace_back(node6, "Признак Абеля", "model");
+  std::vector<Relation> right_relations;
+  right_relations.emplace_back(1, node3, node1, "has_special_case");
+  right_relations.emplace_back(2, node3, node2, "has_special_case");
+  right_relations.emplace_back(relation3, node2, node1 , "boils_down_to");
+  right_relations.emplace_back(relation4, node1, node4 , "has_special_case");
+  right_relations.emplace_back(relation6, node4, node6 , "has_special_case");
+
+  GraphSnapshot dest = src.ToSnapshot();
+  EXPECT_EQ(dest.next_id_node, right_next_id_node);
+  EXPECT_EQ(dest.next_id_relation, right_next_id_relation);
+
+  EXPECT_EQ(dest.ontology_node, right_ontology_node);
+  EXPECT_EQ(dest.ontology_relation, right_ontology_relation);
+
+  EXPECT_EQ(dest.nodes, right_nodes);
+  EXPECT_EQ(dest.relations, right_relations);
 }

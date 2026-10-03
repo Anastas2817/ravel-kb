@@ -195,4 +195,21 @@ Graph Graph::FromSnapshot(const GraphSnapshot& src) {
   return g;
 }
 
+GraphSnapshot Graph::ToSnapshot() const {
+  GraphSnapshot dest;
+  dest.next_id_node = next_id_node_;
+  dest.next_id_relation = next_id_relation_;
+  dest.ontology_node = ontology_node_;
+  dest.ontology_relation = ontology_relation_;
+  for (const auto& [key, value] : access_) {
+    dest.nodes.push_back(nodes_[key - 1]);
+  }
+  for (RelationId id = 0; id < next_id_relation_; ++id) {
+    if (HasRelation(id)) {
+      dest.relations.push_back(relations_[id - 1]);
+    }
+  }
+  return dest;
+}
+
 }  // namespace ravel

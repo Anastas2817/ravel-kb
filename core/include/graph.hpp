@@ -1,4 +1,4 @@
-﻿#ifndef RAVEL_CORE_INCLUDE_GRAPH_HPP_
+#ifndef RAVEL_CORE_INCLUDE_GRAPH_HPP_
 #define RAVEL_CORE_INCLUDE_GRAPH_HPP_
 
 #include <cstdint>
@@ -111,6 +111,12 @@ class Node {  // DTO
     hand_position_ = hand_position;
   }
 
+  bool operator==(const Node& other) const {
+    return (id_ == other.id_) && (type_ == other.type_) && (title_ == other.title_) &&
+           (description_ == other.description_) && (size_ == other.size_) &&
+           (hand_position_ == other.hand_position_);
+  }
+
  private:
   // Identity
   NodeId id_ = 1;
@@ -195,6 +201,11 @@ class Relation {  // DTO
 
   const std::string& Description() const noexcept {
     return description_;
+  }
+
+  bool operator==(const Relation& other) const {
+    return (id_ == other.id_) && (from_ == other.from_) && (to_ == other.to_) &&
+           (type_ == other.type_) && (description_ == other.description_);
   }
 
  private:
@@ -303,6 +314,7 @@ class Graph {
   std::set<NodeId> GetNeighbors(NodeId id) const;
 
   static Graph FromSnapshot(const GraphSnapshot& src);
+  GraphSnapshot ToSnapshot() const;
 
  private:
   std::unordered_map<std::string, NodeType> ontology_node_;
