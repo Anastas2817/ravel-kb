@@ -13,6 +13,7 @@ class JsonStorage {
  public:
   static void Save(const GraphSnapshot& g, std::ostream& out);
   static GraphSnapshot Load(std::istream& in);
+  static constexpr std::uint64_t kFormatVersion = 2;
 };
 
 }  // namespace ravel
