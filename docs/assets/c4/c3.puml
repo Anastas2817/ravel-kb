@@ -1,0 +1,74 @@
+@startuml C3
+skinparam shadowing false
+skinparam componentStyle rectangle
+skinparam rectangle {
+  RoundCorner 12
+}
+skinparam package {
+  RoundCorner 16
+}
+skinparam legend {
+  RoundCorner 12
+}
+left to right direction
+title C3 — Components
+
+package "Core" {
+
+  rectangle "Graph\nC++17" as Graph #LightSkyBlue
+  rectangle "GraphSnapshot" as Snapshot
+  rectangle "IGraphObserver" as Observer <<контракт>>
+  rectangle "SampleGraphs" as Samples
+  rectangle "Layout\nC++17" as Layout
+  rectangle "Algorithms\nC++17" as Algo
+
+  Layout --> Graph : читает структуру
+  Algo --> Graph : читает структуру
+  Graph --> Snapshot : ToSnapshot
+  Snapshot --> Graph : FromSnapshot
+  Graph ..> Observer : оповещает подписчиков
+}
+
+package "App" {
+  rectangle "Controller" as Ctrl
+  rectangle "Command" as Cmd
+  rectangle "SessionState" as Session
+}
+
+package "UI" {
+  rectangle "Canvas" as Canvas
+  rectangle "реализация\nIGraphObserver" as ObsImpl
+}
+
+package "Storage" {
+  rectangle "JsonStorage" as JsonS
+}
+
+Ctrl --> Graph : command-мутации
+ObsImpl ..> Observer : реализует контракт
+Graph ..> ObsImpl : изменения модели => перерисовка
+JsonS <--> Snapshot
+
+legend bottom
+  Ответственности (одной фразой):
+  Graph — хранить модель предметной области и
+  поддерживать корректное состояние карты знаний.
+  GraphSnapshot — переносить состояние Graph между
+  слоями без знания формата.
+  IGraphObserver — оповещать подписчиков об
+  изменениях модели (реализация — в UI).
+  SampleGraphs — строить демонстрационный граф
+  для разработки UI.
+  Layout — преобразовывать граф в пространственную
+  раскладку (выдавать координаты). Планируется.
+  Algorithms — анализировать структуру Graph:
+  DFS, PageRank, циклы. Планируется.
+  Controller / Command / SessionState / Canvas —
+  планируются (этапы 2 и 4).
+
+  Зависимости читателей: Layout и Algorithms —
+  клиенты Graph, Graph о них не знает (защита
+  от God Object: Graph отвечает только за
+  корректное состояние).
+end legend
+@enduml

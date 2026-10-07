@@ -1,0 +1,25 @@
+@startuml C1
+skinparam shadowing false
+skinparam componentStyle rectangle
+skinparam rectangle {
+  RoundCorner 12
+}
+skinparam legend {
+  RoundCorner 12
+}
+left to right direction
+title C1 — System
+
+actor "User" as User <<автор базы знаний>>
+rectangle "Ravel" as Ravel <<система>> #LightBlue
+rectangle "JSON-файлы" as Json <<внешняя система>> #MistyRose
+
+User <--> Ravel : создаёт и структурирует\nкарту знаний
+Ravel <--> Json : сохраняет / загружает карту
+
+legend bottom
+  Расширенное описание контекста и границ системы:
+  docs/c1_scope.md (акторы, сценарии, in/out-of-scope,
+  зависимости, ограничения верхнего уровня)
+end legend
+@enduml

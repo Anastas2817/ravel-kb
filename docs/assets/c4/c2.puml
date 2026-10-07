@@ -1,0 +1,52 @@
+@startuml C2
+skinparam shadowing false
+skinparam componentStyle rectangle
+skinparam rectangle {
+  RoundCorner 12
+}
+skinparam package {
+  RoundCorner 16
+}
+skinparam legend {
+  RoundCorner 12
+}
+top to bottom direction
+title C2 — Containers
+
+actor "User" as User
+
+package "Ravel" {
+
+  rectangle "UI (Qt 6 Widgets)\nподписчик-приёмник" as UI #BurlyWood
+  rectangle "App\nединственный источник мутаций" as App #Tan
+  rectangle "Core (C++17, без Qt)" as Core #LightSkyBlue
+  rectangle "Storage (nlohmann/json)" as Storage #MistyRose
+}
+
+rectangle "JSON-файлы" as Json <<внешняя система>> #MistyRose
+
+User --> UI : жесты пользователя
+UI --> App : действия пользователя
+App --> UI : состояние сессии
+App --> Core : command-мутации
+Core --> UI : изменения модели => перерисовка
+Core --> Storage : Save
+Storage --> Core : Load
+App --> Storage : LoadPath / SavePath
+Storage <--> Json
+
+legend bottom
+  Ответственности:
+  Core — модель и алгоритмы над ней: хранение графа,
+  инварианты, раскладка, анализ структуры.
+  App — обслуживать сценарии пользователя:
+  создать/изменить/удалить узел/отношение.
+  UI — визуализировать Graph и Layout,
+  отображать подсказки Algorithm.
+  Storage — сериализация и десериализация,
+  валидация формата и версии.
+
+  Внутренние компоненты контейнеров (SessionState,
+  Graph, JsonStorage и др.) — на C3.
+end legend
+@enduml

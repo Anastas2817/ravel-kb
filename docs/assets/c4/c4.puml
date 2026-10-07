@@ -1,0 +1,97 @@
+@startuml C4
+skinparam shadowing false
+skinparam rectangle {
+  RoundCorner 12
+}
+hide circle
+title C4 — Graph (class diagram)
+
+class Graph {
+  {static} +FromSnapshot(src) : Graph
+  +ToSnapshot() : GraphSnapshot
+  +AddNodeType / AddRelationType / ResolveNode / ResolveRelation
+  +AddNode / AddNodeWithRelations / AddRelation / MoveNode
+  +HasNode / GetNode / DeleteNodes
+  +HasRelation / GetRelation / DeleteRelations
+  +GetIncidentRelations / GetNeighbors
+  +OntologyNode / OntologyRelation
+  --
+  -ontology_node_ : unordered_map<string, NodeType>
+  -ontology_relation_ : unordered_map<string, RelationType>
+  -nodes_ : vector<Node>
+  -relations_ : vector<Relation>
+  -access_ : map<NodeId, vector<RelationId>>
+  -next_id_node_ / next_id_relation_ : uint64_t
+}
+
+class Node <<DTO>> {
+  +Id / Type / Title / Description / Size
+  +HandPosition / SetHandPosition
+  --
+  -id_ : NodeId
+  -type_ / title_ / description_ : string
+  -size_ : double
+  -hand_position_ : optional<pair<double, double>>
+}
+
+class Relation <<DTO>> {
+  +Id / From / To / Type / Description
+  --
+  -id_ : RelationId
+  -from_ / to_ : NodeId
+  -type_ / description_ : string
+}
+
+class NodeType {
+  +Color / Shape / FrameColor
+  --
+  -color_ / shape_ / frame_color_ : string
+}
+
+class RelationType {
+  +Color / Arrow / Symmetric / Transitive
+  --
+  -color_ : string
+  -arrow_ : string (solid, dashed, dotted)
+  -symmetric_ / transitive_ : bool
+}
+
+class GraphSnapshot {
+  +ontology_node : unordered_map<string, NodeType>
+  +ontology_relation : unordered_map<string, RelationType>
+  +nodes : vector<Node>
+  +relations : vector<Relation>
+  +next_id_node / next_id_relation
+}
+
+Graph *-- Node
+Graph *-- Relation
+Graph *-- NodeType
+Graph *-- RelationType
+Graph ..> GraphSnapshot : ToSnapshot
+GraphSnapshot ..> Graph : FromSnapshot
+Node ..> NodeType : type по имени
+Relation ..> RelationType : type по имени
+
+legend bottom
+  Обязанности: Graph — единственный владелец
+  инвариантов модели; Node/Relation — DTO
+  (данные + читающие геттеры, без логики);
+  NodeType/RelationType — неизменяемые после
+  создания (R8, «тип отстаивает своё»);
+  GraphSnapshot — нейтральные данные для переноса
+  состояния между слоями (без знания формата).
+
+  Инварианты (Graph и только Graph их обеспечивает,
+  FromSnapshot обязан отклонять нарушения):
+  1. id не переиспользуются; next_id_* строго
+     больше всех существующих id своего вида.
+  2. Тип каждого узла и ребра существует в словаре.
+  3. from_/to_ каждого живого ребра — живые узлы.
+  4. access_[x] содержит ровно рёбра, инцидентные x,
+     и существует ровно для живых узлов.
+  5. Удалённые узлы/рёбра хранятся фиктивными
+     объектами («дырки», R2): индекс вектора
+     равен id - 1.
+end legend
+@enduml

@@ -147,3 +147,5 @@ $RECYCLE.BIN/
 *.bak
 *.swp
 *~
+# Локальные инструменты (JRE + plantuml.jar для рендера диаграмм)
+tools/

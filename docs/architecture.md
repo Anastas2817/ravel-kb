@@ -2,6 +2,14 @@
 
 Архитектура зафиксирована в C4-модели: [C1 — System](assets/c4/C1.png) (контекст, см. дополнение [c1_scope.md](c1_scope.md)), [C2 — Containers](assets/c4/C2.png), [C3 — Components](assets/c4/C3.png), [C4 — Graph](assets/c4/C4.png). Ниже — текстовое описание с обоснованиями; диаграммы являются источником истины по составу компонентов, этот документ — по причинам.
 
+Исходники диаграмм — PlantUML ([c1.puml](assets/c4/c1.puml), [c2.puml](assets/c4/c2.puml), [c3.puml](assets/c4/c3.puml), [c4.puml](assets/c4/c4.puml)); PNG — сгенерированные артефакты, не правятся руками. Перегенерация после правки `.puml`:
+
+```bash
+java -jar tools/plantuml.jar -Playout=smetana -charset UTF-8 -tpng docs/assets/c4/*.puml
+```
+
+(`tools/` — локальный JRE + plantuml.jar, в git не входит; см. `.gitignore`. Флаг `-Playout=smetana` — чисто-Java раскладка без Graphviz.)
+
 ## 1. Слои (C2)
 
 ```
