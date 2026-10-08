@@ -1,4 +1,4 @@
-#ifndef RAVEL_CORE_INCLUDE_GRAPH_HPP_
+﻿#ifndef RAVEL_CORE_INCLUDE_GRAPH_HPP_
 #define RAVEL_CORE_INCLUDE_GRAPH_HPP_
 
 #include <cstdint>
@@ -119,8 +119,8 @@ class Node {  // DTO
 
  private:
   // Identity
-  NodeId id_ = 1;
-  std::string type_ = "model";
+  NodeId id_ = 0;
+  std::string type_ = "";
 
   // Local data
   std::string title_ = "";
@@ -209,10 +209,10 @@ class Relation {  // DTO
   }
 
  private:
-  RelationId id_ = 1;
-  NodeId from_ = 1;
-  NodeId to_ = 1;
-  std::string type_ = "is_a";
+  RelationId id_ = 0;
+  NodeId from_ = 0;
+  NodeId to_ = 0;
+  std::string type_ = "";
 
   std::string description_ = "";
 };
