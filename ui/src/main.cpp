@@ -1,12 +1,14 @@
-﻿// Ravel — точка входа десктопного приложения (Qt 6 Widgets).
-// Неделя 4: каркас — пустое главное окно. Канвас (QGraphicsScene/View)
-// появится здесь же, в ui/src/ (см. docs/roadmap.md, этап 2).
-
-#include <QApplication>
+﻿#include <QApplication>
+#include <QDebug>
 #include <QGraphicsScene>
 #include <QGraphicsView>
-#include <QGraphicsRectItem>
 #include <QMainWindow>
+
+#include "node_item.hpp"
+#include "relation_item.hpp"
+
+using ravel::ui::NodeItem;
+using ravel::ui::RelationItem;
 
 int main(int argc, char* argv[]) {
   QApplication app(argc, argv);
@@ -18,20 +20,19 @@ int main(int argc, char* argv[]) {
   window.show();
 
   QGraphicsScene* scene = new QGraphicsScene(&window);
-  QGraphicsRectItem* rect1 = scene->addRect(QRectF(0, 0, 100, 50));
-  rect1->setFlag(QGraphicsItem::ItemIsMovable);
-  rect1->setBrush(Qt::blue);
 
-  QGraphicsRectItem* rect2 = scene->addRect(QRectF(0, 200, 100, 50));
-  rect2->setFlag(QGraphicsItem::ItemIsMovable);
-  rect2->setBrush(QColor("darkblue"));
+  auto* node1 = new NodeItem(1, QRectF(0, 0, 120, 60));
+  scene->addItem(node1);
+  auto* node2 = new NodeItem(2, QRectF(0, 0, 300, 60));
+  scene->addItem(node2);
 
-  QGraphicsRectItem* rect3 = scene->addRect(QRectF(200, 0, 100, 50));
+  auto* relation = new RelationItem(node1, node2);
+  scene->addItem(relation);
 
-  class NodeItem : QGraphicsRectItem {
-    std::uint64_t id_ = 0;
-  };
-  
+  QObject::connect(node1, &NodeItem::Moved, [&window](ravel::NodeId id, const QPointF& p) {
+    window.setWindowTitle(QStringLiteral("node %1: (%2, %3)").arg(id).arg(p.x()).arg(p.y()));
+  });
+
   QGraphicsView* view = new QGraphicsView(scene, &window);
   window.setCentralWidget(view);
 

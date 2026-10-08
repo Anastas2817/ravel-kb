@@ -37,6 +37,8 @@ endif()
 # WIN32 — GUI-подсистема Windows (без консольного окна).
 add_executable(ravel WIN32 ${RAVEL_UI_SOURCES})
 
+target_include_directories(ravel PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+
 target_link_libraries(ravel PRIVATE
     Qt6::Widgets
     ravel::app
