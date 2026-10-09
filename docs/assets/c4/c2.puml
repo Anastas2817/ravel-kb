@@ -17,7 +17,7 @@ actor "User" as User
 
 package "Ravel" {
 
-  rectangle "UI (Qt 6 Widgets)\nподписчик-приёмник" as UI #BurlyWood
+  rectangle "UI (Qt 6 Widgets)" as UI #BurlyWood
   rectangle "App\nединственный источник мутаций" as App #Tan
   rectangle "Core (C++17, без Qt)" as Core #LightSkyBlue
   rectangle "Storage (nlohmann/json)" as Storage #MistyRose
@@ -29,9 +29,7 @@ User --> UI : жесты пользователя
 UI --> App : действия пользователя
 App --> UI : состояние сессии
 App --> Core : command-мутации
-Core --> UI : изменения модели => перерисовка
-Core --> Storage : Save
-Storage --> Core : Load
+Storage --> Core : знает GraphSnapshot
 App --> Storage : LoadPath / SavePath
 Storage <--> Json
 

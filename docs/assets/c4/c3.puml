@@ -1,4 +1,4 @@
-@startuml C3
+﻿@startuml C3
 skinparam shadowing false
 skinparam componentStyle rectangle
 skinparam rectangle {
@@ -17,7 +17,6 @@ package "Core" {
 
   rectangle "Graph\nC++17" as Graph #LightSkyBlue
   rectangle "GraphSnapshot" as Snapshot
-  rectangle "IGraphObserver" as Observer <<контракт>>
   rectangle "SampleGraphs" as Samples
   rectangle "Layout\nC++17" as Layout
   rectangle "Algorithms\nC++17" as Algo
@@ -26,7 +25,7 @@ package "Core" {
   Algo --> Graph : читает структуру
   Graph --> Snapshot : ToSnapshot
   Snapshot --> Graph : FromSnapshot
-  Graph ..> Observer : оповещает подписчиков
+  Samples --> Graph : строит демо-граф (мутации)
 }
 
 package "App" {
@@ -37,7 +36,6 @@ package "App" {
 
 package "UI" {
   rectangle "Canvas" as Canvas
-  rectangle "реализация\nIGraphObserver" as ObsImpl
 }
 
 package "Storage" {
@@ -45,9 +43,9 @@ package "Storage" {
 }
 
 Ctrl --> Graph : command-мутации
-ObsImpl ..> Observer : реализует контракт
-Graph ..> ObsImpl : изменения модели => перерисовка
-JsonS <--> Snapshot
+Ctrl --> Algo : анализ
+Ctrl --> Layout : геометрия
+JsonS --> Snapshot
 
 legend bottom
   Ответственности (одной фразой):
@@ -55,8 +53,6 @@ legend bottom
   поддерживать корректное состояние карты знаний.
   GraphSnapshot — переносить состояние Graph между
   слоями без знания формата.
-  IGraphObserver — оповещать подписчиков об
-  изменениях модели (реализация — в UI).
   SampleGraphs — строить демонстрационный граф
   для разработки UI.
   Layout — преобразовывать граф в пространственную
