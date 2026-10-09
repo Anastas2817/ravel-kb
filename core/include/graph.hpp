@@ -254,7 +254,6 @@ class Graph {
     if (ontology_node_.find(name) != ontology_node_.end()) {
       throw std::logic_error("Graph::AddNodeType tried to add the same NodeType");
     }
-    // TODO: validate color format (#RRGGBB)
     ontology_node_.emplace(name,
                            NodeType(std::move(color), std::move(shape), std::move(frame_color)));
   }
@@ -263,7 +262,6 @@ class Graph {
     if (ontology_relation_.find(name) != ontology_relation_.end()) {
       throw std::logic_error("Graph::AddRelationType tried to add the same RelationType");
     }
-    // TODO: validate color format (#RRGGBB)
     ontology_relation_.emplace(
         name, RelationType(std::move(color), std::move(arrow), symmetric, transitive));
   }
