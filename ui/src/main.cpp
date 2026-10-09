@@ -1,4 +1,4 @@
-﻿#include <QApplication>
+#include <QApplication>
 #include <QDebug>
 #include <QGraphicsScene>
 #include <QGraphicsView>
@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
   auto* relation = new RelationItem(node1, node2);
   scene->addItem(relation);
 
-  QObject::connect(node1, &NodeItem::Moved, [&window](ravel::NodeId id, const QPointF& p) {
+  QObject::connect(node1, &NodeItem::Moved, [&window](std::uint64_t id, const QPointF& p) {
     window.setWindowTitle(QStringLiteral("node %1: (%2, %3)").arg(id).arg(p.x()).arg(p.y()));
   });
 

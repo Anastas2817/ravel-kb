@@ -4,7 +4,7 @@
 
 namespace ravel::ui {
 
-NodeItem::NodeItem(ravel::NodeId id, const QRectF& rect, QGraphicsItem* parent)
+NodeItem::NodeItem(std::uint64_t id, const QRectF& rect, QGraphicsItem* parent)
     : QGraphicsObject(parent), id_(id), rect_(rect) {
   this->setFlag(QGraphicsItem::ItemIsMovable);
   this->setFlag(QGraphicsItem::ItemSendsGeometryChanges);
