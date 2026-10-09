@@ -22,4 +22,8 @@ endif()
 
 add_library(ravel::app ALIAS ravel_app)
 
-target_link_libraries(ravel_app INTERFACE ravel::core ravel::storage)
+if(RAVEL_APP_SOURCES)
+    target_link_libraries(ravel_app PUBLIC ravel::core ravel::storage)
+else()
+    target_link_libraries(ravel_app INTERFACE ravel::core ravel::storage)
+endif()
