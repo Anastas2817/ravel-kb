@@ -140,7 +140,7 @@ Graph Graph::FromSnapshot(const GraphSnapshot& src) {
     throw std::runtime_error("Graph::FromSnapshot Graph with next_id_relation = 0 has relations");
   }
   // invariant 1
-  if (!src.relations.empty() && src.nodes.back().Id() >= src.next_id_node) {
+  if (!src.nodes.empty() && src.nodes.back().Id() >= src.next_id_node) {
     throw std::runtime_error("Graph::FromSnapshot exists node_id >= next_id_node");
   }
   if (!src.relations.empty() && src.relations.back().Id() >= src.next_id_relation) {
