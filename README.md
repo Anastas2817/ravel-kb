@@ -6,6 +6,7 @@
 ![lang](https://img.shields.io/badge/C%2B%2B-17-blue)
 ![qt](https://img.shields.io/badge/Qt-6%20Widgets-green)
 ![build](https://img.shields.io/badge/CMake-%3E%3D3.20-blue)
+[![CI](https://github.com/Anastas2817/ravel-kb/actions/workflows/ci.yml/badge.svg)](https://github.com/Anastas2817/ravel-kb/actions/workflows/ci.yml)
 ![license](https://img.shields.io/badge/license-MIT-purple)
 
 Ravel — десктопное приложение для создания структурированных баз знаний в форме ориентированного графа. Структура строится пользователем осознанно: каждый узел и каждая связь добавляются вручную, а система только советует — обнаруживает циклы, выделяет хабы, предлагает упорядочить перегруженные области.
