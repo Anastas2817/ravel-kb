@@ -13,7 +13,7 @@ class NodeItem : public QGraphicsObject {
  public:
   NodeItem(std::uint64_t id, const QRectF& rect, QGraphicsItem* parent = nullptr);
 
-  std::uint64_t Id() const {
+  std::uint64_t id() const {
     return id_;
   }
   QRectF boundingRect() const override;

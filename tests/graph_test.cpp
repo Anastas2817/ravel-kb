@@ -1,4 +1,6 @@
-﻿#pragma warning(disable : 26495 26439)
+﻿#ifdef _MSC_VER
+#pragma warning(disable : 26495 26439)
+#endif
 
 #include "graph.hpp"
 
@@ -20,8 +22,8 @@ TEST(GraphAddNode, CreatesAccessEntryAndBumpsCounter) {
   EXPECT_THROW(g.AddNode("Сложение", "function"),
                std::out_of_range);  // инвариант 5: тип есть в словаре
   EXPECT_TRUE(g.HasNode(id));       // инвариант 3: запись в access_
-  EXPECT_EQ(g.GetNode(id).Type(), "model");
-  EXPECT_EQ(g.NextIdNode(), id + 1);  // инвариант 1: счётчик выдал id
+  EXPECT_EQ(g.GetNode(id).type(), "model");
+  EXPECT_EQ(g.next_id_node(), id + 1);  // инвариант 1: счётчик выдал id
 }
 
 TEST(GraphAddRelation, CreatesAccessEntryCounter) {
@@ -43,7 +45,7 @@ TEST(GraphAddRelation, CreatesAccessEntryCounter) {
             g.GetIncidentRelations(from));  // инвариант 3: запись в access_
   EXPECT_EQ(std::vector<RelationId>{id},
             g.GetIncidentRelations(to));  // инвариант 3: запись в access_
-  EXPECT_EQ(g.NextIdRelation(), id + 1);  // инвариант 1: счётчик выдал id
+  EXPECT_EQ(g.next_id_relation(), id + 1);  // инвариант 1: счётчик выдал id
 }
 
 TEST(GraphHasRelation, NegativeRelation) {
@@ -78,7 +80,7 @@ TEST(GraphDeleteNodes, DeleteAccess) {
   EXPECT_TRUE(g.HasNode(to1) && g.HasNode(to2));
   EXPECT_EQ(std::set<NodeId>{}, g.GetNeighbors(to1));  // инвариант 3: запись в access_
   EXPECT_EQ(std::set<NodeId>{}, g.GetNeighbors(to2));  // инвариант 3: запись в access_
-  EXPECT_EQ(g.NextIdNode(), to2 + 1);                  // инвариант 1: id не переиспользуются
+  EXPECT_EQ(g.next_id_node(), to2 + 1);                  // инвариант 1: id не переиспользуются
 }
 
 TEST(GraphMoveNode, SetNewHandPosition) {
@@ -86,12 +88,12 @@ TEST(GraphMoveNode, SetNewHandPosition) {
   g.AddNodeType("model", "#4a90d9", "rect", "#000000");
   NodeId id =
       g.AddNode("Датчик Холла", "model", "лаба по физике", 1, std::pair<double, double>{100, 100});
-  std::optional<std::pair<double, double>> before = g.GetNode(id).HandPosition().value();
+  std::optional<std::pair<double, double>> before = g.GetNode(id).hand_position().value();
   EXPECT_EQ(before.value(), std::make_pair(100.0, 100.0));
   std::optional<std::pair<double, double>> prev = g.MoveNode(id, {-100, -100});
   EXPECT_EQ(prev.value(), std::make_pair(100.0, 100.0));
   EXPECT_TRUE(g.HasNode(id));
-  EXPECT_EQ(g.GetNode(id).HandPosition().value(), std::make_pair(-100.0, -100.0));
+  EXPECT_EQ(g.GetNode(id).hand_position().value(), std::make_pair(-100.0, -100.0));
 
   NodeId temp = g.AddNode("Коаксильный кабель", "model");
   g.DeleteNodes({temp});
@@ -133,25 +135,25 @@ TEST(GraphAddNodeWithRelations, CreatesAccessEntry) {
   EXPECT_EQ(g.GetNeighbors(to1), std::set<NodeId>{test});
   EXPECT_EQ(g.GetNeighbors(from1), std::set<NodeId>({test}));
   EXPECT_EQ(g.GetNeighbors(from2), std::set<NodeId>({test}));
-  EXPECT_EQ(g.NextIdNode(), test + 1);
+  EXPECT_EQ(g.next_id_node(), test + 1);
 
   const size_t kAddedRelations = 3;
 
-  EXPECT_EQ(g.NextIdRelation(), kAddedRelations + 1);
+  EXPECT_EQ(g.next_id_relation(), kAddedRelations + 1);
 
   EXPECT_THROW(
       g.AddNodeWithRelations("Однородные уравнения", "modl",
                              {{from1, "reduce_to"}, {from2, "reduce_to"}}, {{to1, "reduce_to"}}),
       std::out_of_range);
-  EXPECT_EQ(g.NextIdNode(), test + 1);
-  EXPECT_EQ(g.NextIdRelation(), kAddedRelations + 1);
+  EXPECT_EQ(g.next_id_node(), test + 1);
+  EXPECT_EQ(g.next_id_relation(), kAddedRelations + 1);
 
   EXPECT_THROW(
       g.AddNodeWithRelations("Однородные уравнения", "model",
                              {{from1, "reduc_to"}, {from2, "reduce_to"}}, {{to1, "reduce_to"}}),
       std::out_of_range);
-  EXPECT_EQ(g.NextIdNode(), test + 1);
-  EXPECT_EQ(g.NextIdRelation(), kAddedRelations + 1);
+  EXPECT_EQ(g.next_id_node(), test + 1);
+  EXPECT_EQ(g.next_id_relation(), kAddedRelations + 1);
 }
 
 TEST(GraphFromSnapshot, ValidGraphWithCorrectInvariantsAndHoles) {
@@ -174,16 +176,16 @@ TEST(GraphFromSnapshot, ValidGraphWithCorrectInvariantsAndHoles) {
   src.relations.emplace_back(kAliveRelation, kAliveNode1, kAliveNode2, "has_special_case");
 
   Graph g = Graph::FromSnapshot(src);
-  EXPECT_EQ(g.NextIdNode(), src.next_id_node);
-  EXPECT_EQ(g.NextIdRelation(), src.next_id_relation);
+  EXPECT_EQ(g.next_id_node(), src.next_id_node);
+  EXPECT_EQ(g.next_id_relation(), src.next_id_relation);
 
   std::unordered_map<std::string, NodeType> right_node_types;
   right_node_types.emplace("model", NodeType("#000000", "rect", "#000000"));
-  EXPECT_EQ(g.OntologyNode(), right_node_types);
+  EXPECT_EQ(g.ontology_node(), right_node_types);
 
   std::unordered_map<std::string, RelationType> right_relation_types;
   right_relation_types.emplace("has_special_case", RelationType("#000000", "solid", false, true));
-  EXPECT_EQ(g.OntologyRelation(), right_relation_types);
+  EXPECT_EQ(g.ontology_relation(), right_relation_types);
 
   for (NodeId id = 0; id < src.next_id_node; ++id) {
     if (id == kAliveNode1 || id == kAliveNode2 || id == kAliveNode3) {
@@ -192,18 +194,18 @@ TEST(GraphFromSnapshot, ValidGraphWithCorrectInvariantsAndHoles) {
       EXPECT_FALSE(g.HasNode(id));
     }
   }
-  EXPECT_EQ(g.GetNode(kAliveNode1).Id(), kAliveNode1);
-  EXPECT_EQ(g.GetNode(kAliveNode1).Title(), "Ряд Дирихле");
-  EXPECT_EQ(g.GetNode(kAliveNode1).Type(), "model");
-  EXPECT_EQ(g.GetNode(kAliveNode2).Id(), kAliveNode2);
-  EXPECT_EQ(g.GetNode(kAliveNode2).Title(), "Гармонический ряд");
-  EXPECT_EQ(g.GetNode(kAliveNode2).Type(), "model");
-  EXPECT_EQ(g.GetNode(kAliveNode2).Description(), "1/n");
-  EXPECT_EQ(g.GetNode(kAliveNode2).Size(), size);
-  EXPECT_EQ(g.GetNode(kAliveNode2).HandPosition(), hand_position);
-  EXPECT_EQ(g.GetNode(kAliveNode3).Id(), kAliveNode3);
-  EXPECT_EQ(g.GetNode(kAliveNode3).Title(), "Телескопический ряд");
-  EXPECT_EQ(g.GetNode(kAliveNode3).Type(), "model");
+  EXPECT_EQ(g.GetNode(kAliveNode1).id(), kAliveNode1);
+  EXPECT_EQ(g.GetNode(kAliveNode1).title(), "Ряд Дирихле");
+  EXPECT_EQ(g.GetNode(kAliveNode1).type(), "model");
+  EXPECT_EQ(g.GetNode(kAliveNode2).id(), kAliveNode2);
+  EXPECT_EQ(g.GetNode(kAliveNode2).title(), "Гармонический ряд");
+  EXPECT_EQ(g.GetNode(kAliveNode2).type(), "model");
+  EXPECT_EQ(g.GetNode(kAliveNode2).description(), "1/n");
+  EXPECT_EQ(g.GetNode(kAliveNode2).size(), size);
+  EXPECT_EQ(g.GetNode(kAliveNode2).hand_position(), hand_position);
+  EXPECT_EQ(g.GetNode(kAliveNode3).id(), kAliveNode3);
+  EXPECT_EQ(g.GetNode(kAliveNode3).title(), "Телескопический ряд");
+  EXPECT_EQ(g.GetNode(kAliveNode3).type(), "model");
 
   for (RelationId id = 0; id < src.next_id_relation; ++id) {
     if (id == kAliveRelation) {
@@ -212,10 +214,10 @@ TEST(GraphFromSnapshot, ValidGraphWithCorrectInvariantsAndHoles) {
       EXPECT_FALSE(g.HasRelation(id));
     }
   }
-  EXPECT_EQ(g.GetRelation(kAliveRelation).From(), kAliveNode1);
-  EXPECT_EQ(g.GetRelation(kAliveRelation).To(), kAliveNode2);
-  EXPECT_EQ(g.GetRelation(kAliveRelation).Description(), "");
-  EXPECT_EQ(g.GetRelation(kAliveRelation).Type(), "has_special_case");
+  EXPECT_EQ(g.GetRelation(kAliveRelation).from(), kAliveNode1);
+  EXPECT_EQ(g.GetRelation(kAliveRelation).to(), kAliveNode2);
+  EXPECT_EQ(g.GetRelation(kAliveRelation).description(), "");
+  EXPECT_EQ(g.GetRelation(kAliveRelation).type(), "has_special_case");
 
   EXPECT_EQ(g.GetIncidentRelations(kAliveNode1), std::vector<RelationId>({kAliveRelation}));
   EXPECT_EQ(g.GetIncidentRelations(kAliveNode2), std::vector<RelationId>({kAliveRelation}));
@@ -229,12 +231,12 @@ TEST(GraphFromSnapshot, ValidGraphWithCorrectInvariantsAndHoles) {
 TEST(GraphFromSnaphot, EmptySnaphot) {
   GraphSnapshot src;
   Graph g = Graph::FromSnapshot(src);
-  EXPECT_EQ(g.NextIdNode(), 1);
-  EXPECT_EQ(g.NextIdRelation(), 1);
+  EXPECT_EQ(g.next_id_node(), 1);
+  EXPECT_EQ(g.next_id_relation(), 1);
   const std::unordered_map<std::string, NodeType> empty_node_type;
-  EXPECT_EQ(g.OntologyNode(), empty_node_type);
+  EXPECT_EQ(g.ontology_node(), empty_node_type);
   const std::unordered_map<std::string, RelationType> empty_relation_type;
-  EXPECT_EQ(g.OntologyRelation(), empty_relation_type);
+  EXPECT_EQ(g.ontology_relation(), empty_relation_type);
   EXPECT_FALSE(g.HasNode(1));
   EXPECT_FALSE(g.HasRelation(1));
 }
@@ -441,10 +443,10 @@ TEST(GraphToSnapshot, ValidGraphSnapshotWithdHoles) {
   [[maybe_unused]] RelationId deleted_rel8 = src.AddRelation(node2, deleted8, "has_special_case");
   src.DeleteNodes({deleted5, deleted7, deleted8});
 
-  NodeId right_next_id_node = src.NextIdNode();
-  NodeId right_next_id_relation = src.NextIdRelation();
-  std::unordered_map<std::string, NodeType> right_ontology_node = src.OntologyNode();
-  std::unordered_map<std::string, RelationType> right_ontology_relation = src.OntologyRelation();
+  NodeId right_next_id_node = src.next_id_node();
+  NodeId right_next_id_relation = src.next_id_relation();
+  std::unordered_map<std::string, NodeType> right_ontology_node = src.ontology_node();
+  std::unordered_map<std::string, RelationType> right_ontology_relation = src.ontology_relation();
   std::vector<Node> right_nodes;
   right_nodes.emplace_back(node1, "Числовой ряд", "model");
   right_nodes.emplace_back(node2, "Функциональный ряд", "model");

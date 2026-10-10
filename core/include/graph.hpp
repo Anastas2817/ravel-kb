@@ -54,13 +54,13 @@ class NodeType {
                       "Graph::NodeType tried to create Nodetype with non-existent frame_color")) {
   }
 
-  const std::string& Color() const noexcept {
+  const std::string& color() const noexcept {
     return color_;
   }
-  const std::string& Shape() const noexcept {
+  const std::string& shape() const noexcept {
     return shape_;
   }
-  const std::string& FrameColor() const noexcept {
+  const std::string& frame_color() const noexcept {
     return frame_color_;
   }
   bool operator==(const NodeType& other) const {
@@ -79,8 +79,8 @@ class Node {  // DTO
   Node(NodeId id, std::string title, std::string type, std::string description = "",
        double size = 1, std::optional<std::pair<double, double>> hand_position = std::nullopt)
       : id_(id),
-        title_(std::move(title)),
         type_(std::move(type)),
+        title_(std::move(title)),
         description_(std::move(description)),
         size_(size > 0 ? size
                        : throw std::logic_error(
@@ -88,27 +88,27 @@ class Node {  // DTO
         hand_position_(hand_position) {
   }
 
-  NodeId Id() const noexcept {
+  NodeId id() const noexcept {
     return id_;
   }
-  const std::string& Type() const noexcept {
+  const std::string& type() const noexcept {
     return type_;
   }
 
-  const std::string& Title() const noexcept {
+  const std::string& title() const noexcept {
     return title_;
   }
-  const std::string& Description() const noexcept {
+  const std::string& description() const noexcept {
     return description_;
   }
-  double Size() const noexcept {
+  double size() const noexcept {
     return size_;
   }
-  std::optional<std::pair<double, double>> HandPosition() const {
+  std::optional<std::pair<double, double>> hand_position() const {
     return hand_position_;
   }
 
-  void SetHandPosition(std::pair<double, double> hand_position) noexcept {
+  void set_hand_position(std::pair<double, double> hand_position) noexcept {
     hand_position_ = hand_position;
   }
 
@@ -153,16 +153,16 @@ class RelationType {
         transitive_(transitive) {
   }
 
-  const std::string& Color() const noexcept {
+  const std::string& color() const noexcept {
     return color_;
   }
-  const std::string& Arrow() const noexcept {
+  const std::string& arrow() const noexcept {
     return arrow_;
   }
-  bool Symmetric() const noexcept {
+  bool symmetric() const noexcept {
     return symmetric_;
   }
-  bool Transitive() const noexcept {
+  bool transitive() const noexcept {
     return transitive_;
   }
   bool operator==(const RelationType& other) const {
@@ -187,20 +187,20 @@ class Relation {  // DTO
         description_(std::move(description)) {
   }
 
-  RelationId Id() const noexcept {
+  RelationId id() const noexcept {
     return id_;
   }
-  NodeId From() const noexcept {
+  NodeId from() const noexcept {
     return from_;
   }
-  NodeId To() const noexcept {
+  NodeId to() const noexcept {
     return to_;
   }
-  const std::string& Type() const noexcept {
+  const std::string& type() const noexcept {
     return type_;
   }
 
-  const std::string& Description() const noexcept {
+  const std::string& description() const noexcept {
     return description_;
   }
 
@@ -231,19 +231,19 @@ struct GraphSnapshot {
 
 class Graph {
  public:
-  NodeId NextIdNode() const noexcept {
+  NodeId next_id_node() const noexcept {
     return next_id_node_;
   }
-  NodeId NextIdRelation() const noexcept {
+  NodeId next_id_relation() const noexcept {
     return next_id_relation_;
   }
-  const std::unordered_map<std::string, NodeType>& OntologyNode()
+  const std::unordered_map<std::string, NodeType>& ontology_node()
       const noexcept {  /// @return Const
     /// reference to the type dictionary. Lifetime is bound to *this; do not store the reference
     /// beyond the Graph's lifetime.
     return ontology_node_;
   }
-  const std::unordered_map<std::string, RelationType>& OntologyRelation()
+  const std::unordered_map<std::string, RelationType>& ontology_relation()
       const noexcept {  /// @return
     /// Const reference to the type dictionary. Lifetime is bound to *this; do not store the
     /// reference beyond the Graph's lifetime.
@@ -287,7 +287,7 @@ class Graph {
   }
   RelationId AddRelation(NodeId from, NodeId to, std::string type, std::string description = "");
   bool HasRelation(RelationId id) const noexcept {
-    return ((id >= 1) && (id < next_id_relation_) && (relations_[id - 1].Id() == id));
+    return ((id >= 1) && (id < next_id_relation_) && (relations_[id - 1].id() == id));
   }
   const Relation& GetRelation(RelationId id) const {
     if (HasRelation(id)) {

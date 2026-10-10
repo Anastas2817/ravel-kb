@@ -1,4 +1,6 @@
-﻿#pragma warning(disable : 26495 26439)
+﻿#ifdef _MSC_VER
+#pragma warning(disable : 26495 26439)
+#endif
 
 #include "storage.hpp"
 

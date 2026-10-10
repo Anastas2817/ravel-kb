@@ -70,11 +70,11 @@ std::set<NodeId> Graph::GetNeighbors(NodeId id) const {
 
   std::set<NodeId> neighbors;
   for (RelationId rid : access_.at(id)) {
-    if (GetRelation(rid).From() != id) {
-      neighbors.insert(GetRelation(rid).From());
+    if (GetRelation(rid).from() != id) {
+      neighbors.insert(GetRelation(rid).from());
     }
-    if (GetRelation(rid).To() != id) {
-      neighbors.insert(GetRelation(rid).To());
+    if (GetRelation(rid).to() != id) {
+      neighbors.insert(GetRelation(rid).to());
     }
   }
   return neighbors;
@@ -84,8 +84,8 @@ std::optional<std::pair<double, double>> Graph::MoveNode(NodeId id, std::pair<do
   if (!HasNode(id)) {
     throw std::out_of_range("Graph::MoveNode tried to access non-existent Node");
   } else {
-    std::optional<std::pair<double, double>> prev_pos = GetNode(id).HandPosition();
-    nodes_[id - 1].SetHandPosition(pos);
+    std::optional<std::pair<double, double>> prev_pos = GetNode(id).hand_position();
+    nodes_[id - 1].set_hand_position(pos);
     return prev_pos;
   }
 }
@@ -102,8 +102,8 @@ void Graph::DeleteNodes(std::vector<NodeId> ids) {
 
 void Graph::DeleteRelations(std::vector<RelationId> ids) {
   for (RelationId id : ids) {
-    NodeId from = relations_[id - 1].From();
-    NodeId to = relations_[id - 1].To();
+    NodeId from = relations_[id - 1].from();
+    NodeId to = relations_[id - 1].to();
     if (HasNode(from)) {
       access_[from].erase(std::find(access_[from].begin(), access_[from].end(), id));
     }
@@ -133,41 +133,41 @@ Graph Graph::FromSnapshot(const GraphSnapshot& src) {
     return Graph();
   }
   if (src.next_id_node == 1 &&
-      (!src.nodes.empty() || src.next_id_relation != 1 || src.relations.empty())) {
+      (!src.nodes.empty() || src.next_id_relation != 1 || !src.relations.empty())) {
     throw std::runtime_error("Graph::FromSnapshot Graph with next_id_node = 0 has nodes/relations");
   }
   if (src.next_id_relation == 1 && !src.relations.empty()) {
     throw std::runtime_error("Graph::FromSnapshot Graph with next_id_relation = 0 has relations");
   }
   // invariant 1
-  if (!src.nodes.empty() && src.nodes.back().Id() >= src.next_id_node) {
+  if (!src.nodes.empty() && src.nodes.back().id() >= src.next_id_node) {
     throw std::runtime_error("Graph::FromSnapshot exists node_id >= next_id_node");
   }
-  if (!src.relations.empty() && src.relations.back().Id() >= src.next_id_relation) {
+  if (!src.relations.empty() && src.relations.back().id() >= src.next_id_relation) {
     throw std::runtime_error("Graph::FromSnapshot exists relation_id >= next_id_relation");
   }
   // invariant 3 and 4
   std::unordered_set<NodeId> alive_nodes;
   for (const Node& i : src.nodes) {
-    if (src.ontology_node.find(i.Type()) == src.ontology_node.end()) {
+    if (src.ontology_node.find(i.type()) == src.ontology_node.end()) {
       throw std::runtime_error("Graph::FromSnapshot tried to add node with non-existent type");
     }
-    if (i.Id() == 0 || !alive_nodes.insert(i.Id()).second) {
+    if (i.id() == 0 || !alive_nodes.insert(i.id()).second) {
       throw std::runtime_error("Graph::FromSnapshot tried to add node with id = 0 or repeated id");
     }
   }
   std::unordered_set<RelationId> alive_relations;
   for (const Relation& i : src.relations) {
-    if (src.ontology_relation.find(i.Type()) == src.ontology_relation.end()) {
+    if (src.ontology_relation.find(i.type()) == src.ontology_relation.end()) {
       throw std::runtime_error("Graph::FromSnapshot tried to add relation with non-existent type");
     }
-    if (alive_nodes.count(i.From()) != 1) {
+    if (alive_nodes.count(i.from()) != 1) {
       throw std::runtime_error("Graph::FromSnapshot tried to add relation with non-existent from");
     }
-    if (alive_nodes.count(i.To()) != 1) {
+    if (alive_nodes.count(i.to()) != 1) {
       throw std::runtime_error("Graph::FromSnapshot tried to add relation with non-existent to");
     }
-    if (i.Id() == 0 || !alive_relations.insert(i.Id()).second) {
+    if (i.id() == 0 || !alive_relations.insert(i.id()).second) {
       throw std::runtime_error(
           "Graph::FromSnapshot tried to add relation with id = 0 or repeated id");
     }
@@ -182,14 +182,14 @@ Graph Graph::FromSnapshot(const GraphSnapshot& src) {
 
   g.nodes_ = std::vector<Node>(src.next_id_node - 1, Node(0, "", "", ""));
   for (const Node& node : src.nodes) {
-    g.nodes_[node.Id() - 1] = node;
-    g.access_.try_emplace(node.Id());
+    g.nodes_[node.id() - 1] = node;
+    g.access_.try_emplace(node.id());
   }
   g.relations_ = std::vector<Relation>(src.next_id_relation - 1, Relation(0, 0, 0, ""));
   for (const Relation& relation : src.relations) {
-    g.relations_[relation.Id() - 1] = relation;
-    g.access_[relation.From()].push_back(relation.Id());
-    g.access_[relation.To()].push_back(relation.Id());
+    g.relations_[relation.id() - 1] = relation;
+    g.access_[relation.from()].push_back(relation.id());
+    g.access_[relation.to()].push_back(relation.id());
   }
 
   return g;
