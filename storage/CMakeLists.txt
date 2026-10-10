@@ -45,3 +45,17 @@ add_library(ravel::storage ALIAS ravel_storage)
 # (storage.hpp включает graph.hpp), поэтому связь PUBLIC, а не INTERFACE:
 # INTERFACE-зависимости не попадают в include-пути собственной компиляции цели.
 target_link_libraries(ravel_storage PUBLIC ravel::core nlohmann_json::nlohmann_json)
+
+# Include-пути nlohmann/json помечаются SYSTEM (/external:I у MSVC, -isystem у
+# gcc/clang): предупреждения анализатора из чужих заголовков (C26495, C26819
+# и др.) не должны засорять нашу сборку. Работает и для find_package, и для
+# FetchContent (у imported target INTERFACE_INCLUDE_DIRECTORIES уже задан).
+if(TARGET nlohmann_json)
+    if(nlohmann_json_SOURCE_DIR)
+        set(_nlohmann_inc "${nlohmann_json_SOURCE_DIR}/include")
+    else()
+        get_target_property(_nlohmann_inc nlohmann_json INTERFACE_INCLUDE_DIRECTORIES)
+    endif()
+    set_target_properties(nlohmann_json PROPERTIES
+        INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_nlohmann_inc}")
+endif()

@@ -46,6 +46,12 @@ jobs:
     # windows-2022 (не latest): на Server 2025 CMake через vswhere не находит VS 2022
     runs-on: ${{ matrix.os }}
 
+    # Через env, а не -DCMAKE_CXX_FLAGS: переменная окружения ПРИБАВЛЯЕТСЯ
+    # к флагам по умолчанию, а -DCMAKE_CXX_FLAGS их ЗАМЕНЯЕТ — на MSVC это
+    # молча убирает /EHsc (модель исключений) и ломает любой throw → abort.
+    env:
+      CXXFLAGS: ${{ matrix.cxx_flags }}
+
     steps:
       - uses: actions/checkout@v4
 
@@ -55,7 +61,6 @@ jobs:
           cmake -B build -G "${{ matrix.generator }}" ${{ matrix.extra_flags }}
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
           -DRAVEL_BUILD_UI=OFF
-          -DCMAKE_CXX_FLAGS="${{ matrix.cxx_flags }}"
 
       - name: Build
         run: cmake --build build --config ${{ matrix.build_type }} --parallel

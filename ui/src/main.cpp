@@ -1,3 +1,10 @@
+#ifdef _MSC_VER
+// Qt: шум code analysis (PREfast, C26xxx) из чужих заголовков — анализатор
+// не подчиняется /external, а диагностика шаблонов рождается в точках
+// использования. Файлы UI целиком построены на Qt — suppress на весь TU.
+#pragma warning(disable : 26495 26813)
+#endif
+
 #include <QApplication>
 #include <QDebug>
 #include <QGraphicsScene>

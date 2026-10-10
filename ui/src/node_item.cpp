@@ -1,4 +1,9 @@
-﻿#include <QPainter>
+#ifdef _MSC_VER
+// Qt: шум code analysis (PREfast, C26xxx) из чужих заголовков — см. main.cpp.
+#pragma warning(disable : 26495 26813)
+#endif
+
+#include <QPainter>
 
 #include "node_item.hpp"
 

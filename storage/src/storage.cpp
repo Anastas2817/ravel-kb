@@ -1,11 +1,14 @@
-﻿#include <algorithm>
-
-// Анализатор Core Guidelines шумит на заголовках nlohmann (C26495/C26819) —
-// та же политика, что и в tests/storage_test.cpp для gtest.
-#pragma warning(push)
+#ifdef _MSC_VER
+// nlohmann/json: шум code analysis (PREfast, C26xxx) из чужих шаблонов.
+// /external:I компиляторные предупреждения глушит, анализатор — нет; диагностика
+// шаблонов рождается в точках ИСПОЛЬЗОВАНИЯ (в Save/Load ниже), поэтому suppress
+// на область одного include не работает. Файл целиком работает с nlohmann —
+// отключение на весь TU.
 #pragma warning(disable : 26495 26819)
+#endif
+
+#include <algorithm>
 #include <nlohmann/json.hpp>
-#pragma warning(pop)
 
 #include "storage.hpp"
 
@@ -30,9 +33,9 @@ void JsonStorage::Save(const GraphSnapshot& g, std::ostream& out) {
   for (const auto& [name, node_type] : node_types) {
     json type;
     type["name"] = name;
-    type["color"] = node_type.Color();
-    type["shape"] = node_type.Shape();
-    type["frame_color"] = node_type.FrameColor();
+    type["color"] = node_type.color();
+    type["shape"] = node_type.shape();
+    type["frame_color"] = node_type.frame_color();
     j["node_types"].push_back(type);
   }
 
@@ -44,28 +47,28 @@ void JsonStorage::Save(const GraphSnapshot& g, std::ostream& out) {
   for (const auto& [name, relation_type] : relation_types) {
     json type;
     type["name"] = name;
-    type["color"] = relation_type.Color();
-    type["arrow"] = relation_type.Arrow();
-    type["symmetric"] = relation_type.Symmetric();
-    type["transitive"] = relation_type.Transitive();
+    type["color"] = relation_type.color();
+    type["arrow"] = relation_type.arrow();
+    type["symmetric"] = relation_type.symmetric();
+    type["transitive"] = relation_type.transitive();
     j["relation_types"].push_back(type);
   }
 
   j["nodes"] = json::array();
   for (const auto& node: g.nodes) {
     json obj;
-    obj["id"] = node.Id();
-    obj["title"] = node.Title();
-    obj["type"] = node.Type();
-    if (node.Description() != "") {
-      obj["description"] = node.Description();
+    obj["id"] = node.id();
+    obj["title"] = node.title();
+    obj["type"] = node.type();
+    if (node.description() != "") {
+      obj["description"] = node.description();
     }
-    if (node.Size() != 1) {
-      obj["size"] = node.Size();
+    if (node.size() != 1) {
+      obj["size"] = node.size();
     }
-    if (node.HandPosition() != std::nullopt) {
+    if (node.hand_position() != std::nullopt) {
       obj["hand_position"] =
-          json{{"x", node.HandPosition().value().first}, {"y", node.HandPosition().value().second}};
+          json{{"x", node.hand_position().value().first}, {"y", node.hand_position().value().second}};
     }
     j["nodes"].push_back(obj);
   }
@@ -73,12 +76,12 @@ void JsonStorage::Save(const GraphSnapshot& g, std::ostream& out) {
   j["relations"] = json::array();
   for (const auto& relation: g.relations) {
     json obj;
-    obj["id"] = relation.Id();
-    obj["from"] = relation.From();
-    obj["to"] = relation.To();
-    obj["type"] = relation.Type();
-    if (relation.Description() != "") {
-      obj["description"] = relation.Description();
+    obj["id"] = relation.id();
+    obj["from"] = relation.from();
+    obj["to"] = relation.to();
+    obj["type"] = relation.type();
+    if (relation.description() != "") {
+      obj["description"] = relation.description();
     }
     j["relations"].push_back(obj);
   }
