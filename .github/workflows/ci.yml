@@ -1,6 +1,9 @@
-# CI: сборка ядра (core + storage + tests) без Qt.
-# Повторяет локальную сборку MSVC 2022: warnings-as-errors нет, /W4, CTest.
+# CI: сборка ядра (core + storage + tests) без Qt, матрица платформ и конфигураций.
 # UI-слой (Qt 6) намеренно исключён — job `core` по docs/roadmap.md (неделя 3).
+#
+# MSVC (Windows): warnings-as-errors НЕ включён — системные заголовки nlohmann/json
+# дают предупреждения уровня /W4; лечение через /external отложено.
+# GCC (Ubuntu): -Wall -Wextra -Werror — свой код должен быть чист; нарушение = красный CI.
 
 name: CI
 
@@ -11,19 +14,51 @@ on:
 
 jobs:
   core:
-    name: core (Windows, MSVC 2022, без Qt)
+    name: core (${{ matrix.name }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: "Windows · MSVC 2022 · Debug"
+            os: windows-2022
+            generator: "Visual Studio 17 2022"
+            extra_flags: "-A x64"
+            build_type: Debug
+            cxx_flags: ""
+          - name: "Windows · MSVC 2022 · Release"
+            os: windows-2022
+            generator: "Visual Studio 17 2022"
+            extra_flags: "-A x64"
+            build_type: Release
+            cxx_flags: ""
+          - name: "Ubuntu · GCC · Debug"
+            os: ubuntu-latest
+            generator: "Ninja"
+            extra_flags: ""
+            build_type: Debug
+            cxx_flags: "-Wall -Wextra -Werror"
+          - name: "Ubuntu · GCC · Release"
+            os: ubuntu-latest
+            generator: "Ninja"
+            extra_flags: ""
+            build_type: Release
+            cxx_flags: "-Wall -Wextra -Werror"
     # windows-2022 (не latest): на Server 2025 CMake через vswhere не находит VS 2022
-    runs-on: windows-2022
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v4
 
       # VS-генератор не требует vcvars (в отличие от Ninja из build_dev.bat)
       - name: Configure
-        run: cmake -B build -G "Visual Studio 17 2022" -A x64 -DRAVEL_BUILD_UI=OFF
+        run: >
+          cmake -B build -G "${{ matrix.generator }}" ${{ matrix.extra_flags }}
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          -DRAVEL_BUILD_UI=OFF
+          -DCMAKE_CXX_FLAGS="${{ matrix.cxx_flags }}"
 
-      - name: Build (Debug)
-        run: cmake --build build --config Debug --parallel
+      - name: Build
+        run: cmake --build build --config ${{ matrix.build_type }} --parallel
 
       - name: Test
-        run: ctest --test-dir build -C Debug --output-on-failure
+        run: ctest --test-dir build -C ${{ matrix.build_type }} --output-on-failure
