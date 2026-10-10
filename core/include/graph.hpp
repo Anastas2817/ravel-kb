@@ -1,4 +1,4 @@
-﻿#ifndef RAVEL_CORE_INCLUDE_GRAPH_HPP_
+#ifndef RAVEL_CORE_INCLUDE_GRAPH_HPP_
 #define RAVEL_CORE_INCLUDE_GRAPH_HPP_
 
 #include <cctype>
@@ -112,6 +112,12 @@ class Node {  // DTO
     hand_position_ = hand_position;
   }
 
+  // Exact == for doubles is intentional: size_/hand_position_ are stored
+  // values compared for identity after serialization round-trips, not results
+  // of floating-point computation. A bit-level mismatch here is a storage bug
+  // and must surface, not be masked by an epsilon. Approximate comparison is
+  // for computed values (layout geometry) only. See implementation.md,
+  // note to rule 18.
   bool operator==(const Node& other) const {
     return (id_ == other.id_) && (type_ == other.type_) && (title_ == other.title_) &&
            (description_ == other.description_) && (size_ == other.size_) &&
