@@ -138,7 +138,7 @@ TEST(StorageLoad, WrongFormatVersion) {
 }
 
 
-TEST(StorageLoad, AbsenseOfAnObject) {
+TEST(StorageLoad, AbsenceOfAnObject) {
   // Тест 1: нет next_id_node
   {
     std::stringstream ss{R"({

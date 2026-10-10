@@ -228,7 +228,7 @@ TEST(GraphFromSnapshot, ValidGraphWithCorrectInvariantsAndHoles) {
   EXPECT_EQ(g.GetNeighbors(kAliveNode3), std::set<NodeId>());
 }
 
-TEST(GraphFromSnaphot, EmptySnaphot) {
+TEST(GraphFromSnapshot, EmptySnapshot) {
   GraphSnapshot src;
   Graph g = Graph::FromSnapshot(src);
   EXPECT_EQ(g.next_id_node(), 1);
@@ -421,7 +421,7 @@ TEST(GraphFromSnapshot, RepeatedIdRelation) {
   EXPECT_THROW(Graph::FromSnapshot(src), std::runtime_error);
 }
 
-TEST(GraphToSnapshot, ValidGraphSnapshotWithdHoles) {
+TEST(GraphToSnapshot, ValidGraphSnapshotWithHoles) {
   Graph src;
   src.AddRelationType("has_special_case", "#000000", "solid", false, true);
   src.AddRelationType("boils_down_to", "#000000", "solid", false, true);
