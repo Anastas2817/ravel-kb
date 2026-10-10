@@ -9,6 +9,8 @@
 [![CI](https://github.com/Anastas2817/ravel-kb/actions/workflows/ci.yml/badge.svg)](https://github.com/Anastas2817/ravel-kb/actions/workflows/ci.yml)
 ![license](https://img.shields.io/badge/license-MIT-purple)
 
+> **In English.** Ravel is a desktop tool for manually designing personal knowledge bases as a typed directed graph. Every relation is a typed entity with properties (symmetry, transitivity); the layout is semantic — hierarchy top-down (Sugiyama), ontological bands left-to-right; automation only advises (cycle detection, overloaded hubs), the user decides. Local-first: one human-readable, git-friendly JSON file, no cloud. C++17 / Qt 6, MIT. *Full documentation is in Russian.*
+
 Ravel — десктопное приложение для создания структурированных баз знаний в форме ориентированного графа. Структура строится пользователем осознанно: каждый узел и каждая связь добавляются вручную, а система только советует — обнаруживает циклы, выделяет хабы, предлагает упорядочить перегруженные области.
 
 *Название — от англ. ravel: «запутывать» и «распутывать» (контроним). Иерархия знаний неоднозначна и строится под задачу; Ravel помогает эту спутанность распутать, не отнимая ручного контроля.*
@@ -16,6 +18,22 @@ Ravel — десктопное приложение для создания ст
 ## Почему Ravel
 
 **Новизна — не в алгоритмах, а в композиции и философии.** Иерархическая раскладка (Сугияма), семантика положения (semantic substrates, conceptual spaces) и типизированные связи сами по себе известны. Новизна Ravel — в их сочетании под принципом «ручное управление; автоматика только советует»: ни один существующий инструмент не даёт одновременно типизированных связей, онтологически осмысленной раскладки и полного ручного контроля над структурой. Подробное позиционирование и обзор связанных работ — [docs/spec.md](docs/spec.md) §2.
+
+**Почему не Obsidian и не Heptabase?** У Obsidian граф — побочный продукт заметок: связи нетипизированы, а силовая раскладка не несёт смысла. У Heptabase есть вложенные холсты, но связи — просто линии, а положение карточек не кодирует онтологию. В Ravel тип связи — сущность со свойствами, а обе оси карты — часть модели знаний.
+
+| Инструмент | Типизированные связи | Семантическая раскладка | Ручное управление | Вложенность карт | Local-first |
+|---|---|---|---|---|---|
+| **Ravel** | ✅ со свойствами (симметрия, транзитивность) | ✅ иерархия + онтологические ленты | ✅ автоматика только советует | 🗘 фрактальная нотация | ✅ |
+| CmapTools | ◐ подписи-связки без свойств | ◐ иерархия — принцип нотации, не алгоритм | ✅ | ✅ вложенные узлы | ✅ |
+| Obsidian (+Canvas) | — | — (силовая раскладка графа) | ✅ | ◐ | ✅ |
+| Heptabase | — | — | ✅ | ✅ whiteboard в whiteboard | ◐ облако |
+| Scrintal / Kosmik / Muse | — | — | ✅ | ◐ | ◐ |
+| TheBrain / ExcaliBrain | ✅ | — (фокус на локальной окрестности) | ✅ | — | ◐ / ✅ |
+| Kumu | ✅ | ◐ (кластеры и метрики сети, не онтология) | ◐ анализ существующей сети | — | — |
+| Tana / Capacities | ◐ типизированы объекты, не связи | — | ✅ | ◐ | ◐ |
+| InfraNodus | — | — | — (автоизвлечение из текста) | — | — |
+
+(✅ — есть; ◐ — частично; — нет; 🗘 — в перспективах. Обоснования по каждому инструменту — [docs/spec.md](docs/spec.md) §2.1.)
 
 ## Оглавление
 
@@ -33,11 +51,11 @@ Ravel — десктопное приложение для создания ст
 Требования: CMake ≥ 3.20, компилятор с C++17, Qt 6 (модуль Widgets).
 
 ```bash
-git clone https://github.com/<user>/ravel-kb.git
+git clone https://github.com/Anastas2817/ravel-kb.git
 cd ravel-kb
 cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build
-./build/ravel
+./build/bin/ravel
 ```
 
 Тесты:
@@ -60,12 +78,12 @@ ctest --test-dir build -C Release --output-on-failure
 
 ## Статус проекта
 
-Проект на **этапе 1** (ядро). Текущий план — аскетичный MVP курсовой работы: [docs/roadmap.md](docs/roadmap.md).
+Проект на **этапе 2** (канвас; этап 1 «ядро» закрыт). Текущий план — аскетичный MVP курсовой работы: [docs/roadmap.md](docs/roadmap.md).
 
 | Компонент | Статус |
 |---|---|
-| Модель данных `Graph` | ✅ закрыто (неделя 1: 7 юнит-тестов на инварианты) |
-| Сериализация JSON | ✅ закрыто (неделя 2: `JsonStorage` Load/Save, 21 тест, round-trip) |
+| Модель данных `Graph` | ✅ закрыто (неделя 1: 18 юнит-тестов на инварианты) |
+| Сериализация JSON | ✅ закрыто (неделя 2: `JsonStorage` Load/Save, 12 тестов, round-trip) |
 | Канвас (QGraphicsView) | 🔧 база (неделя 4): узлы перемещаемы, рёбра следуют |
 | Раскладка (Сугияма с онтологическими лентами) | 📋 запланировано |
 | Обнаружение циклов | 📋 запланировано |
