@@ -54,7 +54,7 @@ cmake --build build --config Release
 ctest --test-dir build -C Release --output-on-failure
 ```
 
-Открыть можно и как `build/ravel-kb.sln`. GoogleTest и nlohmann/json подтягиваются через FetchContent при первой конфигурации (нужен интернет). `windeployqt` запускается автоматически после сборки — собранный `build/bin/Release/ravel.exe` работает вне IDE без дополнительных шагов. CI при этом может оставаться на Linux/gcc — ядро портируемо.
+Открыть можно и как `build/ravel-kb.sln`. GoogleTest и nlohmann/json подтягиваются через FetchContent при первой конфигурации (нужен интернет). `windeployqt` запускается автоматически после сборки — собранный `build/bin/Release/ravel.exe` работает вне IDE без дополнительных шагов. CI гоняет матрицу Windows/MSVC и Ubuntu/GCC в Debug и Release (на GCC — `-Wall -Wextra -Werror`): заявленная совместимость с MSVC 2022 и портативность ядра проверяются автоматически на каждом push.
 
 Если официальный установщик Qt недоступен или работает медленно (например, `download.qt.io` не открывается): Qt можно поставить без установщика и регистрации — скачав готовые бинарники с зеркала (например, `ftp.fau.de/qtproject/online/qtsdkrepository/...`) и распаковав их в выбранный каталог. Для разработки на Widgets достаточно архивов `qtbase`, `qttools`, `qtsvg`, `d3dcompiler`, `opengl32sw` (~70 МБ вместо ~2 ГБ полной установки).
 
@@ -66,7 +66,7 @@ ctest --test-dir build -C Release --output-on-failure
 |---|---|
 | Модель данных `Graph` | ✅ закрыто (неделя 1: 7 юнит-тестов на инварианты) |
 | Сериализация JSON | ✅ закрыто (неделя 2: `JsonStorage` Load/Save, 21 тест, round-trip) |
-| Канвас (QGraphicsView) | 📋 запланировано |
+| Канвас (QGraphicsView) | 🔧 база (неделя 4): узлы перемещаемы, рёбра следуют |
 | Раскладка (Сугияма с онтологическими лентами) | 📋 запланировано |
 | Обнаружение циклов | 📋 запланировано |
 | undo/redo (Command) | 📋 запланировано |
@@ -80,6 +80,7 @@ ctest --test-dir build -C Release --output-on-failure
 | Qt 6 Widgets | GUI, event loop | устанавливается вручную (официальный установщик, кит MSVC 2022 64-bit) |
 | nlohmann/json | сериализация | автоматически, FetchContent |
 | GoogleTest | юнит-тесты | автоматически, FetchContent |
+| Doxygen | документация API (`doxygen Doxyfile` → `docs/html`) | устанавливается в систему (опц.) |
 
 ## Ключевые возможности
 
