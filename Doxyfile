@@ -1,0 +1,22 @@
+# Doxyfile — минимальная конфигурация для Ravel (заготовка).
+# Запуск: doxygen Doxyfile  →  вывод в docs/html (каталог в git не входит, см. .gitignore).
+
+DOXYFILE_ENCODING  = UTF-8
+PROJECT_NAME       = Ravel
+PROJECT_BRIEF      = "Инструмент для ручного проектирования персональных баз знаний с типизированными связями"
+
+OUTPUT_DIRECTORY   = docs/html
+HTML_OUTPUT        = .
+GENERATE_HTML      = YES
+GENERATE_LATEX     = NO
+
+INPUT              = core/include core/src app/include storage/include storage/src
+RECURSIVE          = NO
+FILE_PATTERNS      = *.hpp *.cpp
+
+EXTRACT_ALL        = YES
+EXTRACT_PRIVATE    = NO
+EXTRACT_STATIC     = NO
+
+JAVADOC_AUTOBRIEF  = YES
+QUIET              = YES
