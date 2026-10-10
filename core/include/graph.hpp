@@ -1,6 +1,7 @@
 ﻿#ifndef RAVEL_CORE_INCLUDE_GRAPH_HPP_
 #define RAVEL_CORE_INCLUDE_GRAPH_HPP_
 
+#include <cctype>
 #include <cstdint>
 #include <map>
 #include <optional>
@@ -143,11 +144,11 @@ class RelationType {
       : color_(isValidHexColor(color)
                    ? color
                    : throw std::logic_error(
-                         "Graph::RelationType try to create Relationtype with non-existent color")),
+                         "Graph::RelationType tried to create Relationtype with non-existent color")),
         arrow_(isValidArrow(arrow)
                    ? arrow
                    : throw std::logic_error(
-                         "Graph::RelationType try to create Relationtype with non-existent arrow")),
+                         "Graph::RelationType tried to create Relationtype with non-existent arrow")),
         symmetric_(symmetric),
         transitive_(transitive) {
   }

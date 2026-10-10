@@ -83,7 +83,7 @@ void JsonStorage::Save(const GraphSnapshot& g, std::ostream& out) {
     j["relations"].push_back(obj);
   }
 
-  j["allowed_cycles"] = json::array();
+  j["allowed_cycles"] = json::array(); // TODO week 6
 
   out << j.dump(2);
 }
@@ -124,7 +124,7 @@ GraphSnapshot JsonStorage::Load(std::istream& in) {
                              el.value("size", 1.0), pos));
     }
     for (const json& el : j.at("relations")) {
-      g.relations.push_back(Relation(el.at("id").get<NodeId>(), el.at("from").get<NodeId>(), 
+      g.relations.push_back(Relation(el.at("id").get<RelationId>(), el.at("from").get<NodeId>(), 
         el.at("to").get<NodeId>(), el.at("type").get<std::string>(), el.value("description", std::string{})));
     }
     if (j.contains("allowed_cycles") && !j.at("allowed_cycles").is_array()) {
