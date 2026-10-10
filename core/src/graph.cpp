@@ -92,15 +92,23 @@ std::optional<std::pair<double, double>> Graph::MoveNode(NodeId id, std::pair<do
 
 void Graph::DeleteNodes(std::vector<NodeId> ids) {
   for (NodeId id : ids) {
-    if (HasNode(id)) {
-      nodes_[id - 1] = Node(0, "", "");
-      DeleteRelations(access_[id]);  // by the invariant, only live relations are listed there
-      access_.erase(id);
+    if (!HasNode(id)) {
+      throw std::out_of_range("Graph::DeleteNodes tried to delete non-existent Node");
     }
+  }
+  for (NodeId id : ids) {
+    nodes_[id - 1] = Node(0, "", "");
+    DeleteRelations(access_[id]);  // by the invariant, only live relations are listed there
+    access_.erase(id);
   }
 }
 
 void Graph::DeleteRelations(std::vector<RelationId> ids) {
+  for (RelationId id : ids) {
+    if (!HasRelation(id)) {
+      throw std::out_of_range("Graph::DeleteRelations tried to delete non-existent Relation");
+    }
+  }
   for (RelationId id : ids) {
     NodeId from = relations_[id - 1].from();
     NodeId to = relations_[id - 1].to();

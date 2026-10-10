@@ -42,16 +42,16 @@ class NodeType {
       : color_(isValidHexColor(color)
                    ? color
                    : throw std::logic_error(
-                         "Graph::NodeType tried to create Nodetype with non-existent color")),
+                         "Graph::NodeType tried to create Nodetype with non-valid color")),
         shape_(isValidShape(shape)
                    ? shape
                    : throw std::logic_error(
-                         "Graph::NodeType tried to create Nodetype with non-existent shape")),
+                         "Graph::NodeType tried to create Nodetype with non-valid shape")),
         frame_color_(
             isValidHexColor(frame_color)
                 ? frame_color
                 : throw std::logic_error(
-                      "Graph::NodeType tried to create Nodetype with non-existent frame_color")) {
+                      "Graph::NodeType tried to create Nodetype with non-valid frame_color")) {
   }
 
   const std::string& color() const noexcept {
@@ -144,11 +144,11 @@ class RelationType {
       : color_(isValidHexColor(color)
                    ? color
                    : throw std::logic_error(
-                         "Graph::RelationType tried to create Relationtype with non-existent color")),
+                         "Graph::RelationType tried to create Relationtype with non-valid color")),
         arrow_(isValidArrow(arrow)
                    ? arrow
                    : throw std::logic_error(
-                         "Graph::RelationType tried to create Relationtype with non-existent arrow")),
+                         "Graph::RelationType tried to create Relationtype with non-valid arrow")),
         symmetric_(symmetric),
         transitive_(transitive) {
   }
