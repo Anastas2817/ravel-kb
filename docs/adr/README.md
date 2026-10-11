@@ -13,3 +13,4 @@
 | ADR | Решение | Статус |
 |---|---|---|
 | [ADR-001](ADR-001-id-generation.md) | Раздельные счётчики `next_id_node` / `next_id_relation`, хранение вектором с индексом = id | принят |
+| [ADR-002](ADR-002-soft-delete-liveness.md) | Soft-delete: живость = членство в `access_`, без производных структур; `ForEachLive*` — единственная точка перебора | принят |
