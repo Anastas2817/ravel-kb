@@ -1,9 +1,4 @@
-#ifdef _MSC_VER
-// nlohmann/json: шум code analysis (PREfast, C26xxx) из чужих шаблонов.
-// /external:I компиляторные предупреждения глушит, анализатор — нет; диагностика
-// шаблонов рождается в точках ИСПОЛЬЗОВАНИЯ (в Save/Load ниже), поэтому suppress
-// на область одного include не работает. Файл целиком работает с nlohmann —
-// отключение на весь TU.
+﻿#ifdef _MSC_VER
 #pragma warning(disable : 26495 26819)
 #endif
 
@@ -21,7 +16,7 @@ void JsonStorage::Save(const GraphSnapshot& g, std::ostream& out) {
     throw std::runtime_error("JsonStorage::Save: output stream is in fail state");
   }
   json j;
-  j["format_version"] = 2;
+  j["format_version"] = kFormatVersion;
   j["next_id_node"] = g.next_id_node;
   j["next_id_relation"] = g.next_id_relation;
 
@@ -105,16 +100,24 @@ GraphSnapshot JsonStorage::Load(std::istream& in) {
     g.next_id_node = j.at("next_id_node").get<NodeId>();
     g.next_id_relation = j.at("next_id_relation").get<RelationId>();
     for (const json& el : j.at("node_types")) {
-      g.ontology_node.emplace(
-          el.at("name").get<std::string>(),
-          NodeType(el.at("color").get<std::string>(), el.at("shape").get<std::string>(),
-                   el.at("frame_color").get<std::string>()));
+      std::string name = el.at("name").get<std::string>();
+      if (g.ontology_node.find(name) == g.ontology_node.end()) {
+        g.ontology_node.emplace(
+            name, NodeType(el.at("color").get<std::string>(), el.at("shape").get<std::string>(),
+                           el.at("frame_color").get<std::string>()));
+      } else {
+        throw std::runtime_error("JsonStorage::Load: repeated NodeTypes");
+      }
     }
     for (const json& el : j.at("relation_types")) {
-      g.ontology_relation.emplace(
-          el.at("name").get<std::string>(),
-          RelationType(el.at("color").get<std::string>(), el.at("arrow").get<std::string>(),
-                       el.at("symmetric").get<bool>(), el.at("transitive").get<bool>()));
+      std::string name = el.at("name").get<std::string>();
+      if (g.ontology_relation.find(name) == g.ontology_relation.end()) {
+        g.ontology_relation.emplace(
+            name, RelationType(el.at("color").get<std::string>(), el.at("arrow").get<std::string>(),
+                               el.at("symmetric").get<bool>(), el.at("transitive").get<bool>()));
+      } else {
+        throw std::runtime_error("JsonStorage::Load: repeated RelationTypes");
+      }
     }
     for (const json& el : j.at("nodes")) {
       std::optional<std::pair<double, double>> pos = std::nullopt;

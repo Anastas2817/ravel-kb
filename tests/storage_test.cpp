@@ -981,3 +981,47 @@ TEST(StorageSave, FailStateStream) {
   GraphSnapshot g;
   EXPECT_THROW(JsonStorage::Save(g, ss), std::runtime_error);
 }
+
+TEST(StorageLoad, RepeatedNodeTypeName) {
+  // Правило 13/22: повтор имени типа в словаре — битые внешние данные,
+  // а не случайность, которую можно проигнорировать.
+  std::stringstream ss{R"({
+          "format_version": "2",
+          "next_id_node": 1,
+          "next_id_relation": 1,
+          "node_types" : [
+            {"name": "model", "color": "#4a90d9", "shape": "rect",
+             "frame_color": "#2c5f94"},
+            {"name": "model", "color": "#3ba895", "shape": "ellipse",
+             "frame_color": "#000000"}
+          ],
+          "relation_types" : [],
+          "nodes": [],
+          "relations": [],
+          "allowed_cycles": []
+      })"};
+  EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
+}
+
+TEST(StorageLoad, RepeatedRelationTypeName) {
+  // То же для relation_types.
+  std::stringstream ss{R"({
+          "format_version": "2",
+          "next_id_node": 1,
+          "next_id_relation": 1,
+          "node_types" : [
+            {"name": "model", "color": "#4a90d9", "shape": "rect",
+             "frame_color": "#2c5f94"}
+          ],
+          "relation_types" : [
+            {"name": "is_a", "color": "#000000", "arrow": "solid",
+             "symmetric": false, "transitive": true},
+            {"name": "is_a", "color": "#ffffff", "arrow": "dashed",
+             "symmetric": false, "transitive": false}
+          ],
+          "nodes": [],
+          "relations": [],
+          "allowed_cycles": []
+      })"};
+  EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
+}
