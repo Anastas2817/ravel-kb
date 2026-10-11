@@ -1,6 +1,6 @@
 # Ravel
 
-**Инструмент для ручного проектирования персональных баз знаний с типизированными связями, пространственной семантикой и иерархической раскладкой.**
+**Десктопный PKM-инструмент с графовой нотацией: типизированные связи, семантическая раскладка, полное ручное управление.**
 
 ![status](https://img.shields.io/badge/status-in%20development-yellow)
 ![lang](https://img.shields.io/badge/C%2B%2B-17-blue)
@@ -9,7 +9,7 @@
 [![CI](https://github.com/Anastas2817/ravel-kb/actions/workflows/ci.yml/badge.svg)](https://github.com/Anastas2817/ravel-kb/actions/workflows/ci.yml)
 ![license](https://img.shields.io/badge/license-MIT-purple)
 
-> **In English.** Ravel is a desktop tool for manually designing personal knowledge bases as a typed directed graph. Every relation is a typed entity with properties (symmetry, transitivity); the layout is semantic — hierarchy top-down (Sugiyama), ontological bands left-to-right; automation only advises (cycle detection, overloaded hubs), the user decides. Local-first: one human-readable, git-friendly JSON file, no cloud. C++17 / Qt 6, MIT. *Full documentation is in Russian.*
+> **In English.** Ravel is a desktop PKM tool with a graph notation: relations are typed entities with properties (symmetry, transitivity); the layout is semantic — hierarchy top-down (Sugiyama), ontological bands left-to-right; and control is fully manual — automation only advises (cycle detection, overloaded hubs), the user decides. Local-first: one human-readable, git-friendly JSON file, no cloud. C++17 / Qt 6, MIT. *Full documentation is in Russian.*
 
 Ravel — десктопное приложение для создания структурированных баз знаний в форме ориентированного графа. Структура строится пользователем осознанно: каждый узел и каждая связь добавляются вручную, а система только советует — обнаруживает циклы, выделяет хабы, предлагает упорядочить перегруженные области.
 
@@ -25,12 +25,16 @@ Ravel — десктопное приложение для создания ст
 |---|---|---|---|---|---|
 | **Ravel** | ✅ со свойствами (симметрия, транзитивность) | ✅ иерархия + онтологические ленты | ✅ автоматика только советует | 🗘 фрактальная нотация | ✅ |
 | CmapTools | ◐ подписи-связки без свойств | ◐ иерархия — принцип нотации, не алгоритм | ✅ | ✅ вложенные узлы | ✅ |
+| VUE (Tufts) | ◐ подписи + онтологии (OWL) | — | ✅ | ◐ | ✅ заброшен с 2015 |
+| Tinderbox | ✅ и узлы тоже (прототипы) | ◐ пространство осмысленно, но раскладки нет | ✅ | ✅ контейнеры | ✅ macOS-only |
 | Obsidian (+Canvas) | — | — (силовая раскладка графа) | ✅ | ◐ | ✅ |
 | Heptabase | — | — | ✅ | ✅ whiteboard в whiteboard | ◐ облако |
 | Scrintal / Kosmik / Muse | — | — | ✅ | ◐ | ◐ |
 | TheBrain / ExcaliBrain | ✅ | — (фокус на локальной окрестности) | ✅ | — | ◐ / ✅ |
-| Kumu | ✅ | ◐ (кластеры и метрики сети, не онтология) | ◐ анализ существующей сети | — | — |
+| Anytype | ✅ (relation types) | — (граф — побочный view базы) | ✅ | ◐ | ✅ source-available |
 | Tana / Capacities | ◐ типизированы объекты, не связи | — | ✅ | ◐ | ◐ |
+| Kumu | ✅ | ◐ (кластеры и метрики сети, не онтология) | ◐ анализ существующей сети | — | — |
+| yEd (yWorks) | — (подписи) | ◐ эталонная авто-раскладка, но без онтологии | ✅ | ✅ группы | ✅ freeware |
 | InfraNodus | — | — | — (автоизвлечение из текста) | — | — |
 
 (✅ — есть; ◐ — частично; — нет; 🗘 — в перспективах. Обоснования по каждому инструменту — [docs/spec.md](docs/spec.md) §2.1.)
