@@ -11,7 +11,7 @@
 
 > **In English.** Ravel is a desktop PKM tool with a graph notation: relations are typed entities with properties (symmetry, transitivity); the layout is semantic — hierarchy top-down (Sugiyama), ontological bands left-to-right; and control is fully manual — automation only advises (cycle detection, overloaded hubs), the user decides. Local-first: one human-readable, git-friendly JSON file, no cloud. C++17 / Qt 6, MIT. *Full documentation is in Russian.*
 
-Ravel — десктопное приложение для создания структурированных баз знаний в форме ориентированного графа. Структура строится пользователем осознанно: каждый узел и каждая связь добавляются вручную, а система только советует — обнаруживает циклы, выделяет хабы, предлагает упорядочить перегруженные области.
+База знаний в Ravel — ориентированный граф, построенный вручную и осознанно: каждый узел и каждая связь добавляются пользователем, а система только советует — обнаруживает циклы, выделяет перегруженные хабы, предлагает упорядочить. Связи типизированы и имеют свойства (симметрия, транзитивность), а положение узла несёт смысл: вертикаль кодирует иерархию (общее сверху), горизонталь — онтологические ленты.
 
 *Название — от англ. ravel: «запутывать» и «распутывать» (контроним). Иерархия знаний неоднозначна и строится под задачу; Ravel помогает эту спутанность распутать, не отнимая ручного контроля.*
 
