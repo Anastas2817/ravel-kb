@@ -149,3 +149,6 @@ $RECYCLE.BIN/
 *~
 # Локальные инструменты (JRE + plantuml.jar для рендера диаграмм)
 tools/
+
+# Visual Studio: старый формат настроек CMake (заменён CMakePresets.json)
+CMakeSettings.json

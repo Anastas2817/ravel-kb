@@ -1,0 +1,23 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "x64-Debug-local",
+      "displayName": "x64 Debug (Qt, локальный)",
+      "description": "Личная конфигурация: тот же x64-Debug + путь к Qt этого компьютера. Файл не коммитится.",
+      "inherits": "x64-Debug",
+      "cacheVariables": {
+        "CMAKE_PREFIX_PATH": "C:/Qt/6.x.y/msvc2022_64"
+      }
+    },
+    {
+      "name": "x64-Release-local",
+      "displayName": "x64 Release (Qt, локальный)",
+      "description": "Личная конфигурация: тот же x64-Release + путь к Qt этого компьютера. Файл не коммитится.",
+      "inherits": "x64-Release",
+      "cacheVariables": {
+        "CMAKE_PREFIX_PATH": "C:/Qt/6.x.y/msvc2022_64"
+      }
+    }
+  ]
+}
