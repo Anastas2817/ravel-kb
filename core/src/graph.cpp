@@ -147,37 +147,42 @@ Graph Graph::FromSnapshot(const GraphSnapshot& src) {
   if (src.next_id_relation == 1 && !src.relations.empty()) {
     throw std::runtime_error("Graph::FromSnapshot Graph with next_id_relation = 0 has relations");
   }
-  // invariant 1
-  if (!src.nodes.empty() && src.nodes.back().id() >= src.next_id_node) {
-    throw std::runtime_error("Graph::FromSnapshot exists node_id >= next_id_node");
-  }
-  if (!src.relations.empty() && src.relations.back().id() >= src.next_id_relation) {
-    throw std::runtime_error("Graph::FromSnapshot exists relation_id >= next_id_relation");
-  }
-  // invariant 3 and 4
+  
   std::unordered_set<NodeId> alive_nodes;
   for (const Node& i : src.nodes) {
+    // invariant 5
     if (src.ontology_node.find(i.type()) == src.ontology_node.end()) {
       throw std::runtime_error("Graph::FromSnapshot tried to add node with non-existent type");
     }
+    // invariant 1
     if (i.id() == 0 || !alive_nodes.insert(i.id()).second) {
       throw std::runtime_error("Graph::FromSnapshot tried to add node with id = 0 or repeated id");
+    }
+    if (i.id() >= src.next_id_node) {
+      throw std::runtime_error("Graph::FromSnapshot tried to add node with id > next_id");
     }
   }
   std::unordered_set<RelationId> alive_relations;
   for (const Relation& i : src.relations) {
+    // invariant 5
     if (src.ontology_relation.find(i.type()) == src.ontology_relation.end()) {
       throw std::runtime_error("Graph::FromSnapshot tried to add relation with non-existent type");
     }
+    // invariant 4
     if (alive_nodes.count(i.from()) != 1) {
       throw std::runtime_error("Graph::FromSnapshot tried to add relation with non-existent from");
     }
     if (alive_nodes.count(i.to()) != 1) {
       throw std::runtime_error("Graph::FromSnapshot tried to add relation with non-existent to");
     }
+    // invariant 1
     if (i.id() == 0 || !alive_relations.insert(i.id()).second) {
       throw std::runtime_error(
           "Graph::FromSnapshot tried to add relation with id = 0 or repeated id");
+    }
+    if (i.id() >= src.next_id_relation) {
+      throw std::runtime_error(
+          "Graph::FromSnapshot tried to add relation with id > next_id");
     }
   }
   // apply
@@ -212,7 +217,7 @@ GraphSnapshot Graph::ToSnapshot() const {
   for (const auto& [key, value] : access_) {
     dest.nodes.push_back(nodes_[key - 1]);
   }
-  for (RelationId id = 0; id < next_id_relation_; ++id) {
+  for (RelationId id = 1; id < next_id_relation_; ++id) {
     if (HasRelation(id)) {
       dest.relations.push_back(relations_[id - 1]);
     }

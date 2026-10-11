@@ -1,4 +1,4 @@
-#ifndef RAVEL_CORE_INCLUDE_GRAPH_HPP_
+﻿#ifndef RAVEL_CORE_INCLUDE_GRAPH_HPP_
 #define RAVEL_CORE_INCLUDE_GRAPH_HPP_
 
 #include <cctype>
@@ -307,6 +307,7 @@ class Graph {
       std::vector<std::pair<NodeId, std::string>> tos, std::string description = "",
       double size = 1, std::optional<std::pair<double, double>> hand_position = std::nullopt);
   std::optional<std::pair<double, double>> MoveNode(NodeId id, std::pair<double, double> pos);
+  // implementation.md («Контракт удаления») - idempotence for delete*
   void DeleteNodes(std::vector<NodeId> ids);
   void DeleteRelations(std::vector<RelationId> ids);
   const std::vector<RelationId>& GetIncidentRelations(NodeId id) const {

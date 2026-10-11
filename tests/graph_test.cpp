@@ -1,4 +1,4 @@
-﻿#ifdef _MSC_VER
+#ifdef _MSC_VER
 #pragma warning(disable : 26495 26439)
 #endif
 
@@ -469,4 +469,83 @@ TEST(GraphToSnapshot, ValidGraphSnapshotWithHoles) {
 
   EXPECT_EQ(dest.nodes, right_nodes);
   EXPECT_EQ(dest.relations, right_relations);
+}
+
+TEST(GraphDeleteRelations, DuplicateIdsInArgument) {
+  // Контракт идемпотентности (implementation.md): дубликат id в списке на удаление —
+  // вырожденный случай корректного запроса, не ошибка.
+  Graph g;
+  g.AddRelationType("has_special_case", "#000000", "solid", false, true);
+  g.AddNodeType("model", "#4a90d9", "rect", "#000000");
+  NodeId from = g.AddNode("Числовой ряд", "model");
+  NodeId to = g.AddNode("Функциональный ряд", "model");
+  const RelationId id1 = g.AddRelation(from, to, "has_special_case");
+  const RelationId id2 = g.AddRelation(to, from, "has_special_case");
+
+  g.DeleteRelations({id1, id1, id2});  // не бросает, состояние корректно
+
+  EXPECT_FALSE(g.HasRelation(id1));
+  EXPECT_FALSE(g.HasRelation(id2));
+  EXPECT_TRUE(g.GetIncidentRelations(from).empty());
+  EXPECT_TRUE(g.GetIncidentRelations(to).empty());
+  EXPECT_TRUE(g.HasNode(from) && g.HasNode(to));  // узлы не пострадали
+}
+
+TEST(GraphDeleteNodes, DuplicateIdsInArgument) {
+  // Тот же контракт идемпотентности для DeleteNodes: повтор id удаляет один раз.
+  Graph g;
+  g.AddRelationType("has_special_case", "#000000", "solid", false, true);
+  g.AddNodeType("model", "#4a90d9", "rect", "#000000");
+  NodeId from = g.AddNode("Числовой ряд", "model");
+  NodeId to = g.AddNode("Функциональный ряд", "model");
+  const RelationId id = g.AddRelation(from, to, "has_special_case");
+
+  g.DeleteNodes({from, from});  // не бросает
+
+  EXPECT_FALSE(g.HasNode(from));
+  EXPECT_TRUE(g.HasNode(to));
+  EXPECT_FALSE(g.HasRelation(id));
+  EXPECT_TRUE(g.GetIncidentRelations(to).empty());
+}
+
+TEST(GraphFromSnapshot, IdBeyondNextIdUnsorted) {
+  // Правило 22: вход полный и валидный ровно в одном месте — узел id 7 при
+  // next_id_node = 4. Порядок [1, 7, 3]: старая проверка через back() (id 3 < 4)
+  // пропускала этот файл и доходила до записи за пределами вектора (UB).
+  GraphSnapshot src;
+  src.next_id_node = 4;
+  src.next_id_relation = 2;
+
+  src.ontology_node.emplace("model", NodeType("#000000", "rect", "#000000"));
+  src.ontology_relation.emplace("has_special_case", RelationType("#000000", "solid", false, true));
+
+  src.nodes.emplace_back(1, "Ряд Дирихле", "model");
+  src.nodes.emplace_back(7, "Гармонический ряд", "model");
+  src.nodes.emplace_back(3, "Телескопический ряд", "model");
+  src.relations.emplace_back(1, 1, 3, "has_special_case");
+
+  EXPECT_THROW(Graph::FromSnapshot(src), std::runtime_error);
+}
+
+TEST(GraphFromSnapshot, UnsortedOrderAccepted) {
+  // Порядок id в снимке не контракт (R11, ToSnapshot пишет в порядке access_):
+  // несортированный, но валидный снимок обязан грузиться.
+  GraphSnapshot src;
+  src.next_id_node = 4;
+  src.next_id_relation = 2;
+
+  src.ontology_node.emplace("model", NodeType("#000000", "rect", "#000000"));
+  src.ontology_relation.emplace("has_special_case", RelationType("#000000", "solid", false, true));
+
+  src.nodes.emplace_back(3, "Телескопический ряд", "model");
+  src.nodes.emplace_back(1, "Ряд Дирихле", "model");
+  src.nodes.emplace_back(2, "Гармонический ряд", "model");
+  src.relations.emplace_back(1, 1, 2, "has_special_case");
+
+  Graph g = Graph::FromSnapshot(src);
+  EXPECT_TRUE(g.HasNode(1) && g.HasNode(2) && g.HasNode(3));
+  EXPECT_EQ(g.GetNode(1).title(), "Ряд Дирихле");
+  EXPECT_EQ(g.GetNode(3).title(), "Телескопический ряд");
+  EXPECT_TRUE(g.HasRelation(1));
+  EXPECT_EQ(g.next_id_node(), 4);
 }
