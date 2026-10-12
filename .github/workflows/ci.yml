@@ -67,3 +67,23 @@ jobs:
 
       - name: Test
         run: ctest --test-dir build -C ${{ matrix.build_type }} --output-on-failure
+
+  format:
+    name: clang-format
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Пин через venv + pip: бинарь совпадает с локальным из VS 2022 (19.1.5).
+      # Версии clang-format форматируют по-разному — пин обязателен, иначе
+      # «у меня зелёное, в CI красное». apt-вариант не пинится.
+      - name: Install clang-format (pinned 19.1.5)
+        run: |
+          python3 -m venv .fmt-venv
+          .fmt-venv/bin/pip install clang-format==19.1.5
+
+      - name: Check formatting
+        run: >
+          .fmt-venv/bin/clang-format --dry-run --Werror
+          $(find core storage app ui tests -name '*.hpp' -o -name '*.cpp')
