@@ -1,4 +1,4 @@
-﻿#ifndef RAVEL_CORE_INCLUDE_GRAPH_HPP_
+#ifndef RAVEL_CORE_INCLUDE_GRAPH_HPP_
 #define RAVEL_CORE_INCLUDE_GRAPH_HPP_
 
 #include <cctype>
@@ -42,16 +42,16 @@ class NodeType {
       : color_(isValidHexColor(color)
                    ? color
                    : throw std::invalid_argument(
-                         "Graph::NodeType tried to create Nodetype with non-valid color")),
+                         "Graph::NodeType tried to create NodeType with non-valid color")),
         shape_(isValidShape(shape)
                    ? shape
                    : throw std::invalid_argument(
-                         "Graph::NodeType tried to create Nodetype with non-valid shape")),
+                         "Graph::NodeType tried to create NodeType with non-valid shape")),
         frame_color_(
             isValidHexColor(frame_color)
                 ? frame_color
                 : throw std::invalid_argument(
-                      "Graph::NodeType tried to create Nodetype with non-valid frame_color")) {
+                      "Graph::NodeType tried to create NodeType with non-valid frame_color")) {
   }
 
   const std::string& color() const noexcept {
@@ -66,6 +66,9 @@ class NodeType {
   bool operator==(const NodeType& other) const {
     return (color_ == other.color_) && (shape_ == other.shape_) &&
            (frame_color_ == other.frame_color_);
+  }
+  bool operator!=(const NodeType& other) const {
+    return !(*this == other);
   }
 
  private:
@@ -123,6 +126,9 @@ class Node {  // DTO
            (description_ == other.description_) && (size_ == other.size_) &&
            (hand_position_ == other.hand_position_);
   }
+  bool operator!=(const Node& other) const {
+    return !(*this == other);
+  }
 
  private:
   // Identity
@@ -175,6 +181,9 @@ class RelationType {
     return (color_ == other.color_) && (arrow_ == other.arrow_) &&
            (symmetric_ == other.symmetric_) && (transitive_ == other.transitive_);
   }
+  bool operator!=(const RelationType& other) const {
+    return !(*this == other);
+  }
 
  private:
   std::string color_ = "#000000";
@@ -213,6 +222,9 @@ class Relation {  // DTO
   bool operator==(const Relation& other) const {
     return (id_ == other.id_) && (from_ == other.from_) && (to_ == other.to_) &&
            (type_ == other.type_) && (description_ == other.description_);
+  }
+  bool operator!=(const Relation& other) const {
+    return !(*this == other);
   }
 
  private:
@@ -340,6 +352,8 @@ class Graph {
   // existing ids of their kind.
   NodeId next_id_node_ = 1;
   RelationId next_id_relation_ = 1;
+
+  static constexpr std::uint64_t kMaxEntities = 1000000;
 };
 
 }  // namespace ravel

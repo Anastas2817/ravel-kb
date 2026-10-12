@@ -124,7 +124,6 @@ void Graph::DeleteRelations(std::vector<RelationId> ids) {
 
 Graph Graph::FromSnapshot(const GraphSnapshot& src) {
   // validate
-  const std::uint64_t kMaxEntities = 1000000;
   if (src.next_id_node > kMaxEntities) {
     throw std::runtime_error("Graph::FromSnapshot next_id_node > limit = 1 000 000");
   }
@@ -142,12 +141,12 @@ Graph Graph::FromSnapshot(const GraphSnapshot& src) {
   }
   if (src.next_id_node == 1 &&
       (!src.nodes.empty() || src.next_id_relation != 1 || !src.relations.empty())) {
-    throw std::runtime_error("Graph::FromSnapshot Graph with next_id_node = 0 has nodes/relations");
+    throw std::runtime_error("Graph::FromSnapshot Graph with next_id_node = 1 has nodes/relations");
   }
   if (src.next_id_relation == 1 && !src.relations.empty()) {
-    throw std::runtime_error("Graph::FromSnapshot Graph with next_id_relation = 0 has relations");
+    throw std::runtime_error("Graph::FromSnapshot Graph with next_id_relation = 1 has relations");
   }
-  
+
   std::unordered_set<NodeId> alive_nodes;
   for (const Node& i : src.nodes) {
     // invariant 5
@@ -159,7 +158,7 @@ Graph Graph::FromSnapshot(const GraphSnapshot& src) {
       throw std::runtime_error("Graph::FromSnapshot tried to add node with id = 0 or repeated id");
     }
     if (i.id() >= src.next_id_node) {
-      throw std::runtime_error("Graph::FromSnapshot tried to add node with id > next_id");
+      throw std::runtime_error("Graph::FromSnapshot tried to add node with id >= next_id");
     }
   }
   std::unordered_set<RelationId> alive_relations;
@@ -182,7 +181,7 @@ Graph Graph::FromSnapshot(const GraphSnapshot& src) {
     }
     if (i.id() >= src.next_id_relation) {
       throw std::runtime_error(
-          "Graph::FromSnapshot tried to add relation with id > next_id");
+          "Graph::FromSnapshot tried to add relation with id >= next_id");
     }
   }
   // apply

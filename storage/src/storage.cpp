@@ -1,4 +1,4 @@
-﻿#ifdef _MSC_VER
+#ifdef _MSC_VER
 #pragma warning(disable : 26495 26819)
 #endif
 
@@ -84,6 +84,10 @@ void JsonStorage::Save(const GraphSnapshot& g, std::ostream& out) {
   j["allowed_cycles"] = json::array(); // TODO week 6
 
   out << j.dump(2);
+
+  if (!out) {
+    throw std::runtime_error("JsonStorage::Save: failed to write");
+  }
 }
 
 GraphSnapshot JsonStorage::Load(std::istream& in) {
@@ -135,6 +139,9 @@ GraphSnapshot JsonStorage::Load(std::istream& in) {
     }
     if (j.contains("allowed_cycles") && !j.at("allowed_cycles").is_array()) {
       throw std::runtime_error("JsonStorage::Load: allowed_cycles is not an array");
+    }
+    if (!in) {
+      throw std::runtime_error("JsonStorage::Load: stream error");
     }
     return g;
   } catch (const json::exception& e) {
