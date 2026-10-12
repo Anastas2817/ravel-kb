@@ -1,4 +1,4 @@
-#ifndef RAVEL_CORE_INCLUDE_GRAPH_HPP_
+﻿#ifndef RAVEL_CORE_INCLUDE_GRAPH_HPP_
 #define RAVEL_CORE_INCLUDE_GRAPH_HPP_
 
 #include <cctype>
@@ -346,7 +346,8 @@ class Graph {
   // For any relation r and any node x: r is listed in `access_[x]` if and only if x is from or to
   // of r. `access_` holds entries exactly for live nodes: every live node has an entry (possibly
   // with an empty vector), no deleted node has one.
-  std::map<NodeId, std::vector<RelationId>> access_;
+  std::map<NodeId, std::vector<RelationId>>
+      access_;  // deterministic is necessary for serialization
 
   // Ids are never reused; `next_id_node_` / `next_id_relation_` are strictly greater than all
   // existing ids of their kind.

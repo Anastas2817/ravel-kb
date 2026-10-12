@@ -3,9 +3,9 @@
 #pragma warning(disable : 26495 26813)
 #endif
 
-#include <QPainter>
-
 #include "node_item.hpp"
+
+#include <QPainter>
 
 namespace ravel::ui {
 

@@ -180,8 +180,7 @@ Graph Graph::FromSnapshot(const GraphSnapshot& src) {
           "Graph::FromSnapshot tried to add relation with id = 0 or repeated id");
     }
     if (i.id() >= src.next_id_relation) {
-      throw std::runtime_error(
-          "Graph::FromSnapshot tried to add relation with id >= next_id");
+      throw std::runtime_error("Graph::FromSnapshot tried to add relation with id >= next_id");
     }
   }
   // apply

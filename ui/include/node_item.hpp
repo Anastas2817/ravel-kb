@@ -1,9 +1,8 @@
 ﻿#ifndef RAVEL_UI_INCLUDE_NODE_ITEM_HPP_
 #define RAVEL_UI_INCLUDE_NODE_ITEM_HPP_
 
-#include <cstdint>
-
 #include <QGraphicsObject>
+#include <cstdint>
 
 namespace ravel::ui {
 
@@ -17,8 +16,7 @@ class NodeItem : public QGraphicsObject {
     return id_;
   }
   QRectF boundingRect() const override;
-  void paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
-             QWidget* widget) override;
+  void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
 
  signals:
   void Moved(std::uint64_t id, const QPointF& new_pos);

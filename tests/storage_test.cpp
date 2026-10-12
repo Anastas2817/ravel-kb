@@ -4,19 +4,19 @@
 
 #include "storage.hpp"
 
-#include <gtest/gtest.h>
-
 #include <sstream>
 
+#include <gtest/gtest.h>
+
 using ravel::Graph;
-using ravel::JsonStorage;
-using ravel::NodeId;
-using ravel::RelationId;
 using ravel::GraphSnapshot;
-using ravel::NodeType;
-using ravel::RelationType;
+using ravel::JsonStorage;
 using ravel::Node;
+using ravel::NodeId;
+using ravel::NodeType;
 using ravel::Relation;
+using ravel::RelationId;
+using ravel::RelationType;
 
 TEST(StorageLoadSave, RoundTrip) {
   GraphSnapshot src;
@@ -36,7 +36,7 @@ TEST(StorageLoadSave, RoundTrip) {
   std::stringstream saved;
   JsonStorage::Save(src, saved);
   GraphSnapshot dest = JsonStorage::Load(saved);
-  
+
   EXPECT_EQ(src.next_id_node, dest.next_id_node);
   EXPECT_EQ(src.next_id_relation, dest.next_id_relation);
 
@@ -53,12 +53,11 @@ TEST(StorageLoadSave, ValidEmpty) {
   JsonStorage::Save(src, saved);
   GraphSnapshot dest = JsonStorage::Load(saved);
 
-  const NodeId kStandartNodeIdValue = 1; // implementation: R1/R2
-  const NodeId kStandartRelationIdValue = 1; // implementation: R1/R2
+  const NodeId kStandartNodeIdValue = 1;      // implementation: R1/R2
+  const NodeId kStandartRelationIdValue = 1;  // implementation: R1/R2
   EXPECT_EQ(dest.next_id_node, kStandartNodeIdValue);
   EXPECT_EQ(dest.next_id_relation, kStandartRelationIdValue);
 }
-
 
 TEST(StorageLoadSave, SurvivalOfLoners) {
   GraphSnapshot src;
@@ -79,7 +78,7 @@ TEST(StorageLoadSave, SurvivalOfLoners) {
   std::stringstream saved;
   JsonStorage::Save(src, saved);
   GraphSnapshot dest = JsonStorage::Load(saved);
-  
+
   EXPECT_EQ(src.next_id_node, dest.next_id_node);
   EXPECT_EQ(src.next_id_relation, dest.next_id_relation);
 
@@ -89,7 +88,6 @@ TEST(StorageLoadSave, SurvivalOfLoners) {
   EXPECT_EQ(src.nodes, dest.nodes);
   EXPECT_EQ(src.relations, dest.relations);
 }
-
 
 TEST(StorageLoad, WrongFormatVersion) {
   // Тест 1: format_version = 3 (не поддерживается)
@@ -136,7 +134,6 @@ TEST(StorageLoad, WrongFormatVersion) {
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
   }
 }
-
 
 TEST(StorageLoad, AbsenceOfAnObject) {
   // Тест 1: нет next_id_node
@@ -223,7 +220,6 @@ TEST(StorageLoad, AbsenceOfAnObject) {
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
   }
 }
-
 
 TEST(StorageLoad, WrongTypeObject) {
   // Тест 1: str next_id_node
@@ -331,7 +327,6 @@ TEST(StorageLoad, WrongTypeObject) {
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
   }
 }
-
 
 TEST(StorageLoad, StrangeNodeType) {
   // Тест 1.1: имя отсутствует
@@ -478,7 +473,6 @@ TEST(StorageLoad, StrangeNodeType) {
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
   }
 }
-
 
 TEST(StorageLoad, StrangeRelationType) {
   // Тест 1.1: name отсутствует
@@ -653,7 +647,6 @@ TEST(StorageLoad, StrangeRelationType) {
   }
 }
 
-
 TEST(StorageLoad, StrangeNode) {
   // Тест 1.1: id отсутствует
   {
@@ -809,7 +802,6 @@ TEST(StorageLoad, StrangeNode) {
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
   }
 }
-
 
 TEST(StorageLoad, StrangeRelation) {
   // Тест 1.1: id отсутствует
@@ -967,13 +959,11 @@ TEST(StorageLoad, StrangeRelation) {
   }
 }
 
-
 TEST(StorageLoad, FailStateStream) {
   std::stringstream ss;
   ss.setstate(std::ios::failbit);
   EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
 }
-
 
 TEST(StorageSave, FailStateStream) {
   std::stringstream ss;

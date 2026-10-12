@@ -3,10 +3,11 @@
 #pragma warning(disable : 26495 26813)
 #endif
 
-#include <QObject>  // connect
-
 #include "relation_item.hpp"
+
 #include "node_item.hpp"
+
+#include <QObject>  // connect
 
 namespace ravel::ui {
 

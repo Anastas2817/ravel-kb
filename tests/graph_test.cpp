@@ -8,12 +8,12 @@
 
 using ravel::Graph;
 using ravel::GraphSnapshot;
+using ravel::Node;
 using ravel::NodeId;
 using ravel::NodeType;
+using ravel::Relation;
 using ravel::RelationId;
 using ravel::RelationType;
-using ravel::Node;
-using ravel::Relation;
 
 TEST(GraphAddNode, CreatesAccessEntryAndBumpsCounter) {
   Graph g;
@@ -44,7 +44,7 @@ TEST(GraphAddRelation, CreatesAccessEntryCounter) {
   EXPECT_EQ(std::vector<RelationId>{id},
             g.GetIncidentRelations(from));  // инвариант 3: запись в access_
   EXPECT_EQ(std::vector<RelationId>{id},
-            g.GetIncidentRelations(to));  // инвариант 3: запись в access_
+            g.GetIncidentRelations(to));    // инвариант 3: запись в access_
   EXPECT_EQ(g.next_id_relation(), id + 1);  // инвариант 1: счётчик выдал id
 }
 
@@ -80,7 +80,7 @@ TEST(GraphDeleteNodes, DeleteAccess) {
   EXPECT_TRUE(g.HasNode(to1) && g.HasNode(to2));
   EXPECT_EQ(std::set<NodeId>{}, g.GetNeighbors(to1));  // инвариант 3: запись в access_
   EXPECT_EQ(std::set<NodeId>{}, g.GetNeighbors(to2));  // инвариант 3: запись в access_
-  EXPECT_EQ(g.next_id_node(), to2 + 1);                  // инвариант 1: id не переиспользуются
+  EXPECT_EQ(g.next_id_node(), to2 + 1);                // инвариант 1: id не переиспользуются
 }
 
 TEST(GraphMoveNode, SetNewHandPosition) {
@@ -428,7 +428,7 @@ TEST(GraphToSnapshot, ValidGraphSnapshotWithHoles) {
   src.AddNodeType("model", "#4a90d9", "rect", "#000000");
   NodeId node1 = src.AddNode("Числовой ряд", "model");
   NodeId node2 = src.AddNode("Функциональный ряд", "model");
-  NodeId node3= src.AddNodeWithRelations(
+  NodeId node3 = src.AddNodeWithRelations(
       "Ряд", "model", {}, {{node1, "has_special_case"}, {node2, "has_special_case"}});
   RelationId relation3 = src.AddRelation(node2, node1, "boils_down_to");
   NodeId node4 = src.AddNode("Признак Дирихле", "model");
@@ -456,9 +456,9 @@ TEST(GraphToSnapshot, ValidGraphSnapshotWithHoles) {
   std::vector<Relation> right_relations;
   right_relations.emplace_back(1, node3, node1, "has_special_case");
   right_relations.emplace_back(2, node3, node2, "has_special_case");
-  right_relations.emplace_back(relation3, node2, node1 , "boils_down_to");
-  right_relations.emplace_back(relation4, node1, node4 , "has_special_case");
-  right_relations.emplace_back(relation6, node4, node6 , "has_special_case");
+  right_relations.emplace_back(relation3, node2, node1, "boils_down_to");
+  right_relations.emplace_back(relation4, node1, node4, "has_special_case");
+  right_relations.emplace_back(relation6, node4, node6, "has_special_case");
 
   GraphSnapshot dest = src.ToSnapshot();
   EXPECT_EQ(dest.next_id_node, right_next_id_node);

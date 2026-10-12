@@ -2,10 +2,11 @@
 #pragma warning(disable : 26495 26819)
 #endif
 
-#include <algorithm>
-#include <nlohmann/json.hpp>
-
 #include "storage.hpp"
+
+#include <algorithm>
+
+#include <nlohmann/json.hpp>
 
 using nlohmann::json;
 
@@ -23,8 +24,8 @@ void JsonStorage::Save(const GraphSnapshot& g, std::ostream& out) {
   j["node_types"] = json::array();
   std::vector<std::pair<std::string, NodeType>> node_types(g.ontology_node.begin(),
                                                            g.ontology_node.end());
-  std::sort(node_types.begin(), node_types.end(), 
-    [](const auto& a, const auto& b) { return a.first < b.first; });
+  std::sort(node_types.begin(), node_types.end(),
+            [](const auto& a, const auto& b) { return a.first < b.first; });
   for (const auto& [name, node_type] : node_types) {
     json type;
     type["name"] = name;
@@ -36,9 +37,9 @@ void JsonStorage::Save(const GraphSnapshot& g, std::ostream& out) {
 
   j["relation_types"] = json::array();
   std::vector<std::pair<std::string, RelationType>> relation_types(g.ontology_relation.begin(),
-                                                           g.ontology_relation.end());
-  std::sort(relation_types.begin(), relation_types.end(), 
-    [](const auto& a, const auto& b) { return a.first < b.first; });
+                                                                   g.ontology_relation.end());
+  std::sort(relation_types.begin(), relation_types.end(),
+            [](const auto& a, const auto& b) { return a.first < b.first; });
   for (const auto& [name, relation_type] : relation_types) {
     json type;
     type["name"] = name;
@@ -50,7 +51,7 @@ void JsonStorage::Save(const GraphSnapshot& g, std::ostream& out) {
   }
 
   j["nodes"] = json::array();
-  for (const auto& node: g.nodes) {
+  for (const auto& node : g.nodes) {
     json obj;
     obj["id"] = node.id();
     obj["title"] = node.title();
@@ -62,14 +63,14 @@ void JsonStorage::Save(const GraphSnapshot& g, std::ostream& out) {
       obj["size"] = node.size();
     }
     if (node.hand_position() != std::nullopt) {
-      obj["hand_position"] =
-          json{{"x", node.hand_position().value().first}, {"y", node.hand_position().value().second}};
+      obj["hand_position"] = json{{"x", node.hand_position().value().first},
+                                  {"y", node.hand_position().value().second}};
     }
     j["nodes"].push_back(obj);
   }
 
   j["relations"] = json::array();
-  for (const auto& relation: g.relations) {
+  for (const auto& relation : g.relations) {
     json obj;
     obj["id"] = relation.id();
     obj["from"] = relation.from();
@@ -81,7 +82,7 @@ void JsonStorage::Save(const GraphSnapshot& g, std::ostream& out) {
     j["relations"].push_back(obj);
   }
 
-  j["allowed_cycles"] = json::array(); // TODO week 6
+  j["allowed_cycles"] = json::array();  // TODO week 6
 
   out << j.dump(2);
 
@@ -130,12 +131,13 @@ GraphSnapshot JsonStorage::Load(std::istream& in) {
         pos = std::make_pair(hp.at("x").get<double>(), hp.at("y").get<double>());
       }
       g.nodes.push_back(Node(el.at("id").get<NodeId>(), el.at("title").get<std::string>(),
-                             el.at("type").get<std::string>(), el.value("description", std::string{}),
-                             el.value("size", 1.0), pos));
+                             el.at("type").get<std::string>(),
+                             el.value("description", std::string{}), el.value("size", 1.0), pos));
     }
     for (const json& el : j.at("relations")) {
-      g.relations.push_back(Relation(el.at("id").get<RelationId>(), el.at("from").get<NodeId>(), 
-        el.at("to").get<NodeId>(), el.at("type").get<std::string>(), el.value("description", std::string{})));
+      g.relations.push_back(Relation(el.at("id").get<RelationId>(), el.at("from").get<NodeId>(),
+                                     el.at("to").get<NodeId>(), el.at("type").get<std::string>(),
+                                     el.value("description", std::string{})));
     }
     if (j.contains("allowed_cycles") && !j.at("allowed_cycles").is_array()) {
       throw std::runtime_error("JsonStorage::Load: allowed_cycles is not an array");

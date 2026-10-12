@@ -2,14 +2,14 @@
 #pragma warning(disable : 26495 26813)
 #endif
 
+#include "node_item.hpp"
+#include "relation_item.hpp"
+
 #include <QApplication>
 #include <QDebug>
 #include <QGraphicsScene>
 #include <QGraphicsView>
 #include <QMainWindow>
-
-#include "node_item.hpp"
-#include "relation_item.hpp"
 
 using ravel::ui::NodeItem;
 using ravel::ui::RelationItem;
