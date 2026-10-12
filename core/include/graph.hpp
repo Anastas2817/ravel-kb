@@ -41,16 +41,16 @@ class NodeType {
   NodeType(std::string color, std::string shape, std::string frame_color)
       : color_(isValidHexColor(color)
                    ? color
-                   : throw std::logic_error(
+                   : throw std::invalid_argument(
                          "Graph::NodeType tried to create Nodetype with non-valid color")),
         shape_(isValidShape(shape)
                    ? shape
-                   : throw std::logic_error(
+                   : throw std::invalid_argument(
                          "Graph::NodeType tried to create Nodetype with non-valid shape")),
         frame_color_(
             isValidHexColor(frame_color)
                 ? frame_color
-                : throw std::logic_error(
+                : throw std::invalid_argument(
                       "Graph::NodeType tried to create Nodetype with non-valid frame_color")) {
   }
 
@@ -83,7 +83,7 @@ class Node {  // DTO
         title_(std::move(title)),
         description_(std::move(description)),
         size_(size > 0 ? size
-                       : throw std::logic_error(
+                       : throw std::invalid_argument(
                              "Graph::Node tried to create Node with non-positive size")),
         hand_position_(hand_position) {
   }
@@ -149,11 +149,11 @@ class RelationType {
   RelationType(std::string color, std::string arrow, bool symmetric, bool transitive)
       : color_(isValidHexColor(color)
                    ? color
-                   : throw std::logic_error(
+                   : throw std::invalid_argument(
                          "Graph::RelationType tried to create Relationtype with non-valid color")),
         arrow_(isValidArrow(arrow)
                    ? arrow
-                   : throw std::logic_error(
+                   : throw std::invalid_argument(
                          "Graph::RelationType tried to create Relationtype with non-valid arrow")),
         symmetric_(symmetric),
         transitive_(transitive) {
@@ -259,7 +259,7 @@ class Graph {
   void AddNodeType(std::string name, std::string color, std::string shape,
                    std::string frame_color) {
     if (ontology_node_.find(name) != ontology_node_.end()) {
-      throw std::logic_error("Graph::AddNodeType tried to add the same NodeType");
+      throw std::invalid_argument("Graph::AddNodeType tried to add the same NodeType");
     }
     ontology_node_.emplace(name,
                            NodeType(std::move(color), std::move(shape), std::move(frame_color)));
@@ -267,7 +267,7 @@ class Graph {
   void AddRelationType(std::string name, std::string color, std::string arrow, bool symmetric,
                        bool transitive) {
     if (ontology_relation_.find(name) != ontology_relation_.end()) {
-      throw std::logic_error("Graph::AddRelationType tried to add the same RelationType");
+      throw std::invalid_argument("Graph::AddRelationType tried to add the same RelationType");
     }
     ontology_relation_.emplace(
         name, RelationType(std::move(color), std::move(arrow), symmetric, transitive));
