@@ -1,4 +1,4 @@
-﻿#ifdef _MSC_VER
+#ifdef _MSC_VER
 #pragma warning(disable : 26495 26439)
 #endif
 
@@ -1014,4 +1014,58 @@ TEST(StorageLoad, RepeatedRelationTypeName) {
           "allowed_cycles": []
       })"};
   EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
+}
+
+TEST(StorageLoad, BrokenJson) {
+  // Синтаксический уровень: JSON не разбирается парсером в принципе.
+  // Отличие от Strange*-тестов: там вход валиден для парсера и дефект
+  // семантический (один, изолированный — правило 22), здесь дефект —
+  // сам синтаксис. Все сбои обязаны прилетать как std::runtime_error
+  // (json::exception оборачивается в Load), а не проскакивать.
+
+  // Тест 1: незакрытая скобка — документ обрывается посередине
+  {
+    std::stringstream ss{R"({
+            "format_version": 2,
+            "next_id_node": 3,
+            "next_id_relation": 1,
+            "node_types" : [],
+            "relation_types" : [],
+            "nodes": [)};
+    EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
+  }
+
+  // Тест 2: полностью не JSON
+  {
+    std::stringstream ss{"это не json"};
+    EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
+  }
+
+  // Тест 3: пустой ввод — парсер падает на пустом потоке
+  {
+    std::stringstream ss;
+    EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
+  }
+
+  // Тест 4: валидный JSON, но мусор после документа (строгий парсинг)
+  {
+    std::stringstream ss{R"({"format_version": 2}) это уже лишнее"};
+    EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
+  }
+
+  // Тест 5: валидный JSON неверной формы — массив на верхнем уровне
+  // вместо объекта (парсер проходит, доступ по ключам бросает type_error)
+  {
+    std::stringstream ss{"[1, 2, 3]"};
+    EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
+  }
+
+  // Тест 6: литерал вместо значения — недопустимый токен внутри документа
+  {
+    std::stringstream ss{R"({
+            "format_version": 2,
+            "next_id_node": undefined
+        })"};
+    EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
+  }
 }
