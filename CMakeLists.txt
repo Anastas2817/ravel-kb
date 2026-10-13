@@ -20,7 +20,7 @@ project(ravel
 # Глобальные настройки C++
 # ---------------------------------------------------------------------------
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -50,7 +50,7 @@ option(RAVEL_USE_FETCHCONTENT "Подтягивать недостающие з�
 
 if(MSVC)
     # /W4            — высокий уровень предупреждений
-    # /permissive-   — строгое соответствие стандарту C++17
+    # /permissive-   — строгое соответствие стандарту C++20
     # /utf-8         — исходники в UTF-8 (кириллица в строках/комментариях)
     # /Zc:__cplusplus — корректное значение __cplusplus (иначе 199711L)
     add_compile_options(/W4 /permissive- /utf-8 /Zc:__cplusplus)
@@ -68,7 +68,7 @@ endif()
 # Цели
 # ---------------------------------------------------------------------------
 
-add_subdirectory(core)    # ядро: чистый C++17, без Qt (docs/architecture.md §1)
+add_subdirectory(core)    # ядро: чистый C++20, без Qt (docs/architecture.md §1)
 add_subdirectory(storage) # IStorage / JsonStorage (nlohmann/json)
 add_subdirectory(app)     # команды (Command + undo/redo), контроллеры
 

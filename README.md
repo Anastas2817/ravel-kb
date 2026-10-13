@@ -9,7 +9,7 @@
 [![CI](https://github.com/Anastas2817/ravel-kb/actions/workflows/ci.yml/badge.svg)](https://github.com/Anastas2817/ravel-kb/actions/workflows/ci.yml)
 ![license](https://img.shields.io/badge/license-MIT-purple)
 
-> **In English.** Ravel is a desktop PKM tool with a graph notation: relations are typed entities with properties (symmetry, transitivity); the layout is semantic — hierarchy top-down (Sugiyama), ontological bands left-to-right; and control is fully manual — automation only advises (cycle detection, overloaded hubs), the user decides. Local-first: one human-readable, git-friendly JSON file, no cloud. C++17 / Qt 6, MIT. *Full documentation is in Russian.*
+> **In English.** Ravel is a desktop PKM tool with a graph notation: relations are typed entities with properties (symmetry, transitivity); the layout is semantic — hierarchy top-down (Sugiyama), ontological bands left-to-right; and control is fully manual — automation only advises (cycle detection, overloaded hubs), the user decides. Local-first: one human-readable, git-friendly JSON file, no cloud. C++20 / Qt 6, MIT. *Full documentation is in Russian.*
 
 База знаний в Ravel — ориентированный граф, построенный вручную и осознанно: каждый узел и каждая связь добавляются пользователем, а система только советует — обнаруживает циклы, выделяет перегруженные хабы, предлагает упорядочить. Связи типизированы и имеют свойства (симметрия, транзитивность), а положение узла несёт смысл: вертикаль кодирует иерархию (общее сверху), горизонталь — онтологические ленты.
 
@@ -52,7 +52,7 @@
 
 ## Быстрый старт
 
-Требования: CMake ≥ 3.20, компилятор с C++17, Qt 6 (модуль Widgets).
+Требования: CMake ≥ 3.20, компилятор с C++20, Qt 6 (модуль Widgets).
 
 ```bash
 git clone https://github.com/Anastas2817/ravel-kb.git
@@ -143,7 +143,7 @@ ctest --test-dir build -C Release --output-on-failure
 
 ## Contributing
 
-См. [CONTRIBUTING.md](CONTRIBUTING.md). Кратко: ядро (`core/`) — чистый C++17 без Qt, покрыто юнит-тестами; UI зависит от ядра, но не наоборот.
+См. [CONTRIBUTING.md](CONTRIBUTING.md). Кратко: ядро (`core/`) — чистый C++20 без Qt, покрыто юнит-тестами; UI зависит от ядра, но не наоборот.
 
 ## Лицензия
 
