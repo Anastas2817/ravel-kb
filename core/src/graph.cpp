@@ -23,7 +23,7 @@ NodeId Graph::AddNode(std::string title, std::string type, std::string descripti
   return id;
 }
 
-  bool Graph::HasRelation(RelationId id) const noexcept {
+bool Graph::HasRelation(RelationId id) const noexcept {
   const bool is_not_zombie =
       (id >= 1) && (id < next_id_relation_) && (relations_[id - 1].id() == id);
   if (!is_not_zombie) {
