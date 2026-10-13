@@ -23,6 +23,18 @@ NodeId Graph::AddNode(std::string title, std::string type, std::string descripti
   return id;
 }
 
+  bool Graph::HasRelation(RelationId id) const noexcept {
+  const bool is_not_zombie =
+      (id >= 1) && (id < next_id_relation_) && (relations_[id - 1].id() == id);
+  if (!is_not_zombie) {
+    return false;
+  }
+  const NodeId from = relations_[id - 1].from();
+  const auto it = access_.find(from);
+  return it != access_.end() &&
+         std::find(it->second.begin(), it->second.end(), id) != it->second.end();
+}
+
 RelationId Graph::AddRelation(NodeId from, NodeId to, std::string type, std::string description) {
   // validate
   if (ontology_relation_.find(type) == ontology_relation_.end()) {
@@ -114,14 +126,15 @@ std::optional<std::pair<double, double>> Graph::MoveNode(NodeId id, std::pair<do
 
 void Graph::DeleteNodes(std::vector<NodeId> ids) {
   // validate
+  std::set<NodeId> unique;
   for (NodeId id : ids) {
     if (!HasNode(id)) {
       throw std::invalid_argument("Graph::DeleteNodes tried to delete non-existent Node");
     }
+    unique.insert(id);
   }
   // apply
-  for (NodeId id : ids) {
-    nodes_[id - 1] = Node(0, "", "");
+  for (NodeId id : unique) {
     DeleteRelations(access_[id]);  // by the invariant, only live relations are listed there
     access_.erase(id);
   }
@@ -129,22 +142,19 @@ void Graph::DeleteNodes(std::vector<NodeId> ids) {
 
 void Graph::DeleteRelations(std::vector<RelationId> ids) {
   // validate
+  std::set<RelationId> unique;
   for (RelationId id : ids) {
     if (!HasRelation(id)) {
       throw std::invalid_argument("Graph::DeleteRelations tried to delete non-existent Relation");
     }
+    unique.insert(id);
   }
   // apply
-  for (RelationId id : ids) {
+  for (RelationId id : unique) {
     NodeId from = relations_[id - 1].from();
     NodeId to = relations_[id - 1].to();
-    if (HasNode(from)) {
-      access_[from].erase(std::find(access_[from].begin(), access_[from].end(), id));
-    }
-    if (HasNode(to)) {
-      access_[to].erase(std::find(access_[to].begin(), access_[to].end(), id));
-    }
-    relations_[id - 1] = Relation(0, 0, 0, "");
+    access_[from].erase(std::find(access_[from].begin(), access_[from].end(), id));
+    access_[to].erase(std::find(access_[to].begin(), access_[to].end(), id));
   }
 }
 

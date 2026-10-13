@@ -1,4 +1,4 @@
-#ifndef RAVEL_CORE_INCLUDE_GRAPH_HPP_
+﻿#ifndef RAVEL_CORE_INCLUDE_GRAPH_HPP_
 #define RAVEL_CORE_INCLUDE_GRAPH_HPP_
 
 #include <cctype>
@@ -288,12 +288,10 @@ class Graph {
   NodeId AddNode(std::string title, std::string type, std::string description = "", double size = 1,
                  std::optional<std::pair<double, double>> hand_position = std::nullopt);
   bool HasNode(NodeId id) const {
-    return access_.find(id) != access_.end();
+    return access_.contains(id);
   }
   RelationId AddRelation(NodeId from, NodeId to, std::string type, std::string description = "");
-  bool HasRelation(RelationId id) const noexcept {
-    return ((id >= 1) && (id < next_id_relation_) && (relations_[id - 1].id() == id));
-  }
+  bool HasRelation(RelationId id) const noexcept;
   const Relation& GetRelation(RelationId id) const {
     if (HasRelation(id)) {
       return relations_[id - 1];
