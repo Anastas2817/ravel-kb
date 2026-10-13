@@ -1,13 +1,16 @@
-﻿#ifndef RAVEL_CORE_INCLUDE_GRAPH_HPP_
+#ifndef RAVEL_CORE_INCLUDE_GRAPH_HPP_
 #define RAVEL_CORE_INCLUDE_GRAPH_HPP_
 
 #include <cctype>
+#include <concepts>
 #include <cstdint>
 #include <map>
 #include <optional>
+#include <ranges>
 #include <set>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -63,13 +66,7 @@ class NodeType {
   const std::string& frame_color() const noexcept {
     return frame_color_;
   }
-  bool operator==(const NodeType& other) const {
-    return (color_ == other.color_) && (shape_ == other.shape_) &&
-           (frame_color_ == other.frame_color_);
-  }
-  bool operator!=(const NodeType& other) const {
-    return !(*this == other);
-  }
+  bool operator==(const NodeType& other) const = default;
 
  private:
   std::string color_ = "#000000";
@@ -121,14 +118,7 @@ class Node {  // DTO
   // and must surface, not be masked by an epsilon. Approximate comparison is
   // for computed values (layout geometry) only. See implementation.md,
   // note to rule 18.
-  bool operator==(const Node& other) const {
-    return (id_ == other.id_) && (type_ == other.type_) && (title_ == other.title_) &&
-           (description_ == other.description_) && (size_ == other.size_) &&
-           (hand_position_ == other.hand_position_);
-  }
-  bool operator!=(const Node& other) const {
-    return !(*this == other);
-  }
+  bool operator==(const Node& other) const = default;
 
  private:
   // Identity
@@ -149,6 +139,10 @@ inline bool isValidArrow(const std::string& arrow) {
     return false;
   }
 }
+
+template <typename Fn>
+concept LiveNodeCallback = std::invocable<Fn&, const Node&> &&
+                           std::convertible_to<std::invoke_result_t<Fn&, const Node&>, bool>;
 
 class RelationType {
  public:
@@ -177,13 +171,7 @@ class RelationType {
   bool transitive() const noexcept {
     return transitive_;
   }
-  bool operator==(const RelationType& other) const {
-    return (color_ == other.color_) && (arrow_ == other.arrow_) &&
-           (symmetric_ == other.symmetric_) && (transitive_ == other.transitive_);
-  }
-  bool operator!=(const RelationType& other) const {
-    return !(*this == other);
-  }
+  bool operator==(const RelationType& other) const = default;
 
  private:
   std::string color_ = "#000000";
@@ -219,13 +207,7 @@ class Relation {  // DTO
     return description_;
   }
 
-  bool operator==(const Relation& other) const {
-    return (id_ == other.id_) && (from_ == other.from_) && (to_ == other.to_) &&
-           (type_ == other.type_) && (description_ == other.description_);
-  }
-  bool operator!=(const Relation& other) const {
-    return !(*this == other);
-  }
+  bool operator==(const Relation& other) const = default;
 
  private:
   RelationId id_ = 0;
@@ -235,6 +217,11 @@ class Relation {  // DTO
 
   std::string description_ = "";
 };
+
+template <typename Fn>
+concept LiveRelationCallback =
+    std::invocable<Fn&, const Relation&> &&
+    std::convertible_to<std::invoke_result_t<Fn&, const Relation&>, bool>;
 
 struct GraphSnapshot {
   std::unordered_map<std::string, NodeType> ontology_node;
@@ -295,7 +282,7 @@ class Graph {
     if (HasNode(id)) {
       return nodes_[id - 1];
     } else {
-      throw std::out_of_range("Graph::GetNode tried to access non-existent Node");
+      throw std::invalid_argument("Graph::GetNode tried to access non-existent Node");
     }
   }
   NodeId AddNode(std::string title, std::string type, std::string description = "", double size = 1,
@@ -311,7 +298,7 @@ class Graph {
     if (HasRelation(id)) {
       return relations_[id - 1];
     } else {
-      throw std::out_of_range("Graph::GetRelation tried to access non-existent Relation");
+      throw std::invalid_argument("Graph::GetRelation tried to access non-existent Relation");
     }
   }
   NodeId AddNodeWithRelations(
@@ -324,12 +311,37 @@ class Graph {
   void DeleteRelations(std::vector<RelationId> ids);
   const std::vector<RelationId>& GetIncidentRelations(NodeId id) const {
     if (!HasNode(id)) {
-      throw std::out_of_range("Graph::GetIncidentRelations tried to access non-existent Node");
+      throw std::invalid_argument("Graph::GetIncidentRelations tried to access non-existent Node");
     } else {
       return access_.at(id);
     }
   }
   std::set<NodeId> GetNeighbors(NodeId id) const;
+
+  // The single sanctioned iteration point over live nodes, in ascending id
+  // order. Callback contract: do not mutate the graph during iteration — UB
+  // (ADR-002, "Decision"); mutations go through collect-then-apply. Returning
+  // false stops the iteration early (early exit for algorithms).
+  template <LiveNodeCallback Fn>
+  void ForEachLiveNode(Fn&& fn) const {
+    for (const NodeId id : access_ | std::views::keys) {
+      if (!fn(nodes_[id - 1])) {
+        return;
+      }
+    }
+  }
+  // Same for relations: dense vector with a liveness filter — each live
+  // relation exactly once, in id order. Iterating access_ is not an option:
+  // a relation is listed in the neighborhoods of both endpoints and would be
+  // visited twice.
+  template <LiveRelationCallback Fn>
+  void ForEachLiveRelation(Fn&& fn) const {
+    for (const Relation& relation : relations_) {
+      if (HasRelation(relation.id()) && !fn(relation)) {
+        return;
+      }
+    }
+  }
 
   static Graph FromSnapshot(const GraphSnapshot& src);
   GraphSnapshot ToSnapshot() const;

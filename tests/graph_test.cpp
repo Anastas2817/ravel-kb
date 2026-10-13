@@ -20,10 +20,12 @@ TEST(GraphAddNode, CreatesAccessEntryAndBumpsCounter) {
   g.AddNodeType("model", "#4a90d9", "rect", "#000000");
   const NodeId id = g.AddNode("Вещественная прямая", "model");
   EXPECT_THROW(g.AddNode("Сложение", "function"),
-               std::out_of_range);  // инвариант 5: тип есть в словаре
-  EXPECT_TRUE(g.HasNode(id));       // инвариант 3: запись в access_
+               std::invalid_argument);  // инвариант 5: тип есть в словаре
+  EXPECT_TRUE(g.HasNode(id));           // инвариант 3: запись в access_
   EXPECT_EQ(g.GetNode(id).type(), "model");
   EXPECT_EQ(g.next_id_node(), id + 1);  // инвариант 1: счётчик выдал id
+
+  EXPECT_THROW(g.AddNode("Математика", "model", "царица наук", -467.0), std::invalid_argument);
 }
 
 TEST(GraphAddRelation, CreatesAccessEntryCounter) {
@@ -35,11 +37,11 @@ TEST(GraphAddRelation, CreatesAccessEntryCounter) {
   const RelationId id = g.AddRelation(from, to, "has_special_case");
 
   EXPECT_THROW(g.AddRelation(from, 3, "has_special_case"),
-               std::out_of_range);  // инваринт 4: from и to существуют
+               std::invalid_argument);  // инваринт 4: from и to существуют
   EXPECT_THROW(g.AddRelation(5, to, "has_special_case"),
-               std::out_of_range);  // инваринт 4: from и to существуют
+               std::invalid_argument);  // инваринт 4: from и to существуют
   EXPECT_THROW(g.AddRelation(from, to, "is_a"),
-               std::out_of_range);  // инвариант  5: тип есть в словаре
+               std::invalid_argument);  // инвариант  5: тип есть в словаре
 
   EXPECT_EQ(std::vector<RelationId>{id},
             g.GetIncidentRelations(from));  // инвариант 3: запись в access_
@@ -75,8 +77,8 @@ TEST(GraphDeleteNodes, DeleteAccess) {
   EXPECT_FALSE(g.HasNode(from));
   EXPECT_FALSE(g.HasRelation(id1));
   EXPECT_FALSE(g.HasRelation(id2));
-  EXPECT_THROW(g.GetRelation(id1), std::out_of_range);
-  EXPECT_THROW(g.GetRelation(id2), std::out_of_range);
+  EXPECT_THROW(g.GetRelation(id1), std::invalid_argument);
+  EXPECT_THROW(g.GetRelation(id2), std::invalid_argument);
   EXPECT_TRUE(g.HasNode(to1) && g.HasNode(to2));
   EXPECT_EQ(std::set<NodeId>{}, g.GetNeighbors(to1));  // инвариант 3: запись в access_
   EXPECT_EQ(std::set<NodeId>{}, g.GetNeighbors(to2));  // инвариант 3: запись в access_
@@ -97,7 +99,7 @@ TEST(GraphMoveNode, SetNewHandPosition) {
 
   NodeId temp = g.AddNode("Коаксильный кабель", "model");
   g.DeleteNodes({temp});
-  EXPECT_THROW(g.MoveNode(temp, {-100, 100}), std::out_of_range);
+  EXPECT_THROW(g.MoveNode(temp, {-100, 100}), std::invalid_argument);
 
   NodeId primitive = g.AddNode("Магнитное поле", "model");
   std::optional<std::pair<double, double>> simple = g.MoveNode(primitive, {30.0, 20.0});
@@ -144,14 +146,22 @@ TEST(GraphAddNodeWithRelations, CreatesAccessEntry) {
   EXPECT_THROW(
       g.AddNodeWithRelations("Однородные уравнения", "modl",
                              {{from1, "reduce_to"}, {from2, "reduce_to"}}, {{to1, "reduce_to"}}),
-      std::out_of_range);
+      std::invalid_argument);
   EXPECT_EQ(g.next_id_node(), test + 1);
   EXPECT_EQ(g.next_id_relation(), kAddedRelations + 1);
 
   EXPECT_THROW(
       g.AddNodeWithRelations("Однородные уравнения", "model",
                              {{from1, "reduc_to"}, {from2, "reduce_to"}}, {{to1, "reduce_to"}}),
-      std::out_of_range);
+      std::invalid_argument);
+  EXPECT_THROW(
+      g.AddNodeWithRelations("Однородные уравнения", "modl",
+                             {{from1, "reduce_to"}, {from2, "reduce_to"}}, {{to1, "reduce_to"}}),
+      std::invalid_argument);
+  EXPECT_THROW(g.AddNodeWithRelations("Однородные уравнения", "model",
+                                      {{from1, "reduce_to"}, {from2, "reduce_to"}},
+                                      {{to1, "reduce_to"}}, "", -100.0),
+               std::invalid_argument);
   EXPECT_EQ(g.next_id_node(), test + 1);
   EXPECT_EQ(g.next_id_relation(), kAddedRelations + 1);
 }
@@ -261,6 +271,26 @@ TEST(GraphFromSnapshot, NextLessThanMaxId) {
   src.relations.emplace_back(kAliveRelation, kAliveNode1, kAliveNode2, "has_special_case");
 
   EXPECT_THROW(Graph::FromSnapshot(src), std::runtime_error);
+}
+
+TEST(GraphFromSnapshot, NonPositiveNodeSize) {
+  // Инвариант size > 0 держит конструктор Node: битый узел не может
+  // существовать в снимке, поэтому FromSnapshot его никогда не увидит.
+  GraphSnapshot src;
+  src.next_id_node = 9;
+  src.next_id_relation = 5;
+
+  src.ontology_node.emplace("model", NodeType("#000000", "rect", "#000000"));
+  src.ontology_relation.emplace("has_special_case", RelationType("#000000", "solid", false, true));
+
+  const NodeId kAliveNode1 = 1;
+  const NodeId kAliveNode2 = 2;
+  src.nodes.emplace_back(kAliveNode1, "Ряд Дирихле", "model");
+  const double size = -4.0;
+  EXPECT_THROW(src.nodes.emplace_back(kAliveNode2, "Гармонический ряд", "model", "1/n", size,
+                                      std::pair<double, double>{4.0, 8.0}),
+               std::invalid_argument);
+  EXPECT_EQ(src.nodes.size(), 1);  // strong guarantee: снимок не тронут
 }
 
 TEST(GraphFromSnapshot, InvalidNodeType) {
@@ -419,6 +449,74 @@ TEST(GraphFromSnapshot, RepeatedIdRelation) {
   src.relations.emplace_back(kAliveRelation, kAliveNode1, kAliveNode3, "has_special_case");
 
   EXPECT_THROW(Graph::FromSnapshot(src), std::runtime_error);
+}
+
+TEST(GraphForEachLive, TryIterate) {
+  Graph src;
+  src.AddRelationType("has_special_case", "#000000", "solid", false, true);
+  src.AddRelationType("boils_down_to", "#000000", "solid", false, true);
+  src.AddNodeType("model", "#4a90d9", "rect", "#000000");
+  NodeId node1 = src.AddNode("Числовой ряд", "model");
+  NodeId node2 = src.AddNode("Функциональный ряд", "model");
+  [[maybe_unused]] NodeId node3 = src.AddNodeWithRelations(
+      "Ряд", "model", {}, {{node1, "has_special_case"}, {node2, "has_special_case"}});
+  [[maybe_unused]] RelationId relation3 = src.AddRelation(node2, node1, "boils_down_to");
+  NodeId node4 = src.AddNode("Признак Дирихле", "model");
+  NodeId deleted5 = src.AddNode("Признак Лейбница", "model");
+  NodeId node6 = src.AddNode("Признак Абеля", "model");
+  [[maybe_unused]] RelationId relation4 = src.AddRelation(node1, node4, "has_special_case");
+  [[maybe_unused]] RelationId deleted_rel5 = src.AddRelation(node4, deleted5, "has_special_case");
+  [[maybe_unused]] RelationId relation6 = src.AddRelation(node4, node6, "has_special_case");
+  NodeId deleted7 = src.AddNode("Признак Вейерштрасса", "model");
+  NodeId deleted8 = src.AddNode("Признак Коши", "model");
+  [[maybe_unused]] RelationId deleted_rel7 = src.AddRelation(node2, deleted7, "has_special_case");
+  [[maybe_unused]] RelationId deleted_rel8 = src.AddRelation(node2, deleted8, "has_special_case");
+  src.DeleteNodes({deleted5, deleted7, deleted8});
+
+  std::vector<NodeId> live_node_ids;
+  std::vector<RelationId> live_relation_ids;
+  src.ForEachLiveNode([&live_node_ids](const Node& node) {
+    live_node_ids.push_back(node.id());
+    return true;
+  });
+  src.ForEachLiveRelation([&live_relation_ids](const Relation& relation) {
+    live_relation_ids.push_back(relation.id());
+    return true;
+  });
+
+  std::vector<NodeId> expected_live_node_id({1, 2, 3, 4, 6});
+  std::vector<NodeId> expected_live_relation_id({1, 2, 3, 4, 6});
+  EXPECT_EQ(live_node_ids, expected_live_node_id);
+  EXPECT_EQ(live_relation_ids, expected_live_relation_id);
+
+  const NodeId search_for_id = 4;
+  Node search_for(0, "", "");
+  src.ForEachLiveNode([&search_for_id, &search_for](const Node& node) {
+    if (search_for_id == node.id()) {
+      search_for = node;
+      return false;
+    } else {
+      return true;
+    }
+  });
+  EXPECT_EQ(search_for.id(), search_for_id);
+  EXPECT_EQ(search_for.title(), "Признак Дирихле");
+  EXPECT_EQ(search_for.type(), "model");
+
+  const RelationId search_for_id_r = 4;
+  Relation search_for_r(0, 0, 0, "");
+  src.ForEachLiveRelation([&search_for_id_r, &search_for_r](const Relation& relation) {
+    if (search_for_id_r == relation.id()) {
+      search_for_r = relation;
+      return false;
+    } else {
+      return true;
+    }
+  });
+  EXPECT_EQ(search_for_r.id(), search_for_id_r);
+  EXPECT_EQ(search_for_r.from(), 1);
+  EXPECT_EQ(search_for_r.to(), 4);
+  EXPECT_EQ(search_for_r.type(), "has_special_case");
 }
 
 TEST(GraphToSnapshot, ValidGraphSnapshotWithHoles) {

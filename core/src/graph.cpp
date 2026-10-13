@@ -7,9 +7,15 @@ namespace ravel {
 
 NodeId Graph::AddNode(std::string title, std::string type, std::string description, double size,
                       std::optional<std::pair<double, double>> hand_position) {
+  // validate
   if (ontology_node_.find(type) == ontology_node_.end()) {
-    throw std::out_of_range("Graph::AddNode tried to create node with non-existent type");
+    throw std::invalid_argument("Graph::AddNode tried to create node with non-existent type");
   }
+  if (size <= 0) {
+    throw std::invalid_argument("Graph::AddNode tried to create node with non-positive size");
+  }
+
+  // apply
   NodeId id = next_id_node_++;
   nodes_.emplace_back(id, std::move(title), std::move(type), std::move(description), size,
                       hand_position);
@@ -18,17 +24,21 @@ NodeId Graph::AddNode(std::string title, std::string type, std::string descripti
 }
 
 RelationId Graph::AddRelation(NodeId from, NodeId to, std::string type, std::string description) {
+  // validate
   if (ontology_relation_.find(type) == ontology_relation_.end()) {
-    throw std::out_of_range("Graph::AddRelation tried to create relation with non-existent type");
+    throw std::invalid_argument(
+        "Graph::AddRelation tried to create relation with non-existent type");
   }
   if (!HasNode(from)) {
-    throw std::out_of_range(
+    throw std::invalid_argument(
         "Graph::AddRelation tried to create relation with non-existent node from");
   }
   if (!HasNode(to)) {
-    throw std::out_of_range(
+    throw std::invalid_argument(
         "Graph::AddRelation tried to create relation with non-existent node to");
   }
+
+  // apply
   RelationId id = next_id_relation_++;
   relations_.emplace_back(id, from, to, std::move(type), std::move(description));
   access_[from].push_back(id);
@@ -41,18 +51,28 @@ NodeId Graph::AddNodeWithRelations(std::string title, std::string type,
                                    std::vector<std::pair<NodeId, std::string>> tos,
                                    std::string description, double size,
                                    std::optional<std::pair<double, double>> hand_position) {
+  // validate
+  if (ontology_node_.find(type) == ontology_node_.end()) {
+    throw std::invalid_argument(
+        "Graph::AddNodeWithRelations tried to create node with non-existent type");
+  }
+  if (size <= 0) {
+    throw std::invalid_argument(
+        "Graph::AddNodeWithRelations tried to create node with non-positive size");
+  }
   for (const std::pair<NodeId, std::string>& from : froms) {
     if (!HasNode(from.first) ||
         (ontology_relation_.find(from.second) == ontology_relation_.end())) {
-      throw std::out_of_range("Graph::AddNodeWithRelations");
+      throw std::invalid_argument("Graph::AddNodeWithRelations wrong from");
     }
   }
   for (const std::pair<NodeId, std::string>& to : tos) {
     if (!HasNode(to.first) || (ontology_relation_.find(to.second) == ontology_relation_.end())) {
-      throw std::out_of_range("Graph::AddNodeWithRelations");
+      throw std::invalid_argument("Graph::AddNodeWithRelations wrong to");
     }
   }
 
+  // apply
   NodeId cur = AddNode(title, type, description, size, hand_position);
   for (const std::pair<NodeId, std::string>& from : froms) {
     AddRelation(from.first, cur, from.second);
@@ -64,10 +84,12 @@ NodeId Graph::AddNodeWithRelations(std::string title, std::string type,
 }
 
 std::set<NodeId> Graph::GetNeighbors(NodeId id) const {
+  // validate
   if (!HasNode(id)) {
-    throw std::out_of_range("Graph::GetNeighbors tried to access non-existent Node");
+    throw std::invalid_argument("Graph::GetNeighbors tried to access non-existent Node");
   }
 
+  // apply
   std::set<NodeId> neighbors;
   for (RelationId rid : access_.at(id)) {
     if (GetRelation(rid).from() != id) {
@@ -82,7 +104,7 @@ std::set<NodeId> Graph::GetNeighbors(NodeId id) const {
 
 std::optional<std::pair<double, double>> Graph::MoveNode(NodeId id, std::pair<double, double> pos) {
   if (!HasNode(id)) {
-    throw std::out_of_range("Graph::MoveNode tried to access non-existent Node");
+    throw std::invalid_argument("Graph::MoveNode tried to access non-existent Node");
   } else {
     std::optional<std::pair<double, double>> prev_pos = GetNode(id).hand_position();
     nodes_[id - 1].set_hand_position(pos);
@@ -91,11 +113,13 @@ std::optional<std::pair<double, double>> Graph::MoveNode(NodeId id, std::pair<do
 }
 
 void Graph::DeleteNodes(std::vector<NodeId> ids) {
+  // validate
   for (NodeId id : ids) {
     if (!HasNode(id)) {
-      throw std::out_of_range("Graph::DeleteNodes tried to delete non-existent Node");
+      throw std::invalid_argument("Graph::DeleteNodes tried to delete non-existent Node");
     }
   }
+  // apply
   for (NodeId id : ids) {
     nodes_[id - 1] = Node(0, "", "");
     DeleteRelations(access_[id]);  // by the invariant, only live relations are listed there
@@ -104,11 +128,13 @@ void Graph::DeleteNodes(std::vector<NodeId> ids) {
 }
 
 void Graph::DeleteRelations(std::vector<RelationId> ids) {
+  // validate
   for (RelationId id : ids) {
     if (!HasRelation(id)) {
-      throw std::out_of_range("Graph::DeleteRelations tried to delete non-existent Relation");
+      throw std::invalid_argument("Graph::DeleteRelations tried to delete non-existent Relation");
     }
   }
+  // apply
   for (RelationId id : ids) {
     NodeId from = relations_[id - 1].from();
     NodeId to = relations_[id - 1].to();
@@ -159,6 +185,9 @@ Graph Graph::FromSnapshot(const GraphSnapshot& src) {
     }
     if (i.id() >= src.next_id_node) {
       throw std::runtime_error("Graph::FromSnapshot tried to add node with id >= next_id");
+    }
+    if (i.size() <= 0) {
+      throw std::runtime_error("Graph::FromSnapshot tried to add node with non-positive size");
     }
   }
   std::unordered_set<RelationId> alive_relations;
@@ -212,14 +241,16 @@ GraphSnapshot Graph::ToSnapshot() const {
   dest.next_id_relation = next_id_relation_;
   dest.ontology_node = ontology_node_;
   dest.ontology_relation = ontology_relation_;
-  for (const auto& [key, value] : access_) {
-    dest.nodes.push_back(nodes_[key - 1]);
-  }
-  for (RelationId id = 1; id < next_id_relation_; ++id) {
-    if (HasRelation(id)) {
-      dest.relations.push_back(relations_[id - 1]);
-    }
-  }
+
+  ForEachLiveNode([&dest](const Node& node) {
+    dest.nodes.push_back(node);
+    return true;
+  });
+  ForEachLiveRelation([&dest](const Relation& relation) {
+    dest.relations.push_back(relation);
+    return true;
+  });
+
   return dest;
 }
 
