@@ -1,9 +1,9 @@
-# Ravel
+﻿# Ravel
 
 **Десктопный PKM-инструмент с графовой нотацией: типизированные связи, семантическая раскладка, полное ручное управление.**
 
 ![status](https://img.shields.io/badge/status-in%20development-yellow)
-![lang](https://img.shields.io/badge/C%2B%2B-17-blue)
+![lang](https://img.shields.io/badge/C%2B%2B-20-blue)
 ![qt](https://img.shields.io/badge/Qt-6%20Widgets-green)
 ![build](https://img.shields.io/badge/CMake-%3E%3D3.20-blue)
 [![CI](https://github.com/Anastas2817/ravel-kb/actions/workflows/ci.yml/badge.svg)](https://github.com/Anastas2817/ravel-kb/actions/workflows/ci.yml)
