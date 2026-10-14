@@ -17,7 +17,6 @@ package "Core" {
 
   rectangle "Graph\nC++20" as Graph #LightSkyBlue
   rectangle "GraphSnapshot" as Snapshot
-  rectangle "SampleGraphs" as Samples
   rectangle "Layout\nC++20" as Layout
   rectangle "Algorithms\nC++20" as Algo
 
@@ -25,7 +24,6 @@ package "Core" {
   Algo --> Graph : читает структуру
   Graph --> Snapshot : ToSnapshot
   Snapshot --> Graph : FromSnapshot
-  Samples --> Graph : строит демо-граф (мутации)
 }
 
 package "App" {
@@ -53,8 +51,6 @@ legend bottom
   поддерживать корректное состояние карты знаний.
   GraphSnapshot — переносить состояние Graph между
   слоями без знания формата.
-  SampleGraphs — строить демонстрационный граф
-  для разработки UI.
   Layout — преобразовывать граф в пространственную
   раскладку (выдавать координаты). Планируется.
   Algorithms — анализировать структуру Graph:

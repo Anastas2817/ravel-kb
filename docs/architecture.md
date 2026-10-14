@@ -25,7 +25,7 @@ tools/jdk-21.0.12.1+1-jre/bin/java -jar tools/plantuml.jar -Playout=smetana -cha
 ├─────────────────────────────────────────────┤
 │  Core (чистый C++20, без Qt)                │
 │  Graph · GraphSnapshot · Layout ·           │
-│  Algorithms · SampleGraphs                  │
+│  Algorithms                                 │
 ├─────────────────────────────────────────────┤
 │  Storage                                    │
 │  JsonStorage (потоки, format_version)       │
@@ -56,7 +56,6 @@ tools/jdk-21.0.12.1+1-jre/bin/java -jar tools/plantuml.jar -Playout=smetana -cha
 |---|---|---|---|
 | `Graph` | Core | хранить модель предметной области и поддерживать корректное состояние карты знаний | реализован |
 | `GraphSnapshot` | Core | переносить состояние Graph между слоями без знания формата | реализован |
-| `SampleGraphs` | Core | строить демонстрационный граф для разработки UI | заглушка (`MakeShowcaseGraph` без тела) |
 | `Layout` | Core | преобразовывать граф в пространственную раскладку — выдавать координаты | запланирован (этап 3) |
 | `Algorithms` | Core | анализировать структуру Graph: DFS, PageRank, циклы | запланирован (этап 3) |
 | `JsonStorage` | Storage | сериализация/десериализация, валидация формата и версии | реализован (потоки) |

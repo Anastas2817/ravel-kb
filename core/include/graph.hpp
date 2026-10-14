@@ -298,6 +298,11 @@ class Graph {
       throw std::invalid_argument("Graph::GetRelation tried to access non-existent Relation");
     }
   }
+  // Composite convenience: AddNode + AddRelation(s) in one validated call.
+  // A real UI scenario exists (create a node already linked), but the
+  // composition itself does not need Graph's privacy — candidate for moving
+  // to the App layer (built on public AddNode/AddRelation) once the UI
+  // scenario lands. Until then it stays, covered by tests.
   NodeId AddNodeWithRelations(
       std::string title, std::string type, std::vector<std::pair<NodeId, std::string>> froms,
       std::vector<std::pair<NodeId, std::string>> tos, std::string description = "",
@@ -315,6 +320,14 @@ class Graph {
       return access_.at(id);
     }
   }
+  // Undo surface (ADR-002, consequence 12). Ownership invariant: called
+  // ONLY from the undo stack (App layer) — never directly from UI. The
+  // preconditions below are debug-asserts, not exceptions: a violation is
+  // an undo-logic bug, not bad data. In Release (NDEBUG) a violated
+  // precondition degrades to silent inconsistency — accepted deliberately
+  // for the undo path, which is why the ownership invariant is written
+  // here rather than left as a convention. Order: restore nodes BEFORE
+  // their relations (foreign endpoints must be live).
   void RestoreNodes(std::vector<NodeId> ids);
   void RestoreRelations(std::vector<RelationId> ids);
 
