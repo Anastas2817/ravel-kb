@@ -169,9 +169,10 @@ void Graph::DeleteRelations(std::vector<RelationId> ids) {
 }
 
 void Graph::RestoreNodes(std::vector<NodeId> ids) {
-  // validate
+  // validate (asserts vanish under NDEBUG — [[maybe_unused]] keeps
+  // -Werror quiet about the loop variable in Release)
   std::set<NodeId> unique(ids.begin(), ids.end());
-  for (NodeId id : ids) {
+  for ([[maybe_unused]] NodeId id : ids) {
     assert(id < next_id_node_);
     assert(!HasNode(id));
   }
@@ -183,9 +184,10 @@ void Graph::RestoreNodes(std::vector<NodeId> ids) {
 }
 
 void Graph::RestoreRelations(std::vector<RelationId> ids) {
-  // validate
+  // validate (asserts vanish under NDEBUG — [[maybe_unused]] keeps
+  // -Werror quiet about the loop variable in Release)
   const std::set<RelationId> unique(ids.begin(), ids.end());
-  for (RelationId id : unique) {
+  for ([[maybe_unused]] RelationId id : unique) {
     assert(!HasRelation(id));  // bug undo
     assert(HasNode(relations_[id - 1].from()));
     assert(HasNode(relations_[id - 1].to()));
