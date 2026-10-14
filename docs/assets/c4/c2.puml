@@ -19,7 +19,7 @@ package "Ravel" {
 
   rectangle "UI (Qt 6 Widgets)" as UI #BurlyWood
   rectangle "App\nединственный источник мутаций" as App #Tan
-  rectangle "Core (C++17, без Qt)" as Core #LightSkyBlue
+  rectangle "Core (C++20, без Qt)" as Core #LightSkyBlue
   rectangle "Storage (nlohmann/json)" as Storage #MistyRose
 }
 

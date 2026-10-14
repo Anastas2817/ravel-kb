@@ -1,4 +1,4 @@
-﻿@startuml C3
+@startuml C3
 skinparam shadowing false
 skinparam componentStyle rectangle
 skinparam rectangle {
@@ -15,11 +15,11 @@ title C3 — Components
 
 package "Core" {
 
-  rectangle "Graph\nC++17" as Graph #LightSkyBlue
+  rectangle "Graph\nC++20" as Graph #LightSkyBlue
   rectangle "GraphSnapshot" as Snapshot
   rectangle "SampleGraphs" as Samples
-  rectangle "Layout\nC++17" as Layout
-  rectangle "Algorithms\nC++17" as Algo
+  rectangle "Layout\nC++20" as Layout
+  rectangle "Algorithms\nC++20" as Algo
 
   Layout --> Graph : читает структуру
   Algo --> Graph : читает структуру
