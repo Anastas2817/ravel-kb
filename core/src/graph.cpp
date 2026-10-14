@@ -126,8 +126,10 @@ std::optional<std::pair<double, double>> Graph::MoveNode(NodeId id, std::pair<do
   if (!HasNode(id)) {
     throw std::invalid_argument("Graph::MoveNode tried to access non-existent Node");
   } else {
-    std::optional<std::pair<double, double>> prev_pos = GetNode(id).hand_position();
-    nodes_[id - 1].set_hand_position(pos);
+    const Node& prev = GetNode(id);
+    std::optional<std::pair<double, double>> prev_pos = prev.hand_position();
+    nodes_[id - 1] =
+        Node(prev.id(), prev.title(), prev.type(), prev.description(), prev.size(), pos);
     return prev_pos;
   }
 }

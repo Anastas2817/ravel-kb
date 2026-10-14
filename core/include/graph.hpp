@@ -109,10 +109,6 @@ class Node {  // DTO
     return hand_position_;
   }
 
-  void set_hand_position(std::pair<double, double> hand_position) noexcept {
-    hand_position_ = hand_position;
-  }
-
   // Exact == for doubles is intentional: size_/hand_position_ are stored
   // values compared for identity after serialization round-trips, not results
   // of floating-point computation. A bit-level mismatch here is a storage bug
