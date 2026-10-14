@@ -1,4 +1,4 @@
-﻿#include "graph.hpp"
+#include "graph.hpp"
 
 #include <algorithm>
 #include <unordered_set>
@@ -21,6 +21,14 @@ NodeId Graph::AddNode(std::string title, std::string type, std::string descripti
                       hand_position);
   access_.try_emplace(id);
   return id;
+}
+
+bool Graph::HasNode(NodeId id) const {
+  const bool is_not_zombie = (id >= 1) && (id < next_id_node_) && (nodes_[id - 1].id() == id);
+  if (!is_not_zombie) {
+    return false;
+  }
+  return access_.contains(id);
 }
 
 bool Graph::HasRelation(RelationId id) const noexcept {
@@ -158,6 +166,36 @@ void Graph::DeleteRelations(std::vector<RelationId> ids) {
   }
 }
 
+void Graph::RestoreNodes(std::vector<NodeId> ids) {
+  // validate
+  std::set<NodeId> unique(ids.begin(), ids.end());
+  for (NodeId id : ids) {
+    assert(id < next_id_node_);
+    assert(!HasNode(id));
+  }
+
+  // apply
+  for (NodeId id : ids) {
+    access_.emplace(id, std::vector<RelationId>());
+  }
+}
+
+void Graph::RestoreRelations(std::vector<RelationId> ids) {
+  // validate
+  const std::set<RelationId> unique(ids.begin(), ids.end());
+  for (RelationId id : unique) {
+    assert(!HasRelation(id));  // bug undo
+    assert(HasNode(relations_[id - 1].from()));
+    assert(HasNode(relations_[id - 1].to()));
+  }
+
+  // apply
+  for (RelationId id : unique) {
+    access_[relations_[id - 1].from()].push_back(id);
+    access_[relations_[id - 1].to()].push_back(id);
+  }
+}
+
 Graph Graph::FromSnapshot(const GraphSnapshot& src) {
   // validate
   if (src.next_id_node > kMaxEntities) {
@@ -230,11 +268,13 @@ Graph Graph::FromSnapshot(const GraphSnapshot& src) {
   g.ontology_node_ = src.ontology_node;
   g.ontology_relation_ = src.ontology_relation;
 
+  // placeholder ADR-002 11
   g.nodes_ = std::vector<Node>(src.next_id_node - 1, Node(0, "", "", ""));
   for (const Node& node : src.nodes) {
     g.nodes_[node.id() - 1] = node;
     g.access_.try_emplace(node.id());
   }
+  // placeholder ADR-002 11
   g.relations_ = std::vector<Relation>(src.next_id_relation - 1, Relation(0, 0, 0, ""));
   for (const Relation& relation : src.relations) {
     g.relations_[relation.id() - 1] = relation;
@@ -262,6 +302,29 @@ GraphSnapshot Graph::ToSnapshot() const {
   });
 
   return dest;
+}
+
+bool Graph::operator==(const Graph& other) const {
+  if (next_id_node_ != other.next_id_node_ || next_id_relation_ != other.next_id_relation_ ||
+      nodes_ != other.nodes_ || relations_ != other.relations_ ||
+      ontology_node_ != other.ontology_node_ || ontology_relation_ != other.ontology_relation_ ||
+      access_.size() != other.access_.size()) {
+    return false;
+  }
+  for (const auto& [id, incident] : access_) {
+    const auto it = other.access_.find(id);
+    if (it == other.access_.end()) {
+      return false;
+    }
+    std::vector<RelationId> lhs(incident.begin(), incident.end());
+    std::vector<RelationId> rhs(it->second.begin(), it->second.end());
+    std::sort(lhs.begin(), lhs.end());
+    std::sort(rhs.begin(), rhs.end());
+    if (lhs != rhs) {
+      return false;
+    }
+  }
+  return true;
 }
 
 }  // namespace ravel

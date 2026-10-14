@@ -569,7 +569,7 @@ TEST(GraphToSnapshot, ValidGraphSnapshotWithHoles) {
   EXPECT_EQ(dest.relations, right_relations);
 }
 
-TEST(GraphDeleteRelations, DuplicateIdsInArgument) {
+TEST(GraphDeleteRelations, DuplicateRelationIdsInArgument) {
   // Контракт идемпотентности (implementation.md): дубликат id в списке на удаление —
   // вырожденный случай корректного запроса, не ошибка.
   Graph g;
@@ -587,15 +587,22 @@ TEST(GraphDeleteRelations, DuplicateIdsInArgument) {
   EXPECT_TRUE(g.GetIncidentRelations(from).empty());
   EXPECT_TRUE(g.GetIncidentRelations(to).empty());
   EXPECT_TRUE(g.HasNode(from) && g.HasNode(to));  // узлы не пострадали
+
+  NodeId big = g.AddNode("Ряд", "model");
+  const RelationId deleted = g.AddRelation(big, to, "has_special_case");
+
+  g.DeleteRelations({deleted});
+  EXPECT_THROW(g.DeleteRelations({deleted}), std::invalid_argument);
 }
 
-TEST(GraphDeleteNodes, DuplicateIdsInArgument) {
+TEST(GraphDeleteNodes, DuplicateNodeIdsInArgument) {
   // Тот же контракт идемпотентности для DeleteNodes: повтор id удаляет один раз.
   Graph g;
   g.AddRelationType("has_special_case", "#000000", "solid", false, true);
   g.AddNodeType("model", "#4a90d9", "rect", "#000000");
   NodeId from = g.AddNode("Числовой ряд", "model");
   NodeId to = g.AddNode("Функциональный ряд", "model");
+  NodeId big = g.AddNode("Ряд", "model");
   const RelationId id = g.AddRelation(from, to, "has_special_case");
 
   g.DeleteNodes({from, from});  // не бросает
@@ -604,6 +611,9 @@ TEST(GraphDeleteNodes, DuplicateIdsInArgument) {
   EXPECT_TRUE(g.HasNode(to));
   EXPECT_FALSE(g.HasRelation(id));
   EXPECT_TRUE(g.GetIncidentRelations(to).empty());
+
+  g.DeleteNodes({big});
+  EXPECT_THROW(g.DeleteNodes({big}), std::invalid_argument);
 }
 
 TEST(GraphFromSnapshot, IdBeyondNextIdUnsorted) {
@@ -646,4 +656,65 @@ TEST(GraphFromSnapshot, UnsortedOrderAccepted) {
   EXPECT_EQ(g.GetNode(3).title(), "Телескопический ряд");
   EXPECT_TRUE(g.HasRelation(1));
   EXPECT_EQ(g.next_id_node(), 4);
+}
+
+TEST(GraphRestoreNodes, ToRessurectNodes) {
+  Graph src;
+  src.AddRelationType("has_special_case", "#000000", "solid", false, true);
+  src.AddRelationType("boils_down_to", "#000000", "solid", false, true);
+  src.AddNodeType("model", "#4a90d9", "rect", "#000000");
+  NodeId node1 = src.AddNode("Числовой ряд", "model");
+  NodeId node2 = src.AddNode("Функциональный ряд", "model");
+  [[maybe_unused]] NodeId node3 = src.AddNodeWithRelations(
+      "Ряд", "model", {}, {{node1, "has_special_case"}, {node2, "has_special_case"}});
+  [[maybe_unused]] RelationId relation3 = src.AddRelation(node2, node1, "boils_down_to");
+  NodeId node4 = src.AddNode("Признак Дирихле", "model");
+  NodeId deleted5 = src.AddNode("Признак Лейбница", "model");
+  NodeId node6 = src.AddNode("Признак Абеля", "model");
+  [[maybe_unused]] RelationId relation4 = src.AddRelation(node1, node4, "has_special_case");
+  RelationId deleted_rel5 = src.AddRelation(node4, deleted5, "has_special_case");
+  [[maybe_unused]] RelationId relation6 = src.AddRelation(node4, node6, "has_special_case");
+  NodeId deleted7 = src.AddNode("Признак Вейерштрасса", "model");
+  NodeId deleted8 = src.AddNode("Признак Коши", "model");
+  [[maybe_unused]] RelationId deleted_rel7 = src.AddRelation(node2, deleted7, "has_special_case");
+  [[maybe_unused]] RelationId deleted_rel8 = src.AddRelation(node2, deleted8, "has_special_case");
+
+  Graph dest(src);
+
+  dest.DeleteNodes({deleted5, deleted7, deleted8});
+  EXPECT_FALSE(dest == src);
+  EXPECT_THROW(dest.DeleteNodes({deleted5}), std::invalid_argument);
+  dest.RestoreNodes({deleted5, deleted7, deleted8});
+  dest.RestoreRelations({deleted_rel5, deleted_rel7, deleted_rel8});
+  EXPECT_TRUE(dest == src);
+}
+
+TEST(GraphRestoreNodes, ToRessurectRelations) {
+  Graph src;
+  src.AddRelationType("has_special_case", "#000000", "solid", false, true);
+  src.AddRelationType("boils_down_to", "#000000", "solid", false, true);
+  src.AddNodeType("model", "#4a90d9", "rect", "#000000");
+  NodeId node1 = src.AddNode("Числовой ряд", "model");
+  NodeId node2 = src.AddNode("Функциональный ряд", "model");
+  [[maybe_unused]] NodeId node3 = src.AddNodeWithRelations(
+      "Ряд", "model", {}, {{node1, "has_special_case"}, {node2, "has_special_case"}});
+  [[maybe_unused]] RelationId relation3 = src.AddRelation(node2, node1, "boils_down_to");
+  NodeId node4 = src.AddNode("Признак Дирихле", "model");
+  NodeId node5 = src.AddNode("Признак Лейбница", "model");
+  NodeId node6 = src.AddNode("Признак Абеля", "model");
+  [[maybe_unused]] RelationId relation4 = src.AddRelation(node1, node4, "has_special_case");
+  RelationId deleted_rel5 = src.AddRelation(node4, node5, "has_special_case");
+  [[maybe_unused]] RelationId relation6 = src.AddRelation(node4, node6, "has_special_case");
+  NodeId node7 = src.AddNode("Признак Вейерштрасса", "model");
+  NodeId node8 = src.AddNode("Признак Коши", "model");
+  [[maybe_unused]] RelationId deleted_rel7 = src.AddRelation(node2, node7, "has_special_case");
+  [[maybe_unused]] RelationId deleted_rel8 = src.AddRelation(node2, node8, "has_special_case");
+
+  Graph dest(src);
+
+  dest.DeleteRelations({deleted_rel5, deleted_rel7, deleted_rel8});
+  EXPECT_FALSE(dest == src);
+  EXPECT_THROW(dest.DeleteRelations({deleted_rel7}), std::invalid_argument);
+  dest.RestoreRelations({deleted_rel5, deleted_rel7, deleted_rel8});
+  EXPECT_TRUE(dest == src);
 }

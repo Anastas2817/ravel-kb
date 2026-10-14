@@ -1,6 +1,7 @@
-﻿#ifndef RAVEL_CORE_INCLUDE_GRAPH_HPP_
+#ifndef RAVEL_CORE_INCLUDE_GRAPH_HPP_
 #define RAVEL_CORE_INCLUDE_GRAPH_HPP_
 
+#include <cassert>
 #include <cctype>
 #include <concepts>
 #include <cstdint>
@@ -287,9 +288,7 @@ class Graph {
   }
   NodeId AddNode(std::string title, std::string type, std::string description = "", double size = 1,
                  std::optional<std::pair<double, double>> hand_position = std::nullopt);
-  bool HasNode(NodeId id) const {
-    return access_.contains(id);
-  }
+  bool HasNode(NodeId id) const;
   RelationId AddRelation(NodeId from, NodeId to, std::string type, std::string description = "");
   bool HasRelation(RelationId id) const noexcept;
   const Relation& GetRelation(RelationId id) const {
@@ -305,8 +304,10 @@ class Graph {
       double size = 1, std::optional<std::pair<double, double>> hand_position = std::nullopt);
   std::optional<std::pair<double, double>> MoveNode(NodeId id, std::pair<double, double> pos);
   // implementation.md («Контракт удаления») - idempotence for delete*
+
   void DeleteNodes(std::vector<NodeId> ids);
   void DeleteRelations(std::vector<RelationId> ids);
+
   const std::vector<RelationId>& GetIncidentRelations(NodeId id) const {
     if (!HasNode(id)) {
       throw std::invalid_argument("Graph::GetIncidentRelations tried to access non-existent Node");
@@ -314,6 +315,9 @@ class Graph {
       return access_.at(id);
     }
   }
+  void RestoreNodes(std::vector<NodeId> ids);
+  void RestoreRelations(std::vector<RelationId> ids);
+
   std::set<NodeId> GetNeighbors(NodeId id) const;
 
   // The single sanctioned iteration point over live nodes, in ascending id
@@ -343,6 +347,8 @@ class Graph {
 
   static Graph FromSnapshot(const GraphSnapshot& src);
   GraphSnapshot ToSnapshot() const;
+
+  bool operator==(const Graph&) const;
 
  private:
   std::unordered_map<std::string, NodeType> ontology_node_;
