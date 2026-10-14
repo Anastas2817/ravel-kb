@@ -1,0 +1,21 @@
+# Конфигурация редактора для всего репозитория.
+# Главное в проекте: без BOM (VS иначе сохраняет UTF-16/UTF-8-BOM и git
+# видит бинарники), LF в репозитории (core.autocrlf делает CRLF локально),
+# отступы — 2 пробела, как принято в clang-format (.clang-format).
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{cpp,hpp,h}]
+indent_style = space
+indent_size = 2
+
+[{CMakeLists.txt,*.cmake}]
+indent_style = space
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
