@@ -1,4 +1,4 @@
-﻿# Ravel
+# Ravel
 
 **Десктопный PKM-инструмент с графовой нотацией: типизированные связи, семантическая раскладка, полное ручное управление.**
 
@@ -76,7 +76,7 @@ cmake --build build --config Release
 ctest --test-dir build -C Release --output-on-failure
 ```
 
-Открыть можно и как `build/ravel-kb.sln`. GoogleTest и nlohmann/json подтягиваются через FetchContent при первой конфигурации (нужен интернет). `windeployqt` запускается автоматически после сборки — собранный `build/bin/Release/ravel.exe` работает вне IDE без дополнительных шагов. CI гоняет матрицу Windows/MSVC и Ubuntu/GCC в Debug и Release (на GCC — `-Wall -Wextra -Werror`): заявленная совместимость с MSVC 2022 и портативность ядра проверяются автоматически на каждом push.
+Открыть можно и как `build/ravel-kb.sln`. GoogleTest и nlohmann/json подтягиваются через FetchContent при первой конфигурации (нужен интернет). `windeployqt` запускается автоматически после сборки — собранный `build/bin/Release/ravel.exe` работает вне IDE без дополнительных шагов. CI гоняет матрицу Windows/MSVC и Ubuntu/GCC в Debug и Release (на GCC — `-Wall -Wextra -Werror`), job `format` (clang-format `--dry-run --Werror`) и job `sanitizers` (GCC, ASan+UBSan — ручное индексирование `id − 1` по плотным векторам проверяется на выход за границу на каждом push): заявленная совместимость с MSVC 2022 и портативность ядра проверяются автоматически.
 
 Если официальный установщик Qt недоступен или работает медленно (например, `download.qt.io` не открывается): Qt можно поставить без установщика и регистрации — скачав готовые бинарники с зеркала (например, `ftp.fau.de/qtproject/online/qtsdkrepository/...`) и распаковав их в выбранный каталог. Для разработки на Widgets достаточно архивов `qtbase`, `qttools`, `qtsvg`, `d3dcompiler`, `opengl32sw` (~70 МБ вместо ~2 ГБ полной установки).
 
@@ -86,8 +86,8 @@ ctest --test-dir build -C Release --output-on-failure
 
 | Компонент | Статус |
 |---|---|
-| Модель данных `Graph` | ✅ закрыто (неделя 1: 23 юнит-теста на инварианты) |
-| Сериализация JSON | ✅ закрыто (неделя 2: `JsonStorage` Load/Save, 14 тестов, round-trip) |
+| Модель данных `Graph` | ✅ закрыто (неделя 1: 26 юнит-тестов на инварианты) |
+| Сериализация JSON | ✅ закрыто (неделя 2: `JsonStorage` Load/Save, 15 тестов, round-trip) |
 | Канвас (QGraphicsView) | 🔧 база (неделя 4): узлы перемещаемы, рёбра следуют |
 | Раскладка (Сугияма с онтологическими лентами) | 📋 запланировано |
 | Обнаружение циклов | 📋 запланировано |

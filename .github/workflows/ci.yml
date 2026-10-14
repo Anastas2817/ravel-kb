@@ -4,6 +4,9 @@
 # MSVC (Windows): warnings-as-errors НЕ включён — системные заголовки nlohmann/json
 # дают предупреждения уровня /W4; лечение через /external отложено.
 # GCC (Ubuntu): -Wall -Wextra -Werror — свой код должен быть чист; нарушение = красный CI.
+# Санитайзеры (ASan+UBSan, отдельный job): ручное индексирование id − 1 по плотным
+# векторам — зона повышенного риска off-by-one; санитайзер ловит то, что тесты читают
+# как «работает» на отладочной куче.
 
 name: CI
 
@@ -87,3 +90,32 @@ jobs:
         run: >
           .fmt-venv/bin/clang-format --dry-run --Werror
           $(find core storage app ui tests -name '*.hpp' -o -name '*.cpp')
+
+  # Санитайзеры: ручное индексирование id − 1 по плотным векторам — ровно тот
+  # код, где off-by-one читается как «работает» на отладочной куче и взрывается
+  # у пользователя. ASan ловит выход за границу и use-after-free, UBSan —
+  # UB-арифметику и сдвиги. Цена — один лишний прогон тестов.
+  sanitizers:
+    name: sanitizers (Ubuntu · GCC · ASan+UBSan)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Флаги через -D, а не env CXXFLAGS: санитайзеры обязаны дойти и до
+      # компиляции, и до линковки (gtest/тесты). env CXXFLAGS в CMake влияет
+      # только на compile-шаг; линковка без -fsanitize дала бы «libasan not
+      # linked». Замена флагов по умолчанию здесь безопасна: job только GCC.
+      - name: Configure
+        run: >
+          cmake -B build -G Ninja
+          -DCMAKE_BUILD_TYPE=Debug
+          -DRAVEL_BUILD_UI=OFF
+          -DCMAKE_CXX_FLAGS="-Wall -Wextra -Werror -fsanitize=address,undefined -fno-omit-frame-pointer"
+          -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined"
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
