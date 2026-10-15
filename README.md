@@ -3,13 +3,13 @@
 **Десктопный PKM-инструмент с графовой нотацией: типизированные связи, семантическая раскладка, полное ручное управление.**
 
 ![status](https://img.shields.io/badge/status-in%20development-yellow)
-![lang](https://img.shields.io/badge/C%2B%2B-20-blue)
+![lang](https://img.shields.io/badge/C%2B%2B-23-blue)
 ![qt](https://img.shields.io/badge/Qt-6%20Widgets-green)
 ![build](https://img.shields.io/badge/CMake-%3E%3D3.20-blue)
 [![CI](https://github.com/Anastas2817/ravel-kb/actions/workflows/ci.yml/badge.svg)](https://github.com/Anastas2817/ravel-kb/actions/workflows/ci.yml)
 ![license](https://img.shields.io/badge/license-MIT-purple)
 
-> **In English.** Ravel is a desktop PKM tool with a graph notation: relations are typed entities with properties (symmetry, transitivity); the layout is semantic — hierarchy top-down (Sugiyama), ontological bands left-to-right; and control is fully manual — automation only advises (cycle detection, overloaded hubs), the user decides. Local-first: one human-readable, git-friendly JSON file, no cloud. C++20 / Qt 6, MIT. *Full documentation is in Russian.*
+> **In English.** Ravel is a desktop PKM tool with a graph notation: relations are typed entities with properties (symmetry, transitivity); the layout is semantic — hierarchy top-down (Sugiyama), ontological bands left-to-right; and control is fully manual — automation only advises (cycle detection, overloaded hubs), the user decides. Local-first: one human-readable, git-friendly JSON file, no cloud. C++23 / Qt 6, MIT. *Full documentation is in Russian.*
 
 База знаний в Ravel — ориентированный граф, построенный вручную и осознанно: каждый узел и каждая связь добавляются пользователем, а система только советует — обнаруживает циклы, выделяет перегруженные хабы, предлагает упорядочить. Связи типизированы и имеют свойства (симметрия, транзитивность), а положение узла несёт смысл: вертикаль кодирует иерархию (общее сверху), горизонталь — онтологические ленты.
 
@@ -52,7 +52,7 @@
 
 ## Быстрый старт
 
-Требования: CMake ≥ 3.20, компилятор с C++20, Qt 6 (модуль Widgets).
+Требования: CMake ≥ 3.20, компилятор с C++23, Qt 6 (модуль Widgets).
 
 ```bash
 git clone https://github.com/Anastas2817/ravel-kb.git
@@ -71,7 +71,7 @@ ctest --test-dir build --output-on-failure
 **Windows / Visual Studio 2022.** Да, проект полностью собирается в MSVC: установите Qt 6 (кит MSVC 2019/2022), затем:
 
 ```powershell
-cmake -B build -G "Visual Studio 17 2022" -DCMAKE_PREFIX_PATH="C:/Users/nexrf/Qt/6.8.3/msvc2022_64"
+cmake -B build -G "Visual Studio 17 2022" -DCMAKE_PREFIX_PATH="C:/Users/*/Qt/6.8.3/msvc2022_64"
 cmake --build build --config Release
 ctest --test-dir build -C Release --output-on-failure
 ```
@@ -143,7 +143,7 @@ ctest --test-dir build -C Release --output-on-failure
 
 ## Contributing
 
-См. [CONTRIBUTING.md](CONTRIBUTING.md). Кратко: ядро (`core/`) — чистый C++20 без Qt, покрыто юнит-тестами; UI зависит от ядра, но не наоборот.
+См. [CONTRIBUTING.md](CONTRIBUTING.md). Кратко: ядро (`core/`) — чистый C++23 без Qt, покрыто юнит-тестами; UI зависит от ядра, но не наоборот.
 
 ## Лицензия
 

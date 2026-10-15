@@ -20,9 +20,12 @@ project(ravel
 # Глобальные настройки C++
 # ---------------------------------------------------------------------------
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+# std::expected (<expected>) — потребитель: слой команд (app/command.hpp).
+# Поддержка тулчейнов матрицы: GCC libstdc++ 12+, MSVC STL 19.33+ (VS 2022
+# 17.3+), libc++ 16+. Перед downgrade проверить эти версии.
 
 # Qt собирается с динамическим рантаймом (/MD) — подгоняем под него,
 # иначе будут конфликты линковки (LNK2038: mismatch RuntimeLibrary).
@@ -50,7 +53,7 @@ option(RAVEL_USE_FETCHCONTENT "Подтягивать недостающие з�
 
 if(MSVC)
     # /W4            — высокий уровень предупреждений
-    # /permissive-   — строгое соответствие стандарту C++20
+    # /permissive-   — строгое соответствие стандарту C++23
     # /utf-8         — исходники в UTF-8 (кириллица в строках/комментариях)
     # /Zc:__cplusplus — корректное значение __cplusplus (иначе 199711L)
     add_compile_options(/W4 /permissive- /utf-8 /Zc:__cplusplus)
@@ -68,7 +71,7 @@ endif()
 # Цели
 # ---------------------------------------------------------------------------
 
-add_subdirectory(core)    # ядро: чистый C++20, без Qt (docs/architecture.md §1)
+add_subdirectory(core)    # ядро: чистый C++23, без Qt (docs/architecture.md §1)
 add_subdirectory(storage) # IStorage / JsonStorage (nlohmann/json)
 add_subdirectory(app)     # команды (Command + undo/redo), контроллеры
 

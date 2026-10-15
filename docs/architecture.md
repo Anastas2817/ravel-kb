@@ -23,7 +23,7 @@ tools/jdk-21.0.12.1+1-jre/bin/java -jar tools/plantuml.jar -Playout=smetana -cha
 │  Controller · Command (сценарии/команды) ·  │
 │  SessionState — единственный источник мутаций│
 ├─────────────────────────────────────────────┤
-│  Core (чистый C++20, без Qt)                │
+│  Core (чистый C++23, без Qt)                │
 │  Graph · GraphSnapshot · Layout ·           │
 │  Algorithms                                 │
 ├─────────────────────────────────────────────┤
@@ -48,7 +48,7 @@ tools/jdk-21.0.12.1+1-jre/bin/java -jar tools/plantuml.jar -Playout=smetana -cha
 3. **Дисциплина зависимостей.** Запрет Qt в ядре — автоматическая проверка границ слоёв: если для фичи «нужно немного Qt в core», это сигнал, что фичу спроектировали неверно (логика утекла в presentation).
 4. **Переносимость и переиспользование.** Core — статическая библиотека; собирается под любую платформу и может быть переиспользована вне десктопного UI (CLI-утилиты, тестовые генераторы — см. потребители в perspectives.md).
 
-Ядро использует только стандартную библиотеку C++20.
+Ядро использует только стандартную библиотеку C++23.
 
 ## 2. Компоненты (C3)
 
@@ -115,7 +115,7 @@ tools/jdk-21.0.12.1+1-jre/bin/java -jar tools/plantuml.jar -Playout=smetana -cha
 
 ```
 ravel-kb/
-├── core/            # чистый C++20: модель, снимок, свои контракты
+├── core/            # чистый C++23: модель, снимок, свои контракты
 │   ├── include/     # graph.hpp, sample_graphs.hpp
 │   └── src/         # graph.cpp
 ├── app/             # Controller, Command, SessionState (каркас CMake)

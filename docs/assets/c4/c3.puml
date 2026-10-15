@@ -15,10 +15,10 @@ title C3 — Components
 
 package "Core" {
 
-  rectangle "Graph\nC++20" as Graph #LightSkyBlue
+  rectangle "Graph" as Graph #LightSkyBlue
   rectangle "GraphSnapshot" as Snapshot
-  rectangle "Layout\nC++20" as Layout
-  rectangle "Algorithms\nC++20" as Algo
+  rectangle "Layout" as Layout
+  rectangle "Algorithms" as Algo
 
   Layout --> Graph : читает структуру
   Algo --> Graph : читает структуру

@@ -10,11 +10,11 @@ cmake --build build
 ctest --test-dir build --output-on-failure
 ```
 
-Требования: CMake ≥ 3.20, C++17, Qt 6 (Widgets). Зависимости (GoogleTest, nlohmann/json) подтягиваются через `FetchContent`.
+Требования: CMake ≥ 3.20, C++23, Qt 6 (Widgets). Зависимости (GoogleTest, nlohmann/json) подтягиваются через `FetchContent`.
 
 ## Архитектурные правила
 
-1. **`core/` не зависит от Qt.** Только стандартная библиотека C++17. Проверяется CI-целью `core` без Qt. Обоснование — [docs/architecture.md](docs/architecture.md) §1.1.
+1. **`core/` не зависит от Qt.** Только стандартная библиотека C++23. Проверяется CI-целью `core` без Qt. Обоснование — [docs/architecture.md](docs/architecture.md) §1.1.
 2. Все мутации графа — через классы `Command` (см. [docs/architecture.md](docs/architecture.md)).
 3. Новые инварианты модели — только с тестами, их нарушающими.
 4. Алгоритмы (раскладка) — отдельные классы-клиенты `Graph`, не зашиты в UI; интерфейс стратегии вводится только при появлении второй реализации (см. [docs/architecture.md](docs/architecture.md) §3).
