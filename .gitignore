@@ -152,3 +152,6 @@ tools/
 
 # Visual Studio: старый формат настроек CMake (заменён CMakePresets.json)
 CMakeSettings.json
+
+# Локальный venv с clang-format (версия пингуется как в CI)
+.fmt-venv/
