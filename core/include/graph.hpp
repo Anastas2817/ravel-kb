@@ -47,10 +47,11 @@ class NodeType {
         shape_(isValidShape(shape) ? shape
                                    : throw std::invalid_argument(
                                          "NodeType tried to create NodeType with non-valid shape")),
-        frame_color_(isValidHexColor(frame_color)
-                         ? frame_color
-                         : throw std::invalid_argument(
-                               "NodeType::NodeType tried to create NodeType with non-valid frame_color")) {
+        frame_color_(
+            isValidHexColor(frame_color)
+                ? frame_color
+                : throw std::invalid_argument(
+                      "NodeType::NodeType tried to create NodeType with non-valid frame_color")) {
   }
 
   const std::string& color() const noexcept {
@@ -78,10 +79,10 @@ class Node {  // DTO
         type_(std::move(type)),
         title_(std::move(title)),
         description_(std::move(description)),
-        size_(
-            (size > 0 && std::isfinite(size))
-                ? size
-                : throw std::invalid_argument("Node::Node tried to create Node with non-positive size")),
+        size_((size > 0 && std::isfinite(size))
+                  ? size
+                  : throw std::invalid_argument(
+                        "Node::Node tried to create Node with non-positive size")),
         hand_position_((!hand_position || (std::isfinite(hand_position->first) &&
                                            std::isfinite(hand_position->second)))
                            ? hand_position
@@ -142,12 +143,12 @@ class RelationType {
   RelationType(std::string color, std::string arrow, bool symmetric, bool transitive)
       : color_(isValidHexColor(color)
                    ? color
-                   : throw std::invalid_argument(
-                         "RelationType::RelationType tried to create RelationType with non-valid color")),
+                   : throw std::invalid_argument("RelationType::RelationType tried to create "
+                                                 "RelationType with non-valid color")),
         arrow_(isValidArrow(arrow)
                    ? arrow
-                   : throw std::invalid_argument(
-                         "RelationType::RelationType tried to create RelationType with non-valid arrow")),
+                   : throw std::invalid_argument("RelationType::RelationType tried to create "
+                                                 "RelationType with non-valid arrow")),
         symmetric_(symmetric),
         transitive_(transitive) {
   }
