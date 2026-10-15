@@ -43,14 +43,14 @@ class NodeType {
       : color_(isValidHexColor(color)
                    ? color
                    : throw std::invalid_argument(
-                         "NodeType tried to create NodeType with non-valid color")),
+                         "NodeType::NodeType tried to create NodeType with non-valid color")),
         shape_(isValidShape(shape) ? shape
                                    : throw std::invalid_argument(
                                          "NodeType tried to create NodeType with non-valid shape")),
         frame_color_(isValidHexColor(frame_color)
                          ? frame_color
                          : throw std::invalid_argument(
-                               "NodeType tried to create NodeType with non-valid frame_color")) {
+                               "NodeType::NodeType tried to create NodeType with non-valid frame_color")) {
   }
 
   const std::string& color() const noexcept {
@@ -81,12 +81,12 @@ class Node {  // DTO
         size_(
             (size > 0 && std::isfinite(size))
                 ? size
-                : throw std::invalid_argument("Node tried to create Node with non-positive size")),
+                : throw std::invalid_argument("Node::Node tried to create Node with non-positive size")),
         hand_position_((!hand_position || (std::isfinite(hand_position->first) &&
                                            std::isfinite(hand_position->second)))
                            ? hand_position
                            : throw std::invalid_argument(
-                                 "Node tried to create Node with nan/inf hand_position")) {
+                                 "Node::Node tried to create Node with nan/inf hand_position")) {
   }
 
   NodeId id() const noexcept {
@@ -120,11 +120,11 @@ class Node {  // DTO
  private:
   // Identity
   NodeId id_ = 0;
-  std::string type_ = "";
+  std::string type_;
 
   // Local data
-  std::string title_ = "";
-  std::string description_ = "";
+  std::string title_;
+  std::string description_;
   double size_ = 1;
   std::optional<std::pair<double, double>> hand_position_ = std::nullopt;
 };
@@ -143,11 +143,11 @@ class RelationType {
       : color_(isValidHexColor(color)
                    ? color
                    : throw std::invalid_argument(
-                         "RelationType tried to create RelationType with non-valid color")),
+                         "RelationType::RelationType tried to create RelationType with non-valid color")),
         arrow_(isValidArrow(arrow)
                    ? arrow
                    : throw std::invalid_argument(
-                         "RelationType tried to create RelationType with non-valid arrow")),
+                         "RelationType::RelationType tried to create RelationType with non-valid arrow")),
         symmetric_(symmetric),
         transitive_(transitive) {
   }
@@ -206,9 +206,9 @@ class Relation {  // DTO
   RelationId id_ = 0;
   NodeId from_ = 0;
   NodeId to_ = 0;
-  std::string type_ = "";
+  std::string type_;
 
-  std::string description_ = "";
+  std::string description_;
 };
 
 template <typename Fn>
