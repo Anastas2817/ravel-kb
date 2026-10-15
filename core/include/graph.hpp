@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <cctype>
+#include <cmath>
 #include <concepts>
 #include <cstdint>
 #include <map>
@@ -33,11 +34,7 @@ inline bool isValidHexColor(const std::string& color) {
   return true;
 }
 inline bool isValidShape(const std::string& shape) {
-  if ((shape == "rect") || shape == "oval") {
-    return true;
-  } else {
-    return false;
-  }
+  return ((shape == "rect") || (shape == "oval"));
 }
 
 class NodeType {
@@ -46,16 +43,14 @@ class NodeType {
       : color_(isValidHexColor(color)
                    ? color
                    : throw std::invalid_argument(
-                         "Graph::NodeType tried to create NodeType with non-valid color")),
-        shape_(isValidShape(shape)
-                   ? shape
-                   : throw std::invalid_argument(
-                         "Graph::NodeType tried to create NodeType with non-valid shape")),
-        frame_color_(
-            isValidHexColor(frame_color)
-                ? frame_color
-                : throw std::invalid_argument(
-                      "Graph::NodeType tried to create NodeType with non-valid frame_color")) {
+                         "NodeType tried to create NodeType with non-valid color")),
+        shape_(isValidShape(shape) ? shape
+                                   : throw std::invalid_argument(
+                                         "NodeType tried to create NodeType with non-valid shape")),
+        frame_color_(isValidHexColor(frame_color)
+                         ? frame_color
+                         : throw std::invalid_argument(
+                               "NodeType tried to create NodeType with non-valid frame_color")) {
   }
 
   const std::string& color() const noexcept {
@@ -83,10 +78,15 @@ class Node {  // DTO
         type_(std::move(type)),
         title_(std::move(title)),
         description_(std::move(description)),
-        size_(size > 0 ? size
-                       : throw std::invalid_argument(
-                             "Graph::Node tried to create Node with non-positive size")),
-        hand_position_(hand_position) {
+        size_(
+            (size > 0 && std::isfinite(size))
+                ? size
+                : throw std::invalid_argument("Node tried to create Node with non-positive size")),
+        hand_position_((!hand_position || (std::isfinite(hand_position->first) &&
+                                           std::isfinite(hand_position->second)))
+                           ? hand_position
+                           : throw std::invalid_argument(
+                                 "Node tried to create Node with nan/inf hand_position")) {
   }
 
   NodeId id() const noexcept {
@@ -130,11 +130,7 @@ class Node {  // DTO
 };
 
 inline bool isValidArrow(const std::string& arrow) {
-  if (arrow == "solid" || arrow == "dashed" || arrow == "dotted") {
-    return true;
-  } else {
-    return false;
-  }
+  return (arrow == "solid" || arrow == "dashed" || arrow == "dotted");
 }
 
 template <typename Fn>
@@ -147,11 +143,11 @@ class RelationType {
       : color_(isValidHexColor(color)
                    ? color
                    : throw std::invalid_argument(
-                         "Graph::RelationType tried to create Relationtype with non-valid color")),
+                         "RelationType tried to create RelationType with non-valid color")),
         arrow_(isValidArrow(arrow)
                    ? arrow
                    : throw std::invalid_argument(
-                         "Graph::RelationType tried to create Relationtype with non-valid arrow")),
+                         "RelationType tried to create RelationType with non-valid arrow")),
         symmetric_(symmetric),
         transitive_(transitive) {
   }
@@ -309,6 +305,20 @@ class Graph {
   void DeleteNodes(std::vector<NodeId> ids);
   void DeleteRelations(std::vector<RelationId> ids);
 
+  /**
+   * @brief Ids of all relations incident to a live node (incoming and
+   *        outgoing together; direction of a relation is recovered via
+   *        GetRelation(rid)).
+   * @param id id of a live node; std::invalid_argument otherwise.
+   * @return Const reference into the adjacency index. Two lifetime limits,
+   *         both contractual: the reference dies with *this, and it dies on
+   *         ANY mutating call (Add/Delete/Restore/MoveNode) — never hold
+   *         it across a mutation, obtain it again after one.
+   * @note Internal id order is unspecified and unstable across mutations
+   *       (implementation.md R3): rely on membership, not on positions.
+   *       Holding an invalidated reference is UB — tests cannot catch it,
+   *       the contract lives here and is enforced by review.
+   */
   const std::vector<RelationId>& GetIncidentRelations(NodeId id) const {
     if (!HasNode(id)) {
       throw std::invalid_argument("Graph::GetIncidentRelations tried to access non-existent Node");
@@ -357,7 +367,7 @@ class Graph {
   static Graph FromSnapshot(const GraphSnapshot& src);
   GraphSnapshot ToSnapshot() const;
 
-  bool operator==(const Graph&) const;
+  bool session_equal(const Graph&) const;
 
  private:
   std::unordered_map<std::string, NodeType> ontology_node_;

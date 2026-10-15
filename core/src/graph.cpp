@@ -14,6 +14,9 @@ NodeId Graph::AddNode(std::string title, std::string type, std::string descripti
   if (size <= 0) {
     throw std::invalid_argument("Graph::AddNode tried to create node with non-positive size");
   }
+  if (next_id_node_ > kMaxEntities) {
+    throw std::invalid_argument("Graph::AddNode tried to create node with id > kMaxEntities");
+  }
 
   // apply
   NodeId id = next_id_node_++;
@@ -91,6 +94,14 @@ NodeId Graph::AddNodeWithRelations(std::string title, std::string type,
       throw std::invalid_argument("Graph::AddNodeWithRelations wrong to");
     }
   }
+  if (next_id_node_ > kMaxEntities) {
+    throw std::invalid_argument(
+        "Graph::AddNodeWithRelations tried to create node with id > kMaxEntities");
+  }
+  if ((next_id_relation_ + froms.size() + tos.size()) > kMaxEntities) {
+    throw std::invalid_argument(
+        "Graph::AddNodeWithRelations tried to create relation with id > kMaxEntities");
+  }
 
   // apply
   NodeId cur = AddNode(title, type, description, size, hand_position);
@@ -112,11 +123,12 @@ std::set<NodeId> Graph::GetNeighbors(NodeId id) const {
   // apply
   std::set<NodeId> neighbors;
   for (RelationId rid : access_.at(id)) {
-    if (GetRelation(rid).from() != id) {
-      neighbors.insert(GetRelation(rid).from());
+    const Relation& r = relations_[rid - 1];
+    if (r.from() != id) {
+      neighbors.insert(r.from());
     }
-    if (GetRelation(rid).to() != id) {
-      neighbors.insert(GetRelation(rid).to());
+    if (r.to() != id) {
+      neighbors.insert(r.to());
     }
   }
   return neighbors;
@@ -172,13 +184,14 @@ void Graph::RestoreNodes(std::vector<NodeId> ids) {
   // validate (asserts vanish under NDEBUG — [[maybe_unused]] keeps
   // -Werror quiet about the loop variable in Release)
   std::set<NodeId> unique(ids.begin(), ids.end());
-  for ([[maybe_unused]] NodeId id : ids) {
+  for ([[maybe_unused]] NodeId id : unique) {
     assert(id < next_id_node_);
     assert(!HasNode(id));
+    assert(nodes_[id - 1].id() == id);
   }
 
   // apply
-  for (NodeId id : ids) {
+  for (NodeId id : unique) {
     access_.emplace(id, std::vector<RelationId>());
   }
 }
@@ -189,6 +202,8 @@ void Graph::RestoreRelations(std::vector<RelationId> ids) {
   const std::set<RelationId> unique(ids.begin(), ids.end());
   for ([[maybe_unused]] RelationId id : unique) {
     assert(!HasRelation(id));  // bug undo
+    assert(id < next_id_relation_);
+    assert(relations_[id - 1].id() == id);
     assert(HasNode(relations_[id - 1].from()));
     assert(HasNode(relations_[id - 1].to()));
   }
@@ -238,8 +253,13 @@ Graph Graph::FromSnapshot(const GraphSnapshot& src) {
     if (i.id() >= src.next_id_node) {
       throw std::runtime_error("Graph::FromSnapshot tried to add node with id >= next_id");
     }
-    if (i.size() <= 0) {
-      throw std::runtime_error("Graph::FromSnapshot tried to add node with non-positive size");
+    if (i.size() <= 0 || !std::isfinite(i.size())) {
+      throw std::runtime_error(
+          "Graph::FromSnapshot tried to add node with non-positive/nan/inf size");
+    }
+    if ((i.hand_position() != std::nullopt) &&
+        (!std::isfinite(i.hand_position()->first) || !std::isfinite(i.hand_position()->second))) {
+      throw std::runtime_error("Graph::FromSnapshot tried to add node with nan/inf hand_position");
     }
   }
   std::unordered_set<RelationId> alive_relations;
@@ -308,7 +328,7 @@ GraphSnapshot Graph::ToSnapshot() const {
   return dest;
 }
 
-bool Graph::operator==(const Graph& other) const {
+bool Graph::session_equal(const Graph& other) const {
   if (next_id_node_ != other.next_id_node_ || next_id_relation_ != other.next_id_relation_ ||
       nodes_ != other.nodes_ || relations_ != other.relations_ ||
       ontology_node_ != other.ontology_node_ || ontology_relation_ != other.ontology_relation_ ||

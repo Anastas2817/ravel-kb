@@ -682,11 +682,11 @@ TEST(GraphRestoreNodes, ToRessurectNodes) {
   Graph dest(src);
 
   dest.DeleteNodes({deleted5, deleted7, deleted8});
-  EXPECT_FALSE(dest == src);
+  EXPECT_FALSE(dest.session_equal(src));
   EXPECT_THROW(dest.DeleteNodes({deleted5}), std::invalid_argument);
   dest.RestoreNodes({deleted5, deleted7, deleted8});
   dest.RestoreRelations({deleted_rel5, deleted_rel7, deleted_rel8});
-  EXPECT_TRUE(dest == src);
+  EXPECT_TRUE(dest.session_equal(src));
 }
 
 TEST(GraphRestoreNodes, ToRessurectRelations) {
@@ -713,8 +713,8 @@ TEST(GraphRestoreNodes, ToRessurectRelations) {
   Graph dest(src);
 
   dest.DeleteRelations({deleted_rel5, deleted_rel7, deleted_rel8});
-  EXPECT_FALSE(dest == src);
+  EXPECT_FALSE(dest.session_equal(src));
   EXPECT_THROW(dest.DeleteRelations({deleted_rel7}), std::invalid_argument);
   dest.RestoreRelations({deleted_rel5, deleted_rel7, deleted_rel8});
-  EXPECT_TRUE(dest == src);
+  EXPECT_TRUE(dest.session_equal(src));
 }
