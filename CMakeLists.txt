@@ -79,9 +79,12 @@ if(RAVEL_BUILD_UI)
     add_subdirectory(ui)  # Qt 6 Widgets; если Qt не найден — цель пропускается с предупреждением
 endif()
 
-# Тесты: стандартный переключатель BUILD_TESTING (из CTest) + наличие исходников
+# Тесты: стандартный переключатель BUILD_TESTING (из CTest).
+# add_subdirectory без guard EXISTS намеренно: пропажа каталога тестов должна
+# ронять configure, а не молча отключать тесты (2026-10-16: перенос tests/ в
+# docs/tests/ выпал из-за guard'а молча — CI стал бы зелёным без единого теста).
 include(CTest)
-if(BUILD_TESTING AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/CMakeLists.txt")
+if(BUILD_TESTING)
     add_subdirectory(tests) # GoogleTest; FetchContent — только если есть тесты
 endif()
 
