@@ -3,6 +3,7 @@
 
 #include "graph.hpp"
 
+#include <cstddef>
 #include <expected>
 #include <string>
 #include <utility>
@@ -11,12 +12,7 @@
 
 namespace ravel::app {
 
-enum class CommandError {
-  UnknownType,
-  EntityGone,
-  QuotaExceeded,
-  /* Io — later */
-};
+enum class CommandError { UnknownType, EntityGone, QuotaExceeded, NothingToUndo, NothingToRedo };
 
 using CommandResult = std::expected<void, CommandError>;
 
@@ -68,7 +64,7 @@ struct AddRelationCmd {
 
 struct DeleteNodesCmd {
   std::vector<ravel::NodeId> nodes;
-  std::vector<ravel::RelationId> deleted_relations;
+  std::vector<ravel::RelationId> deleted_relations;  // filled by controller
   CommandResult Do(ravel::Graph& g) {
     g.DeleteNodes(nodes);
     return {};
@@ -121,12 +117,52 @@ static_assert(Command<AddNodeCmd> && Command<AddRelationCmd> && Command<DeleteNo
 using AnyCommand =
     std::variant<AddNodeCmd, AddRelationCmd, DeleteNodesCmd, DeleteRelationsCmd, MoveNodeCmd>;
 
-inline void Do(AnyCommand& c, ravel::Graph& g) {
-  std::visit([&g](auto& x) { x.Do(g); }, c);
+inline CommandResult Do(AnyCommand& c, ravel::Graph& g) {
+  return std::visit([&g](auto& x) { return x.Do(g); }, c);
 }
-inline void Undo(AnyCommand& c, ravel::Graph& g) {
-  std::visit([&g](auto& x) { x.Undo(g); }, c);
+inline CommandResult Undo(AnyCommand& c, ravel::Graph& g) {
+  return std::visit([&g](auto& x) { return x.Undo(g); }, c);
 }
+
+class CommandChronicle {
+ public:
+  template <Command C>
+  CommandResult Execute(C cmd, ravel::Graph& g) {
+    CommandResult res = cmd.Do(g);
+    if (res) {
+      chronicle_.erase(chronicle_.begin() + bookmark_, chronicle_.end());
+      chronicle_.emplace_back(std::move(cmd));
+      ++bookmark_;
+    }
+    return res;
+  }
+
+  CommandResult Undo(ravel::Graph& g) {
+    if (bookmark_ == 0) {
+      return std::unexpected(CommandError::NothingToUndo);
+    }
+    CommandResult res = ravel::app::Undo(chronicle_[bookmark_ - 1], g);
+    if (res) {
+      --bookmark_;
+    }
+    return res;
+  }
+
+  CommandResult Redo(ravel::Graph& g) {
+    if (bookmark_ >= chronicle_.size()) {
+      return std::unexpected(CommandError::NothingToRedo);
+    }
+    CommandResult res = ravel::app::Do(chronicle_[bookmark_], g);
+    if (res) {
+      ++bookmark_;
+    }
+    return res;
+  }
+
+ private:
+  std::vector<AnyCommand> chronicle_;
+  std::size_t bookmark_ = 0;  // invariant : 0 <= bookmark <= chronicle.size()
+};
 
 }  // namespace ravel::app
 
