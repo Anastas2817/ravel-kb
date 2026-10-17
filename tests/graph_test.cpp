@@ -77,8 +77,8 @@ TEST(GraphDeleteNodes, DeleteAccess) {
   EXPECT_FALSE(g.HasNode(from));
   EXPECT_FALSE(g.HasRelation(id1));
   EXPECT_FALSE(g.HasRelation(id2));
-  EXPECT_THROW(g.GetRelation(id1), std::invalid_argument);
-  EXPECT_THROW(g.GetRelation(id2), std::invalid_argument);
+  EXPECT_THROW((void)g.GetRelation(id1), std::invalid_argument);  // (void): [[nodiscard]] + -Werror
+  EXPECT_THROW((void)g.GetRelation(id2), std::invalid_argument);  // (void): [[nodiscard]] + -Werror
   EXPECT_TRUE(g.HasNode(to1) && g.HasNode(to2));
   EXPECT_EQ(std::set<NodeId>{}, g.GetNeighbors(to1));  // инвариант 3: запись в access_
   EXPECT_EQ(std::set<NodeId>{}, g.GetNeighbors(to2));  // инвариант 3: запись в access_
