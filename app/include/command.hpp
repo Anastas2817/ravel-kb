@@ -3,6 +3,7 @@
 
 #include "graph.hpp"
 
+#include <algorithm>
 #include <cstddef>
 #include <expected>
 #include <string>
@@ -64,9 +65,9 @@ struct AddRelationCmd {
 
 struct DeleteNodesCmd {
   std::vector<ravel::NodeId> nodes;
-  std::vector<ravel::RelationId> deleted_relations;  // filled by controller
+  std::vector<ravel::RelationId> deleted_relations;
   CommandResult Do(ravel::Graph& g) {
-    g.DeleteNodes(nodes);
+    deleted_relations = g.DeleteNodes(nodes);
     return {};
   }
   CommandResult Undo(ravel::Graph& g) {

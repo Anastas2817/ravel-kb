@@ -1,6 +1,7 @@
 #ifndef RAVEL_CORE_INCLUDE_GRAPH_HPP_
 #define RAVEL_CORE_INCLUDE_GRAPH_HPP_
 
+#include <algorithm>
 #include <cassert>
 #include <cctype>
 #include <cmath>
@@ -12,6 +13,7 @@
 #include <set>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
@@ -22,45 +24,41 @@ namespace ravel {
 using NodeId = std::uint64_t;
 using RelationId = std::uint64_t;
 
-inline bool isValidHexColor(const std::string& color) {
-  if ((color.length() != 7) || (color[0] != '#')) {
-    return false;
-  }
-  for (int i = 1; i < 7; ++i) {
-    if (!std::isxdigit(static_cast<unsigned char>(color[i]))) {
-      return false;
-    }
-  }
-  return true;
+[[nodiscard]] constexpr bool IsHexDigit(char c) noexcept {
+  return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
 }
-inline bool isValidShape(const std::string& shape) {
+[[nodiscard]] constexpr bool IsValidHexColor(std::string_view color) noexcept {
+  return color.size() == 7 && color[0] == '#' &&
+         std::all_of(color.begin() + 1, color.end(), IsHexDigit);
+}
+[[nodiscard]] constexpr bool IsValidShape(std::string_view shape) {
   return ((shape == "rect") || (shape == "oval"));
 }
 
 class NodeType {
  public:
   NodeType(std::string color, std::string shape, std::string frame_color)
-      : color_(isValidHexColor(color)
+      : color_(IsValidHexColor(color)
                    ? color
                    : throw std::invalid_argument(
                          "NodeType::NodeType tried to create NodeType with non-valid color")),
-        shape_(isValidShape(shape) ? shape
+        shape_(IsValidShape(shape) ? shape
                                    : throw std::invalid_argument(
                                          "NodeType tried to create NodeType with non-valid shape")),
         frame_color_(
-            isValidHexColor(frame_color)
+            IsValidHexColor(frame_color)
                 ? frame_color
                 : throw std::invalid_argument(
                       "NodeType::NodeType tried to create NodeType with non-valid frame_color")) {
   }
 
-  const std::string& color() const noexcept {
+  [[nodiscard]] const std::string& color() const noexcept {
     return color_;
   }
-  const std::string& shape() const noexcept {
+  [[nodiscard]] const std::string& shape() const noexcept {
     return shape_;
   }
-  const std::string& frame_color() const noexcept {
+  [[nodiscard]] const std::string& frame_color() const noexcept {
     return frame_color_;
   }
   bool operator==(const NodeType& other) const = default;
@@ -90,23 +88,23 @@ class Node {  // DTO
                                  "Node::Node tried to create Node with nan/inf hand_position")) {
   }
 
-  NodeId id() const noexcept {
+  [[nodiscard]] NodeId id() const noexcept {
     return id_;
   }
-  const std::string& type() const noexcept {
+  [[nodiscard]] const std::string& type() const noexcept {
     return type_;
   }
 
-  const std::string& title() const noexcept {
+  [[nodiscard]] const std::string& title() const noexcept {
     return title_;
   }
-  const std::string& description() const noexcept {
+  [[nodiscard]] const std::string& description() const noexcept {
     return description_;
   }
-  double size() const noexcept {
+  [[nodiscard]] double size() const noexcept {
     return size_;
   }
-  std::optional<std::pair<double, double>> hand_position() const {
+  [[nodiscard]] std::optional<std::pair<double, double>> hand_position() const {
     return hand_position_;
   }
 
@@ -130,7 +128,7 @@ class Node {  // DTO
   std::optional<std::pair<double, double>> hand_position_ = std::nullopt;
 };
 
-inline bool isValidArrow(const std::string& arrow) {
+[[nodiscard]] constexpr bool IsValidArrow(std::string_view arrow) {
   return (arrow == "solid" || arrow == "dashed" || arrow == "dotted");
 }
 
@@ -141,11 +139,11 @@ concept LiveNodeCallback = std::invocable<Fn&, const Node&> &&
 class RelationType {
  public:
   RelationType(std::string color, std::string arrow, bool symmetric, bool transitive)
-      : color_(isValidHexColor(color)
+      : color_(IsValidHexColor(color)
                    ? color
                    : throw std::invalid_argument("RelationType::RelationType tried to create "
                                                  "RelationType with non-valid color")),
-        arrow_(isValidArrow(arrow)
+        arrow_(IsValidArrow(arrow)
                    ? arrow
                    : throw std::invalid_argument("RelationType::RelationType tried to create "
                                                  "RelationType with non-valid arrow")),
@@ -153,16 +151,16 @@ class RelationType {
         transitive_(transitive) {
   }
 
-  const std::string& color() const noexcept {
+  [[nodiscard]] const std::string& color() const noexcept {
     return color_;
   }
-  const std::string& arrow() const noexcept {
+  [[nodiscard]] const std::string& arrow() const noexcept {
     return arrow_;
   }
-  bool symmetric() const noexcept {
+  [[nodiscard]] bool symmetric() const noexcept {
     return symmetric_;
   }
-  bool transitive() const noexcept {
+  [[nodiscard]] bool transitive() const noexcept {
     return transitive_;
   }
   bool operator==(const RelationType& other) const = default;
@@ -184,20 +182,20 @@ class Relation {  // DTO
         description_(std::move(description)) {
   }
 
-  RelationId id() const noexcept {
+  [[nodiscard]] RelationId id() const noexcept {
     return id_;
   }
-  NodeId from() const noexcept {
+  [[nodiscard]] NodeId from() const noexcept {
     return from_;
   }
-  NodeId to() const noexcept {
+  [[nodiscard]] NodeId to() const noexcept {
     return to_;
   }
-  const std::string& type() const noexcept {
+  [[nodiscard]] const std::string& type() const noexcept {
     return type_;
   }
 
-  const std::string& description() const noexcept {
+  [[nodiscard]] const std::string& description() const noexcept {
     return description_;
   }
 
@@ -230,19 +228,19 @@ struct GraphSnapshot {
 
 class Graph {
  public:
-  NodeId next_id_node() const noexcept {
+  [[nodiscard]] NodeId next_id_node() const noexcept {
     return next_id_node_;
   }
-  NodeId next_id_relation() const noexcept {
+  [[nodiscard]] NodeId next_id_relation() const noexcept {
     return next_id_relation_;
   }
-  const std::unordered_map<std::string, NodeType>& ontology_node()
+  [[nodiscard]] const std::unordered_map<std::string, NodeType>& ontology_node()
       const noexcept {  /// @return Const
     /// reference to the type dictionary. Lifetime is bound to *this; do not store the reference
     /// beyond the Graph's lifetime.
     return ontology_node_;
   }
-  const std::unordered_map<std::string, RelationType>& ontology_relation()
+  [[nodiscard]] const std::unordered_map<std::string, RelationType>& ontology_relation()
       const noexcept {  /// @return
     /// Const reference to the type dictionary. Lifetime is bound to *this; do not store the
     /// reference beyond the Graph's lifetime.
@@ -251,28 +249,28 @@ class Graph {
 
   void AddNodeType(std::string name, std::string color, std::string shape,
                    std::string frame_color) {
-    if (ontology_node_.find(name) != ontology_node_.end()) {
+    if (ontology_node_.contains(name)) {
       throw std::invalid_argument("Graph::AddNodeType tried to add the same NodeType");
     }
-    ontology_node_.emplace(name,
-                           NodeType(std::move(color), std::move(shape), std::move(frame_color)));
+    ontology_node_.try_emplace(
+        name, NodeType(std::move(color), std::move(shape), std::move(frame_color)));
   }
   void AddRelationType(std::string name, std::string color, std::string arrow, bool symmetric,
                        bool transitive) {
-    if (ontology_relation_.find(name) != ontology_relation_.end()) {
+    if (ontology_relation_.contains(name)) {
       throw std::invalid_argument("Graph::AddRelationType tried to add the same RelationType");
     }
-    ontology_relation_.emplace(
+    ontology_relation_.try_emplace(
         name, RelationType(std::move(color), std::move(arrow), symmetric, transitive));
   }
-  const NodeType& ResolveNode(const std::string& name) const {
+  [[nodiscard]] const NodeType& ResolveNode(const std::string& name) const {
     return ontology_node_.at(name);
   }
-  const RelationType& ResolveRelation(const std::string& name) const {
+  [[nodiscard]] const RelationType& ResolveRelation(const std::string& name) const {
     return ontology_relation_.at(name);
   }
 
-  const Node& GetNode(NodeId id) const {
+  [[nodiscard]] const Node& GetNode(NodeId id) const {
     if (HasNode(id)) {
       return nodes_[id - 1];
     } else {
@@ -281,10 +279,10 @@ class Graph {
   }
   NodeId AddNode(std::string title, std::string type, std::string description = "", double size = 1,
                  std::optional<std::pair<double, double>> hand_position = std::nullopt);
-  bool HasNode(NodeId id) const;
+  [[nodiscard]] bool HasNode(NodeId id) const noexcept;
   RelationId AddRelation(NodeId from, NodeId to, std::string type, std::string description = "");
-  bool HasRelation(RelationId id) const noexcept;
-  const Relation& GetRelation(RelationId id) const {
+  [[nodiscard]] bool HasRelation(RelationId id) const noexcept;
+  [[nodiscard]] const Relation& GetRelation(RelationId id) const {
     if (HasRelation(id)) {
       return relations_[id - 1];
     } else {
@@ -303,7 +301,7 @@ class Graph {
   std::optional<std::pair<double, double>> MoveNode(NodeId id, std::pair<double, double> pos);
   // implementation.md («Контракт удаления») - idempotence for delete*
 
-  void DeleteNodes(std::vector<NodeId> ids);
+  std::vector<RelationId> DeleteNodes(std::vector<NodeId> ids);
   void DeleteRelations(std::vector<RelationId> ids);
 
   /**
@@ -320,7 +318,7 @@ class Graph {
    *       Holding an invalidated reference is UB — tests cannot catch it,
    *       the contract lives here and is enforced by review.
    */
-  const std::vector<RelationId>& GetIncidentRelations(NodeId id) const {
+  [[nodiscard]] const std::vector<RelationId>& GetIncidentRelations(NodeId id) const {
     if (!HasNode(id)) {
       throw std::invalid_argument("Graph::GetIncidentRelations tried to access non-existent Node");
     } else {
@@ -338,7 +336,7 @@ class Graph {
   void RestoreNodes(std::vector<NodeId> ids);
   void RestoreRelations(std::vector<RelationId> ids);
 
-  std::set<NodeId> GetNeighbors(NodeId id) const;
+  [[nodiscard]] std::set<NodeId> GetNeighbors(NodeId id) const;
 
   // The single sanctioned iteration point over live nodes, in ascending id
   // order. Callback contract: do not mutate the graph during iteration — UB
@@ -368,7 +366,7 @@ class Graph {
   static Graph FromSnapshot(const GraphSnapshot& src);
   GraphSnapshot ToSnapshot() const;
 
-  bool session_equal(const Graph&) const;
+  [[nodiscard]] bool SessionEqual(const Graph&) const;
 
  private:
   std::unordered_map<std::string, NodeType> ontology_node_;

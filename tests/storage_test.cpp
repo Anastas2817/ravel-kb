@@ -53,10 +53,10 @@ TEST(StorageLoadSave, ValidEmpty) {
   JsonStorage::Save(src, saved);
   GraphSnapshot dest = JsonStorage::Load(saved);
 
-  const NodeId kStandartNodeIdValue = 1;      // implementation: R1/R2
-  const NodeId kStandartRelationIdValue = 1;  // implementation: R1/R2
-  EXPECT_EQ(dest.next_id_node, kStandartNodeIdValue);
-  EXPECT_EQ(dest.next_id_relation, kStandartRelationIdValue);
+  const NodeId kStandardNodeIdValue = 1;      // implementation: R1/R2
+  const NodeId kStandardRelationIdValue = 1;  // implementation: R1/R2
+  EXPECT_EQ(dest.next_id_node, kStandardNodeIdValue);
+  EXPECT_EQ(dest.next_id_relation, kStandardRelationIdValue);
 }
 
 TEST(StorageLoadSave, SurvivalOfLoners) {

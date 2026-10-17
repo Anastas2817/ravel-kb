@@ -1,6 +1,5 @@
 #include "graph.hpp"
 
-#include <algorithm>
 #include <unordered_set>
 
 namespace ravel {
@@ -8,7 +7,7 @@ namespace ravel {
 NodeId Graph::AddNode(std::string title, std::string type, std::string description, double size,
                       std::optional<std::pair<double, double>> hand_position) {
   // validate
-  if (ontology_node_.find(type) == ontology_node_.end()) {
+  if (!ontology_node_.contains(type)) {
     throw std::invalid_argument("Graph::AddNode tried to create node with non-existent type");
   }
   if (size <= 0) {
@@ -26,7 +25,7 @@ NodeId Graph::AddNode(std::string title, std::string type, std::string descripti
   return id;
 }
 
-bool Graph::HasNode(NodeId id) const {
+bool Graph::HasNode(NodeId id) const noexcept {
   const bool is_not_zombie = (id >= 1) && (id < next_id_node_) && (nodes_[id - 1].id() == id);
   if (!is_not_zombie) {
     return false;
@@ -48,7 +47,7 @@ bool Graph::HasRelation(RelationId id) const noexcept {
 
 RelationId Graph::AddRelation(NodeId from, NodeId to, std::string type, std::string description) {
   // validate
-  if (ontology_relation_.find(type) == ontology_relation_.end()) {
+  if (!ontology_relation_.contains(type)) {
     throw std::invalid_argument(
         "Graph::AddRelation tried to create relation with non-existent type");
   }
@@ -75,7 +74,7 @@ NodeId Graph::AddNodeWithRelations(std::string title, std::string type,
                                    std::string description, double size,
                                    std::optional<std::pair<double, double>> hand_position) {
   // validate
-  if (ontology_node_.find(type) == ontology_node_.end()) {
+  if (!ontology_node_.contains(type)) {
     throw std::invalid_argument(
         "Graph::AddNodeWithRelations tried to create node with non-existent type");
   }
@@ -84,13 +83,12 @@ NodeId Graph::AddNodeWithRelations(std::string title, std::string type,
         "Graph::AddNodeWithRelations tried to create node with non-positive size");
   }
   for (const std::pair<NodeId, std::string>& from : froms) {
-    if (!HasNode(from.first) ||
-        (ontology_relation_.find(from.second) == ontology_relation_.end())) {
+    if (!HasNode(from.first) || (!ontology_relation_.contains(from.second))) {
       throw std::invalid_argument("Graph::AddNodeWithRelations wrong from");
     }
   }
   for (const std::pair<NodeId, std::string>& to : tos) {
-    if (!HasNode(to.first) || (ontology_relation_.find(to.second) == ontology_relation_.end())) {
+    if (!HasNode(to.first) || (!ontology_relation_.contains(to.second))) {
       throw std::invalid_argument("Graph::AddNodeWithRelations wrong to");
     }
   }
@@ -146,7 +144,7 @@ std::optional<std::pair<double, double>> Graph::MoveNode(NodeId id, std::pair<do
   }
 }
 
-void Graph::DeleteNodes(std::vector<NodeId> ids) {
+std::vector<RelationId> Graph::DeleteNodes(std::vector<NodeId> ids) {
   // validate
   std::set<NodeId> unique;
   for (NodeId id : ids) {
@@ -156,10 +154,14 @@ void Graph::DeleteNodes(std::vector<NodeId> ids) {
     unique.insert(id);
   }
   // apply
+  std::set<RelationId> unique_r;
   for (NodeId id : unique) {
-    DeleteRelations(access_[id]);  // by the invariant, only live relations are listed there
+    std::vector<RelationId> deleted = access_[id];
+    unique_r.insert_range(deleted);
+    DeleteRelations(deleted);  // by the invariant, only live relations are listed there
     access_.erase(id);
   }
+  return (unique_r | std::ranges::to<std::vector>());
 }
 
 void Graph::DeleteRelations(std::vector<RelationId> ids) {
@@ -243,7 +245,7 @@ Graph Graph::FromSnapshot(const GraphSnapshot& src) {
   std::unordered_set<NodeId> alive_nodes;
   for (const Node& i : src.nodes) {
     // invariant 5
-    if (src.ontology_node.find(i.type()) == src.ontology_node.end()) {
+    if (!src.ontology_node.contains(i.type())) {
       throw std::runtime_error("Graph::FromSnapshot tried to add node with non-existent type");
     }
     // invariant 1
@@ -265,7 +267,7 @@ Graph Graph::FromSnapshot(const GraphSnapshot& src) {
   std::unordered_set<RelationId> alive_relations;
   for (const Relation& i : src.relations) {
     // invariant 5
-    if (src.ontology_relation.find(i.type()) == src.ontology_relation.end()) {
+    if (!src.ontology_relation.contains(i.type())) {
       throw std::runtime_error("Graph::FromSnapshot tried to add relation with non-existent type");
     }
     // invariant 4
@@ -328,7 +330,7 @@ GraphSnapshot Graph::ToSnapshot() const {
   return dest;
 }
 
-bool Graph::session_equal(const Graph& other) const {
+bool Graph::SessionEqual(const Graph& other) const {
   if (next_id_node_ != other.next_id_node_ || next_id_relation_ != other.next_id_relation_ ||
       nodes_ != other.nodes_ || relations_ != other.relations_ ||
       ontology_node_ != other.ontology_node_ || ontology_relation_ != other.ontology_relation_ ||

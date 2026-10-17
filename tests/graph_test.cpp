@@ -37,9 +37,9 @@ TEST(GraphAddRelation, CreatesAccessEntryCounter) {
   const RelationId id = g.AddRelation(from, to, "has_special_case");
 
   EXPECT_THROW(g.AddRelation(from, 3, "has_special_case"),
-               std::invalid_argument);  // инваринт 4: from и to существуют
+               std::invalid_argument);  // инвариант 4: from и to существуют
   EXPECT_THROW(g.AddRelation(5, to, "has_special_case"),
-               std::invalid_argument);  // инваринт 4: from и to существуют
+               std::invalid_argument);  // инвариант 4: from и to существуют
   EXPECT_THROW(g.AddRelation(from, to, "is_a"),
                std::invalid_argument);  // инвариант  5: тип есть в словаре
 
@@ -658,7 +658,7 @@ TEST(GraphFromSnapshot, UnsortedOrderAccepted) {
   EXPECT_EQ(g.next_id_node(), 4);
 }
 
-TEST(GraphRestoreNodes, ToRessurectNodes) {
+TEST(GraphRestoreNodes, ToResurrectNodes) {
   Graph src;
   src.AddRelationType("has_special_case", "#000000", "solid", false, true);
   src.AddRelationType("boils_down_to", "#000000", "solid", false, true);
@@ -682,11 +682,11 @@ TEST(GraphRestoreNodes, ToRessurectNodes) {
   Graph dest(src);
 
   dest.DeleteNodes({deleted5, deleted7, deleted8});
-  EXPECT_FALSE(dest.session_equal(src));
+  EXPECT_FALSE(dest.SessionEqual(src));
   EXPECT_THROW(dest.DeleteNodes({deleted5}), std::invalid_argument);
   dest.RestoreNodes({deleted5, deleted7, deleted8});
   dest.RestoreRelations({deleted_rel5, deleted_rel7, deleted_rel8});
-  EXPECT_TRUE(dest.session_equal(src));
+  EXPECT_TRUE(dest.SessionEqual(src));
 }
 
 TEST(GraphRestoreNodes, ToRessurectRelations) {
@@ -713,8 +713,8 @@ TEST(GraphRestoreNodes, ToRessurectRelations) {
   Graph dest(src);
 
   dest.DeleteRelations({deleted_rel5, deleted_rel7, deleted_rel8});
-  EXPECT_FALSE(dest.session_equal(src));
+  EXPECT_FALSE(dest.SessionEqual(src));
   EXPECT_THROW(dest.DeleteRelations({deleted_rel7}), std::invalid_argument);
   dest.RestoreRelations({deleted_rel5, deleted_rel7, deleted_rel8});
-  EXPECT_TRUE(dest.session_equal(src));
+  EXPECT_TRUE(dest.SessionEqual(src));
 }
