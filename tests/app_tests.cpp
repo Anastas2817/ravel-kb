@@ -20,7 +20,7 @@ TEST(AddNodeCmd, DoUndoRedo) {
   ravel::Graph g = MakeGraphWithTypes();
   ravel::app::CommandChronicle chronicle;
 
-  ravel::app::AddNodeCmd cmd{.title = "Title", .type = "concept"};
+  ravel::app::AddNodeCmd cmd{.title = "Title", .type = "concept", .description = ""};
   ASSERT_TRUE(chronicle.Execute(cmd, g).has_value());
   ASSERT_TRUE(g.HasNode(1));
 
@@ -39,7 +39,7 @@ TEST(AddRelationCmd, DoUndoRedo) {
   const ravel::NodeId to = g.AddNode("B", "concept");
   ravel::app::CommandChronicle chronicle;
 
-  ravel::app::AddRelationCmd cmd{.from = from, .to = to, .type = "is_a"};
+  ravel::app::AddRelationCmd cmd{.from = from, .to = to, .type = "is_a", .description = ""};
   ASSERT_TRUE(chronicle.Execute(cmd, g).has_value());
   ASSERT_TRUE(g.HasRelation(1));
 

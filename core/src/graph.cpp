@@ -154,14 +154,17 @@ std::vector<RelationId> Graph::DeleteNodes(std::vector<NodeId> ids) {
     unique.insert(id);
   }
   // apply
+  // NOTE: no insert_range / std::ranges::to — C++23 features missing from
+  // libstdc++ before GCC 14, and CI runs ubuntu-latest (GCC 13). Plain
+  // iterator insert + pair-ctor keep the same complexity and order.
   std::set<RelationId> unique_r;
   for (NodeId id : unique) {
     std::vector<RelationId> deleted = access_[id];
-    unique_r.insert_range(deleted);
+    unique_r.insert(deleted.begin(), deleted.end());
     DeleteRelations(deleted);  // by the invariant, only live relations are listed there
     access_.erase(id);
   }
-  return (unique_r | std::ranges::to<std::vector>());
+  return {unique_r.begin(), unique_r.end()};
 }
 
 void Graph::DeleteRelations(std::vector<RelationId> ids) {
