@@ -5,6 +5,7 @@
 #include "graph.hpp"
 
 #include <gtest/gtest.h>
+#include <limits>
 
 using ravel::Graph;
 using ravel::GraphSnapshot;
@@ -792,8 +793,8 @@ TEST(GraphFromSnapshot, NonFinitePosition) {
     src.positions.push_back(ravel::Position{x, y});
     return src;
   };
-  const double kNan = std::numeric_limits<double>::quiet_NaN();
-  const double kInf = std::numeric_limits<double>::infinity();
+  constexpr double kNan = std::numeric_limits<double>::quiet_NaN();
+  constexpr double kInf = std::numeric_limits<double>::infinity();
   EXPECT_THROW(Graph::FromSnapshot(make_src(kNan, 0.0)), std::runtime_error);
   EXPECT_THROW(Graph::FromSnapshot(make_src(0.0, kNan)), std::runtime_error);
   EXPECT_THROW(Graph::FromSnapshot(make_src(kInf, 0.0)), std::runtime_error);
@@ -826,7 +827,7 @@ TEST(GraphRestoreNodes, PositionSurvivesDeleteRestore) {
   // возвращает узлу его ручное размещение.
   Graph g;
   g.AddNodeType("model", "#4a90d9", "rect", "#000000");
-  NodeId a = g.AddNode("Числовой ряд", "model");
+  [[maybe_unused]] NodeId a = g.AddNode("Числовой ряд", "model");
   NodeId b = g.AddNode("Функциональный ряд", "model");
   g.MoveNode(b, {42.0, -7.5});
   Graph before = g;
