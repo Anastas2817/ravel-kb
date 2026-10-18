@@ -4,8 +4,7 @@
 
 namespace ravel {
 
-NodeId Graph::AddNode(std::string title, std::string type, std::string description, double size,
-                      std::optional<std::pair<double, double>> hand_position) {
+NodeId Graph::AddNode(std::string title, std::string type, std::string description, double size) {
   // validate
   if (!ontology_node_.contains(type)) {
     throw std::invalid_argument("Graph::AddNode tried to create node with non-existent type");
@@ -19,9 +18,9 @@ NodeId Graph::AddNode(std::string title, std::string type, std::string descripti
 
   // apply
   NodeId id = next_id_node_++;
-  nodes_.emplace_back(id, std::move(title), std::move(type), std::move(description), size,
-                      hand_position);
+  nodes_.emplace_back(id, std::move(title), std::move(type), std::move(description), size);
   access_.try_emplace(id);
+  positions_.push_back(std::nullopt);
   return id;
 }
 
@@ -71,8 +70,7 @@ RelationId Graph::AddRelation(NodeId from, NodeId to, std::string type, std::str
 NodeId Graph::AddNodeWithRelations(std::string title, std::string type,
                                    std::vector<std::pair<NodeId, std::string>> froms,
                                    std::vector<std::pair<NodeId, std::string>> tos,
-                                   std::string description, double size,
-                                   std::optional<std::pair<double, double>> hand_position) {
+                                   std::string description, double size) {
   // validate
   if (!ontology_node_.contains(type)) {
     throw std::invalid_argument(
@@ -102,7 +100,7 @@ NodeId Graph::AddNodeWithRelations(std::string title, std::string type,
   }
 
   // apply
-  NodeId cur = AddNode(title, type, description, size, hand_position);
+  NodeId cur = AddNode(title, type, description, size);
   for (const std::pair<NodeId, std::string>& from : froms) {
     AddRelation(from.first, cur, from.second);
   }
@@ -132,14 +130,12 @@ std::set<NodeId> Graph::GetNeighbors(NodeId id) const {
   return neighbors;
 }
 
-std::optional<std::pair<double, double>> Graph::MoveNode(NodeId id, std::pair<double, double> pos) {
-  if (!HasNode(id)) {
-    throw std::invalid_argument("Graph::MoveNode tried to access non-existent Node");
+std::optional<Position> Graph::MoveNode(NodeId id, Position pos) {
+  if (!HasNode(id) || !isfinite(pos.x_) || !isfinite(pos.y_)) {
+    throw std::invalid_argument("Graph::MoveNode tried to access non-existent Node or move to nan/inf");
   } else {
-    const Node& prev = GetNode(id);
-    std::optional<std::pair<double, double>> prev_pos = prev.hand_position();
-    nodes_[id - 1] =
-        Node(prev.id(), prev.title(), prev.type(), prev.description(), prev.size(), pos);
+    std::optional<Position> prev_pos = positions_[id - 1];
+    positions_[id - 1] = pos;
     return prev_pos;
   }
 }
@@ -262,10 +258,6 @@ Graph Graph::FromSnapshot(const GraphSnapshot& src) {
       throw std::runtime_error(
           "Graph::FromSnapshot tried to add node with non-positive/nan/inf size");
     }
-    if ((i.hand_position() != std::nullopt) &&
-        (!std::isfinite(i.hand_position()->first) || !std::isfinite(i.hand_position()->second))) {
-      throw std::runtime_error("Graph::FromSnapshot tried to add node with nan/inf hand_position");
-    }
   }
   std::unordered_set<RelationId> alive_relations;
   for (const Relation& i : src.relations) {
@@ -289,6 +281,12 @@ Graph Graph::FromSnapshot(const GraphSnapshot& src) {
       throw std::runtime_error("Graph::FromSnapshot tried to add relation with id >= next_id");
     }
   }
+
+  for (const std::optional<Position>& pos : src.positions_) {
+    if ((pos != std::nullopt) && (!std::isfinite(pos->x_) || !std::isfinite(pos->y_))) {
+      throw std::runtime_error("Graph::FromSnapshot tried to add node with nan/inf hand_position");
+    }
+  }
   // apply
   Graph g;
   g.next_id_node_ = src.next_id_node;
@@ -310,6 +308,7 @@ Graph Graph::FromSnapshot(const GraphSnapshot& src) {
     g.access_[relation.from()].push_back(relation.id());
     g.access_[relation.to()].push_back(relation.id());
   }
+  g.positions_ = src.positions_;
 
   return g;
 }
@@ -335,7 +334,7 @@ GraphSnapshot Graph::ToSnapshot() const {
 
 bool Graph::SessionEqual(const Graph& other) const {
   if (next_id_node_ != other.next_id_node_ || next_id_relation_ != other.next_id_relation_ ||
-      nodes_ != other.nodes_ || relations_ != other.relations_ ||
+      nodes_ != other.nodes_ || relations_ != other.relations_ || positions_ != other.positions_ ||
       ontology_node_ != other.ontology_node_ || ontology_relation_ != other.ontology_relation_ ||
       access_.size() != other.access_.size()) {
     return false;

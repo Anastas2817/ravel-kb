@@ -103,16 +103,17 @@ TEST(DeleteRelationsCmd, DoUndoRedo) {
 
 TEST(MoveNodeCmd, DoUndoRedo) {
   ravel::Graph g = MakeGraphWithTypes();
-  const ravel::NodeId a = g.AddNode("A", "concept", "", 1, std::pair{1.0, 2.0});
+  const ravel::NodeId a = g.AddNode("A", "concept", "", 1);
+  g.MoveNode(a, ravel::Position{1.0, 2.0});
   ravel::app::CommandChronicle chronicle;
 
   ravel::app::MoveNodeCmd cmd{a, {0.0, 0.0}, {3.5, 4.5}};
   ASSERT_TRUE(chronicle.Execute(cmd, g).has_value());
-  EXPECT_EQ(g.GetNode(a).hand_position(), std::make_optional(std::make_pair(3.5, 4.5)));
+  EXPECT_EQ(g.GetPosition(a), std::make_optional(ravel::Position{3.5, 4.5}));
 
   ASSERT_TRUE(chronicle.Undo(g).has_value());
-  EXPECT_EQ(g.GetNode(a).hand_position(), std::make_optional(std::make_pair(1.0, 2.0)));
+  EXPECT_EQ(g.GetPosition(a), std::make_optional(ravel::Position{1.0, 2.0}));
 
   ASSERT_TRUE(chronicle.Redo(g).has_value());
-  EXPECT_EQ(g.GetNode(a).hand_position(), std::make_optional(std::make_pair(3.5, 4.5)));
+  EXPECT_EQ(g.GetPosition(a), std::make_optional(ravel::Position{3.5, 4.5}));
 }

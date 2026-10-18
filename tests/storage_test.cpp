@@ -23,11 +23,14 @@ TEST(StorageLoadSave, RoundTrip) {
   src.ontology_node.emplace("model", NodeType("#002030", "rect", "#a0500b"));
   src.ontology_relation.emplace("reduce_to", RelationType("#003d00", "dashed", false, true));
 
-  src.nodes.push_back(Node(1, "Уравнения с разделяющимися переменными", "model", "f(x)dx=g(y)dy", 2,
-                           std::make_pair(2.0, 3.0)));
+  src.nodes.push_back(Node(1, "Уравнения с разделяющимися переменными", "model", "f(x)dx=g(y)dy", 2));
+  src.positions_.push_back(ravel::Position{1.0, 2.0});
   src.nodes.push_back(Node(2, "Уравнения, сводящиеся к однородным", "model"));
+  src.positions_.push_back(std::nullopt);
   src.nodes.push_back(Node(3, "Уравнения Бернулли", "model"));
+  src.positions_.push_back(std::nullopt);
   src.nodes.push_back(Node(4, "Однородные уравнения", "model"));
+  src.positions_.push_back(std::nullopt);
 
   src.relations.push_back(Relation(1, 2, 4, "reduce_to"));
   src.relations.push_back(Relation(1, 3, 4, "reduce_to"));
@@ -45,6 +48,7 @@ TEST(StorageLoadSave, RoundTrip) {
 
   EXPECT_EQ(src.nodes, dest.nodes);
   EXPECT_EQ(src.relations, dest.relations);
+  EXPECT_EQ(src.positions_, dest.positions_);
 }
 
 TEST(StorageLoadSave, ValidEmpty) {
@@ -63,11 +67,14 @@ TEST(StorageLoadSave, SurvivalOfLoners) {
   GraphSnapshot src;
   src.ontology_node.emplace("model", NodeType("#002030", "rect", "#a0500b"));
   src.ontology_relation.emplace("reduce_to", RelationType("#003d00", "dashed", false, true));
-  src.nodes.push_back(Node(1, "Уравнения с разделяющимися переменными", "model", "f(x)dx=g(y)dy", 2,
-                           std::make_pair(2.0, 3.0)));
+  src.nodes.push_back(Node(1, "Уравнения с разделяющимися переменными", "model", "f(x)dx=g(y)dy", 2));
+  src.positions_.push_back(ravel::Position{2.0, 1.0});
   src.nodes.push_back(Node(2, "Уравнения, сводящиеся к однородным", "model"));
+  src.positions_.push_back(std::nullopt);
   src.nodes.push_back(Node(3, "Уравнения Бернулли", "model"));
+  src.positions_.push_back(std::nullopt);
   src.nodes.push_back(Node(4, "Однородные уравнения", "model"));
+  src.positions_.push_back(std::nullopt);
 
   src.relations.push_back(Relation(1, 2, 4, "reduce_to"));
   src.relations.push_back(Relation(1, 3, 4, "reduce_to"));
@@ -87,6 +94,7 @@ TEST(StorageLoadSave, SurvivalOfLoners) {
 
   EXPECT_EQ(src.nodes, dest.nodes);
   EXPECT_EQ(src.relations, dest.relations);
+  EXPECT_EQ(src.positions_, dest.positions_);
 }
 
 TEST(StorageLoad, WrongFormatVersion) {

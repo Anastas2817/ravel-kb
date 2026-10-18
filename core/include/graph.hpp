@@ -72,7 +72,7 @@ class NodeType {
 class Node {  // DTO
  public:
   Node(NodeId id, std::string title, std::string type, std::string description = "",
-       double size = 1, std::optional<std::pair<double, double>> hand_position = std::nullopt)
+       double size = 1)
       : id_(id),
         type_(std::move(type)),
         title_(std::move(title)),
@@ -80,12 +80,7 @@ class Node {  // DTO
         size_((size > 0 && std::isfinite(size))
                   ? size
                   : throw std::invalid_argument(
-                        "Node::Node tried to create Node with non-positive size")),
-        hand_position_((!hand_position || (std::isfinite(hand_position->first) &&
-                                           std::isfinite(hand_position->second)))
-                           ? hand_position
-                           : throw std::invalid_argument(
-                                 "Node::Node tried to create Node with nan/inf hand_position")) {
+                        "Node::Node tried to create Node with non-positive size")){
   }
 
   [[nodiscard]] NodeId id() const noexcept {
@@ -104,11 +99,8 @@ class Node {  // DTO
   [[nodiscard]] double size() const noexcept {
     return size_;
   }
-  [[nodiscard]] std::optional<std::pair<double, double>> hand_position() const {
-    return hand_position_;
-  }
 
-  // Exact == for doubles is intentional: size_/hand_position_ are stored
+  // Exact == for doubles is intentional: size_ are stored
   // values compared for identity after serialization round-trips, not results
   // of floating-point computation. A bit-level mismatch here is a storage bug
   // and must surface, not be masked by an epsilon. Approximate comparison is
@@ -215,12 +207,20 @@ concept LiveRelationCallback =
     std::invocable<Fn&, const Relation&> &&
     std::convertible_to<std::invoke_result_t<Fn&, const Relation&>, bool>;
 
+struct Position {
+  double x_;
+  double y_;
+
+  bool operator==(const Position&) const = default;
+};
+
 struct GraphSnapshot {
   std::unordered_map<std::string, NodeType> ontology_node;
   std::unordered_map<std::string, RelationType> ontology_relation;
 
   std::vector<Node> nodes;
   std::vector<Relation> relations;
+  std::vector<std::optional<Position>> positions_;
 
   NodeId next_id_node = 1;
   RelationId next_id_relation = 1;
@@ -277,8 +277,14 @@ class Graph {
       throw std::invalid_argument("Graph::GetNode tried to access non-existent Node");
     }
   }
-  NodeId AddNode(std::string title, std::string type, std::string description = "", double size = 1,
-                 std::optional<std::pair<double, double>> hand_position = std::nullopt);
+  [[nodiscard]] std::optional<Position> GetPosition(NodeId id) const {
+    if (HasNode(id)) {
+      return positions_[id - 1];
+    } else {
+      throw std::invalid_argument("Graph::GetPosition tried to access non-existent Node");
+    }
+  }
+  NodeId AddNode(std::string title, std::string type, std::string description = "", double size = 1);
   [[nodiscard]] bool HasNode(NodeId id) const noexcept;
   RelationId AddRelation(NodeId from, NodeId to, std::string type, std::string description = "");
   [[nodiscard]] bool HasRelation(RelationId id) const noexcept;
@@ -297,8 +303,8 @@ class Graph {
   NodeId AddNodeWithRelations(
       std::string title, std::string type, std::vector<std::pair<NodeId, std::string>> froms,
       std::vector<std::pair<NodeId, std::string>> tos, std::string description = "",
-      double size = 1, std::optional<std::pair<double, double>> hand_position = std::nullopt);
-  std::optional<std::pair<double, double>> MoveNode(NodeId id, std::pair<double, double> pos);
+      double size = 1);
+  std::optional<Position> MoveNode(NodeId id, Position pos);
   // implementation.md («Контракт удаления») - idempotence for delete*
 
   std::vector<RelationId> DeleteNodes(std::vector<NodeId> ids);
@@ -382,6 +388,8 @@ class Graph {
   // with an empty vector), no deleted node has one.
   std::map<NodeId, std::vector<RelationId>>
       access_;  // deterministic is necessary for serialization
+
+  std::vector<std::optional<Position>> positions_;
 
   // Ids are never reused; `next_id_node_` / `next_id_relation_` are strictly greater than all
   // existing ids of their kind.

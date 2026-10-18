@@ -95,8 +95,8 @@ struct DeleteRelationsCmd {
 // implementation.md R14.
 struct MoveNodeCmd {
   ravel::NodeId id;
-  std::pair<double, double> from;
-  std::pair<double, double> to;
+  Position from;
+  Position to;
   CommandResult Do(ravel::Graph& g) {
     from = g.MoveNode(id, to).value();
     return {};

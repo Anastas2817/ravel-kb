@@ -15,7 +15,7 @@ class JsonStorage {
   // (that is Graph::FromSnapshot's job on Load).
   static void Save(const GraphSnapshot& g, std::ostream& out);
   static GraphSnapshot Load(std::istream& in);
-  static constexpr std::uint64_t kFormatVersion = 2;
+  static constexpr std::uint64_t kFormatVersion = 3;
 };
 
 }  // namespace ravel

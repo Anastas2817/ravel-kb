@@ -62,10 +62,6 @@ void JsonStorage::Save(const GraphSnapshot& g, std::ostream& out) {
     if (node.size() != 1) {
       obj["size"] = node.size();
     }
-    if (node.hand_position() != std::nullopt) {
-      obj["hand_position"] = json{{"x", node.hand_position().value().first},
-                                  {"y", node.hand_position().value().second}};
-    }
     j["nodes"].push_back(obj);
   }
 
@@ -80,6 +76,18 @@ void JsonStorage::Save(const GraphSnapshot& g, std::ostream& out) {
       obj["description"] = relation.description();
     }
     j["relations"].push_back(obj);
+  }
+
+  j["positions"] = json::array();
+  for (const auto& pos : g.positions_) {
+    if (pos != std::nullopt) {
+      json obj;
+      obj["x"] = pos->x_;
+      obj["y"] = pos->y_;
+      j["positions"].push_back(obj);
+    } else {
+      j["positions"].push_back("null");
+    }
   }
 
   j["allowed_cycles"] = json::array();  // TODO week 6
@@ -126,19 +134,24 @@ GraphSnapshot JsonStorage::Load(std::istream& in) {
     }
     for (const json& el : j.at("nodes")) {
       std::optional<std::pair<double, double>> pos = std::nullopt;
-      if (el.contains("hand_position")) {
-        const json& hp = el.at("hand_position");
-        pos = std::make_pair(hp.at("x").get<double>(), hp.at("y").get<double>());
-      }
       g.nodes.push_back(Node(el.at("id").get<NodeId>(), el.at("title").get<std::string>(),
                              el.at("type").get<std::string>(),
-                             el.value("description", std::string{}), el.value("size", 1.0), pos));
+                             el.value("description", std::string{}), el.value("size", 1.0)));
     }
     for (const json& el : j.at("relations")) {
       g.relations.push_back(Relation(el.at("id").get<RelationId>(), el.at("from").get<NodeId>(),
                                      el.at("to").get<NodeId>(), el.at("type").get<std::string>(),
                                      el.value("description", std::string{})));
     }
+
+    for (const json& el : j.at("positions")) {
+      if (el != "null") {
+        g.positions_.push_back(Position(el.at("x").get<double>(), el.at("y").get<double>()));
+      } else {
+        g.positions_.push_back(std::nullopt);
+      }
+    }
+
     if (j.contains("allowed_cycles") && !j.at("allowed_cycles").is_array()) {
       throw std::runtime_error("JsonStorage::Load: allowed_cycles is not an array");
     }
