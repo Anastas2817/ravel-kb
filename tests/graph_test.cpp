@@ -4,8 +4,9 @@
 
 #include "graph.hpp"
 
-#include <gtest/gtest.h>
 #include <limits>
+
+#include <gtest/gtest.h>
 
 using ravel::Graph;
 using ravel::GraphSnapshot;
