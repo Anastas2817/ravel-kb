@@ -80,7 +80,7 @@ class Node {  // DTO
         size_((size > 0 && std::isfinite(size))
                   ? size
                   : throw std::invalid_argument(
-                        "Node::Node tried to create Node with non-positive size")){
+                        "Node::Node tried to create Node with non-positive size")) {
   }
 
   [[nodiscard]] NodeId id() const noexcept {
@@ -284,7 +284,8 @@ class Graph {
       throw std::invalid_argument("Graph::GetPosition tried to access non-existent Node");
     }
   }
-  NodeId AddNode(std::string title, std::string type, std::string description = "", double size = 1);
+  NodeId AddNode(std::string title, std::string type, std::string description = "",
+                 double size = 1);
   [[nodiscard]] bool HasNode(NodeId id) const noexcept;
   RelationId AddRelation(NodeId from, NodeId to, std::string type, std::string description = "");
   [[nodiscard]] bool HasRelation(RelationId id) const noexcept;
@@ -300,10 +301,10 @@ class Graph {
   // composition itself does not need Graph's privacy — candidate for moving
   // to the App layer (built on public AddNode/AddRelation) once the UI
   // scenario lands. Until then it stays, covered by tests.
-  NodeId AddNodeWithRelations(
-      std::string title, std::string type, std::vector<std::pair<NodeId, std::string>> froms,
-      std::vector<std::pair<NodeId, std::string>> tos, std::string description = "",
-      double size = 1);
+  NodeId AddNodeWithRelations(std::string title, std::string type,
+                              std::vector<std::pair<NodeId, std::string>> froms,
+                              std::vector<std::pair<NodeId, std::string>> tos,
+                              std::string description = "", double size = 1);
   std::optional<Position> MoveNode(NodeId id, Position pos);
   // implementation.md («Контракт удаления») - idempotence for delete*
 

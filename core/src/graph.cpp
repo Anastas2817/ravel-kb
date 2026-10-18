@@ -131,13 +131,13 @@ std::set<NodeId> Graph::GetNeighbors(NodeId id) const {
 }
 
 std::optional<Position> Graph::MoveNode(NodeId id, Position pos) {
-  if (!HasNode(id) || !isfinite(pos.x_) || !isfinite(pos.y_)) {
-    throw std::invalid_argument("Graph::MoveNode tried to access non-existent Node or move to nan/inf");
-  } else {
-    std::optional<Position> prev_pos = positions_[id - 1];
-    positions_[id - 1] = pos;
-    return prev_pos;
+  if (!HasNode(id) || !std::isfinite(pos.x_) || !std::isfinite(pos.y_)) {
+    throw std::invalid_argument(
+        "Graph::MoveNode tried to access non-existent Node or move to nan/inf");
   }
+  std::optional<Position> prev_pos = positions_[id - 1];
+  positions_[id - 1] = pos;
+  return prev_pos;
 }
 
 std::vector<RelationId> Graph::DeleteNodes(std::vector<NodeId> ids) {

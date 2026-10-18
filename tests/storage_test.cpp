@@ -23,7 +23,8 @@ TEST(StorageLoadSave, RoundTrip) {
   src.ontology_node.emplace("model", NodeType("#002030", "rect", "#a0500b"));
   src.ontology_relation.emplace("reduce_to", RelationType("#003d00", "dashed", false, true));
 
-  src.nodes.push_back(Node(1, "Уравнения с разделяющимися переменными", "model", "f(x)dx=g(y)dy", 2));
+  src.nodes.push_back(
+      Node(1, "Уравнения с разделяющимися переменными", "model", "f(x)dx=g(y)dy", 2));
   src.positions_.push_back(ravel::Position{1.0, 2.0});
   src.nodes.push_back(Node(2, "Уравнения, сводящиеся к однородным", "model"));
   src.positions_.push_back(std::nullopt);
@@ -67,7 +68,8 @@ TEST(StorageLoadSave, SurvivalOfLoners) {
   GraphSnapshot src;
   src.ontology_node.emplace("model", NodeType("#002030", "rect", "#a0500b"));
   src.ontology_relation.emplace("reduce_to", RelationType("#003d00", "dashed", false, true));
-  src.nodes.push_back(Node(1, "Уравнения с разделяющимися переменными", "model", "f(x)dx=g(y)dy", 2));
+  src.nodes.push_back(
+      Node(1, "Уравнения с разделяющимися переменными", "model", "f(x)dx=g(y)dy", 2));
   src.positions_.push_back(ravel::Position{2.0, 1.0});
   src.nodes.push_back(Node(2, "Уравнения, сводящиеся к однородным", "model"));
   src.positions_.push_back(std::nullopt);
@@ -1039,7 +1041,7 @@ TEST(StorageLoad, BrokenJson) {
             "next_id_relation": 1,
             "node_types" : [],
             "relation_types" : [],
-            "nodes": [)};
+            "nodes": [)"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
   }
 
@@ -1057,7 +1059,7 @@ TEST(StorageLoad, BrokenJson) {
 
   // Тест 4: валидный JSON, но мусор после документа (строгий парсинг)
   {
-    std::stringstream ss{R"({"format_version": 2}) это уже лишнее"};
+    std::stringstream ss{R"({"format_version": 2}) это уже лишнее)"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
   }
 

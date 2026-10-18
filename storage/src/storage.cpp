@@ -133,7 +133,6 @@ GraphSnapshot JsonStorage::Load(std::istream& in) {
       }
     }
     for (const json& el : j.at("nodes")) {
-      std::optional<std::pair<double, double>> pos = std::nullopt;
       g.nodes.push_back(Node(el.at("id").get<NodeId>(), el.at("title").get<std::string>(),
                              el.at("type").get<std::string>(),
                              el.value("description", std::string{}), el.value("size", 1.0)));

@@ -88,8 +88,7 @@ TEST(GraphDeleteNodes, DeleteAccess) {
 TEST(GraphMoveNode, SetNewHandPosition) {
   Graph g;
   g.AddNodeType("model", "#4a90d9", "rect", "#000000");
-  NodeId id =
-      g.AddNode("Датчик Холла", "model", "лаба по физике", 1);
+  NodeId id = g.AddNode("Датчик Холла", "model", "лаба по физике", 1);
   g.MoveNode(id, {100.0, 100.0});
   std::optional<ravel::Position> before = g.GetPosition(id);
   EXPECT_EQ(before.value(), ravel::Position(100.0, 100.0));
