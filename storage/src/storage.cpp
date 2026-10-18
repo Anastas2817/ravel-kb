@@ -79,14 +79,14 @@ void JsonStorage::Save(const GraphSnapshot& g, std::ostream& out) {
   }
 
   j["positions"] = json::array();
-  for (const auto& pos : g.positions_) {
+  for (const auto& pos : g.positions) {
     if (pos != std::nullopt) {
       json obj;
       obj["x"] = pos->x_;
       obj["y"] = pos->y_;
       j["positions"].push_back(obj);
     } else {
-      j["positions"].push_back("null");
+      j["positions"].push_back(nullptr);
     }
   }
 
@@ -144,10 +144,10 @@ GraphSnapshot JsonStorage::Load(std::istream& in) {
     }
 
     for (const json& el : j.at("positions")) {
-      if (el != "null") {
-        g.positions_.push_back(Position(el.at("x").get<double>(), el.at("y").get<double>()));
+      if (!el.is_null()) {
+        g.positions.push_back(Position(el.at("x").get<double>(), el.at("y").get<double>()));
       } else {
-        g.positions_.push_back(std::nullopt);
+        g.positions.push_back(std::nullopt);
       }
     }
 

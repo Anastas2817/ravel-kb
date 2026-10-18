@@ -179,13 +179,13 @@ TEST(GraphFromSnapshot, ValidGraphWithCorrectInvariantsAndHoles) {
   const NodeId kAliveNode2 = 2;
   const NodeId kAliveNode3 = 5;
   src.nodes.emplace_back(kAliveNode1, "Ряд Дирихле", "model");
-  src.positions_.push_back(std::nullopt);
+  src.positions.push_back(std::nullopt);
   const double size = 4.0;
   src.nodes.emplace_back(kAliveNode2, "Гармонический ряд", "model", "1/n", size);
   const ravel::Position pos{4.0, 8.0};
-  src.positions_.push_back(pos);
+  src.positions.push_back(pos);
   src.nodes.emplace_back(kAliveNode3, "Телескопический ряд", "model");
-  src.positions_.push_back(pos);
+  src.positions.push_back(pos);
   const RelationId kAliveRelation = 3;
   src.relations.emplace_back(kAliveRelation, kAliveNode1, kAliveNode2, "has_special_case");
 
@@ -267,12 +267,13 @@ TEST(GraphFromSnapshot, NextLessThanMaxId) {
   const NodeId kAliveNode2 = 2;
   const NodeId kAliveNode3 = 11;
   src.nodes.emplace_back(kAliveNode1, "Ряд Дирихле", "model");
-  src.positions_.push_back(std::nullopt);
+  src.positions.push_back(std::nullopt);
   const double size = 4.0;
   src.nodes.emplace_back(kAliveNode2, "Гармонический ряд", "model", "1/n", size);
   const ravel::Position hand_position = {4.0, 8.0};
-  src.positions_.push_back(hand_position);
+  src.positions.push_back(hand_position);
   src.nodes.emplace_back(kAliveNode3, "Телескопический ряд", "model");
+  src.positions.push_back(std::nullopt);
   const RelationId kAliveRelation = 3;
   src.relations.emplace_back(kAliveRelation, kAliveNode1, kAliveNode2, "has_special_case");
 
@@ -292,7 +293,7 @@ TEST(GraphFromSnapshot, NonPositiveNodeSize) {
   const NodeId kAliveNode1 = 1;
   const NodeId kAliveNode2 = 2;
   src.nodes.emplace_back(kAliveNode1, "Ряд Дирихле", "model");
-  src.positions_.push_back(std::nullopt);
+  src.positions.push_back(std::nullopt);
   const double size = -4.0;
   EXPECT_THROW(src.nodes.emplace_back(kAliveNode2, "Гармонический ряд", "model", "1/n", size),
                std::invalid_argument);
@@ -311,13 +312,13 @@ TEST(GraphFromSnapshot, InvalidNodeType) {
   const NodeId kAliveNode2 = 2;
   const NodeId kAliveNode3 = 5;
   src.nodes.emplace_back(kAliveNode1, "Ряд Дирихле", "mod");
-  src.positions_.push_back(std::nullopt);
+  src.positions.push_back(std::nullopt);
   const double size = 4.0;
   src.nodes.emplace_back(kAliveNode2, "Гармонический ряд", "model", "1/n", size);
   const ravel::Position hand_position{4.0, 8.0};
-  src.positions_.push_back(hand_position);
+  src.positions.push_back(hand_position);
   src.nodes.emplace_back(kAliveNode3, "Телескопический ряд", "model");
-  src.positions_.push_back(std::nullopt);
+  src.positions.push_back(std::nullopt);
   const RelationId kAliveRelation = 3;
   src.relations.emplace_back(kAliveRelation, kAliveNode1, kAliveNode2, "has_special_case");
 
@@ -336,13 +337,13 @@ TEST(GraphFromSnapshot, InvalidRelationType) {
   const NodeId kAliveNode2 = 2;
   const NodeId kAliveNode3 = 5;
   src.nodes.emplace_back(kAliveNode1, "Ряд Дирихле", "model");
-  src.positions_.push_back(std::nullopt);
+  src.positions.push_back(std::nullopt);
   const double size = 4.0;
   src.nodes.emplace_back(kAliveNode2, "Гармонический ряд", "model", "1/n", size);
   const ravel::Position hand_position{4.0, 8.0};
-  src.positions_.push_back(hand_position);
+  src.positions.push_back(hand_position);
   src.nodes.emplace_back(kAliveNode3, "Телескопический ряд", "model");
-  src.positions_.push_back(std::nullopt);
+  src.positions.push_back(std::nullopt);
   const RelationId kAliveRelation = 3;
   src.relations.emplace_back(kAliveRelation, kAliveNode1, kAliveNode2, "has_ecial_case");
 
@@ -361,9 +362,12 @@ TEST(GraphFromSnapshot, RelationToNonExistentTo) {
   const NodeId kAliveNode2 = 2;
   const NodeId kAliveNode3 = 5;
   src.nodes.emplace_back(kAliveNode1, "Ряд Дирихле", "mod");
+  src.positions.push_back(std::nullopt);
   const double size = 4.0;
   src.nodes.emplace_back(kAliveNode2, "Гармонический ряд", "model", "1/n", size);
+  src.positions.push_back(std::nullopt);
   src.nodes.emplace_back(kAliveNode3, "Телескопический ряд", "model");
+  src.positions.push_back(std::nullopt);
   const RelationId kAliveRelation = 3;
   const NodeId kDead = 56;
   src.relations.emplace_back(kAliveRelation, kAliveNode1, kDead, "has_special_case");
@@ -383,9 +387,12 @@ TEST(GraphFromSnapshot, RelationToNonExistentFrom) {
   const NodeId kAliveNode2 = 2;
   const NodeId kAliveNode3 = 5;
   src.nodes.emplace_back(kAliveNode1, "Ряд Дирихле", "mod");
+  src.positions.push_back(std::nullopt);
   const double size = 4.0;
   src.nodes.emplace_back(kAliveNode2, "Гармонический ряд", "model", "1/n", size);
+  src.positions.push_back(std::nullopt);
   src.nodes.emplace_back(kAliveNode3, "Телескопический ряд", "model");
+  src.positions.push_back(std::nullopt);
   const RelationId kAliveRelation = 3;
   const NodeId kDead = 56;
 
@@ -406,9 +413,12 @@ TEST(GraphFromSnapshot, NextIdNodeTooBig) {
   const NodeId kAliveNode2 = 2;
   const NodeId kAliveNode3 = 5;
   src.nodes.emplace_back(kAliveNode1, "Ряд Дирихле", "mod");
+  src.positions.push_back(std::nullopt);
   const double size = 4.0;
   src.nodes.emplace_back(kAliveNode2, "Гармонический ряд", "model", "1/n", size);
+  src.positions.push_back(std::nullopt);
   src.nodes.emplace_back(kAliveNode3, "Телескопический ряд", "model");
+  src.positions.push_back(std::nullopt);
   const RelationId kAliveRelation = 3;
   src.relations.emplace_back(kAliveRelation, kAliveNode1, kAliveNode2, "has_special_case");
 
@@ -427,9 +437,12 @@ TEST(GraphFromSnapshot, RepeatedIdNode) {
   const NodeId kAliveNode2 = 5;
   const NodeId kAliveNode3 = 5;
   src.nodes.emplace_back(kAliveNode1, "Ряд Дирихле", "mod");
+  src.positions.push_back(std::nullopt);
   const double size = 4.0;
   src.nodes.emplace_back(kAliveNode2, "Гармонический ряд", "model", "1/n", size);
+  src.positions.push_back(std::nullopt);
   src.nodes.emplace_back(kAliveNode3, "Телескопический ряд", "model");
+  src.positions.push_back(std::nullopt);
   const RelationId kAliveRelation = 3;
   src.relations.emplace_back(kAliveRelation, kAliveNode1, kAliveNode2, "has_special_case");
 
@@ -448,9 +461,12 @@ TEST(GraphFromSnapshot, RepeatedIdRelation) {
   const NodeId kAliveNode2 = 2;
   const NodeId kAliveNode3 = 5;
   src.nodes.emplace_back(kAliveNode1, "Ряд Дирихле", "mod");
+  src.positions.push_back(std::nullopt);
   const double size = 4.0;
   src.nodes.emplace_back(kAliveNode2, "Гармонический ряд", "model", "1/n", size);
+  src.positions.push_back(std::nullopt);
   src.nodes.emplace_back(kAliveNode3, "Телескопический ряд", "model");
+  src.positions.push_back(std::nullopt);
   const RelationId kAliveRelation = 3;
   src.relations.emplace_back(kAliveRelation, kAliveNode1, kAliveNode2, "has_special_case");
   src.relations.emplace_back(kAliveRelation, kAliveNode1, kAliveNode3, "has_special_case");
@@ -553,11 +569,17 @@ TEST(GraphToSnapshot, ValidGraphSnapshotWithHoles) {
   std::unordered_map<std::string, NodeType> right_ontology_node = src.ontology_node();
   std::unordered_map<std::string, RelationType> right_ontology_relation = src.ontology_relation();
   std::vector<Node> right_nodes;
+  std::vector<std::optional<ravel::Position>> right_positions;
   right_nodes.emplace_back(node1, "Числовой ряд", "model");
+  right_positions.push_back(std::nullopt);
   right_nodes.emplace_back(node2, "Функциональный ряд", "model");
+  right_positions.push_back(std::nullopt);
   right_nodes.emplace_back(node3, "Ряд", "model");
+  right_positions.push_back(std::nullopt);
   right_nodes.emplace_back(node4, "Признак Дирихле", "model");
+  right_positions.push_back(std::nullopt);
   right_nodes.emplace_back(node6, "Признак Абеля", "model");
+  right_positions.push_back(std::nullopt);
   std::vector<Relation> right_relations;
   right_relations.emplace_back(1, node3, node1, "has_special_case");
   right_relations.emplace_back(2, node3, node2, "has_special_case");
@@ -574,6 +596,8 @@ TEST(GraphToSnapshot, ValidGraphSnapshotWithHoles) {
 
   EXPECT_EQ(dest.nodes, right_nodes);
   EXPECT_EQ(dest.relations, right_relations);
+
+  EXPECT_EQ(dest.positions, right_positions);
 }
 
 TEST(GraphDeleteRelations, DuplicateRelationIdsInArgument) {
@@ -635,8 +659,11 @@ TEST(GraphFromSnapshot, IdBeyondNextIdUnsorted) {
   src.ontology_relation.emplace("has_special_case", RelationType("#000000", "solid", false, true));
 
   src.nodes.emplace_back(1, "Ряд Дирихле", "model");
+  src.positions.push_back(std::nullopt);
   src.nodes.emplace_back(7, "Гармонический ряд", "model");
+  src.positions.push_back(std::nullopt);
   src.nodes.emplace_back(3, "Телескопический ряд", "model");
+  src.positions.push_back(std::nullopt);
   src.relations.emplace_back(1, 1, 3, "has_special_case");
 
   EXPECT_THROW(Graph::FromSnapshot(src), std::runtime_error);
@@ -653,8 +680,12 @@ TEST(GraphFromSnapshot, UnsortedOrderAccepted) {
   src.ontology_relation.emplace("has_special_case", RelationType("#000000", "solid", false, true));
 
   src.nodes.emplace_back(3, "Телескопический ряд", "model");
+  src.positions.push_back(std::nullopt);
   src.nodes.emplace_back(1, "Ряд Дирихле", "model");
+  src.positions.push_back(std::nullopt);
   src.nodes.emplace_back(2, "Гармонический ряд", "model");
+  ravel::Position pos{4.0, 8.0};
+  src.positions.push_back(pos);
   src.relations.emplace_back(1, 1, 2, "has_special_case");
 
   Graph g = Graph::FromSnapshot(src);
@@ -663,6 +694,7 @@ TEST(GraphFromSnapshot, UnsortedOrderAccepted) {
   EXPECT_EQ(g.GetNode(3).title(), "Телескопический ряд");
   EXPECT_TRUE(g.HasRelation(1));
   EXPECT_EQ(g.next_id_node(), 4);
+  EXPECT_EQ(g.GetPosition(2).value(), pos);
 }
 
 TEST(GraphRestoreNodes, ToResurrectNodes) {
@@ -724,4 +756,84 @@ TEST(GraphRestoreNodes, ToRessurectRelations) {
   EXPECT_THROW(dest.DeleteRelations({deleted_rel7}), std::invalid_argument);
   dest.RestoreRelations({deleted_rel5, deleted_rel7, deleted_rel8});
   EXPECT_TRUE(dest.SessionEqual(src));
+}
+
+TEST(GraphFromSnapshot, PositionsCountMismatch) {
+  // ADR-003: секция позиций параллельна nodes, строго. Рассинхрон в любую
+  // сторону — битый снимок: раньше доходило до разреженного positions_ и
+  // падало в GetPosition UB.
+  auto make_src = [](std::size_t pos_count) {
+    GraphSnapshot src;
+    src.next_id_node = 3;
+    src.next_id_relation = 1;
+    src.ontology_node.emplace("model", NodeType("#000000", "rect", "#000000"));
+    src.nodes.emplace_back(1, "Ряд Дирихле", "model");
+    src.nodes.emplace_back(2, "Гармонический ряд", "model");
+    for (std::size_t i = 0; i < pos_count; ++i) {
+      src.positions.push_back(std::nullopt);
+    }
+    return src;
+  };
+  EXPECT_THROW(Graph::FromSnapshot(make_src(1)), std::runtime_error);  // меньше узлов
+  EXPECT_THROW(Graph::FromSnapshot(make_src(3)), std::runtime_error);  // больше узлов
+  EXPECT_NO_THROW(Graph::FromSnapshot(make_src(2)));                   // ровно — грузится
+}
+
+TEST(GraphFromSnapshot, NonFinitePosition) {
+  // ADR-003: nan/inf в позиции — битые данные. JSON nan/inf не умеет, поэтому
+  // дефект reachable только на уровне снапшота (Position — агрегат из двух
+  // double, конструктор ничего не проверяет).
+  auto make_src = [](double x, double y) {
+    GraphSnapshot src;
+    src.next_id_node = 2;
+    src.next_id_relation = 1;
+    src.ontology_node.emplace("model", NodeType("#000000", "rect", "#000000"));
+    src.nodes.emplace_back(1, "Ряд Дирихле", "model");
+    src.positions.push_back(ravel::Position{x, y});
+    return src;
+  };
+  const double kNan = std::numeric_limits<double>::quiet_NaN();
+  const double kInf = std::numeric_limits<double>::infinity();
+  EXPECT_THROW(Graph::FromSnapshot(make_src(kNan, 0.0)), std::runtime_error);
+  EXPECT_THROW(Graph::FromSnapshot(make_src(0.0, kNan)), std::runtime_error);
+  EXPECT_THROW(Graph::FromSnapshot(make_src(kInf, 0.0)), std::runtime_error);
+  EXPECT_THROW(Graph::FromSnapshot(make_src(0.0, -kInf)), std::runtime_error);
+}
+
+TEST(GraphToSnapshot, PositionsParallelToLiveNodes) {
+  // Регрессия для бага ADR-003: ToSnapshot обязан нести позиции живых узлов
+  // параллельно nodes. Пропуск здесь = тихая потеря ручного размещения при
+  // сохранении и разреженный positions_ после загрузки.
+  Graph g;
+  g.AddNodeType("model", "#4a90d9", "rect", "#000000");
+  NodeId keep = g.AddNode("Числовой ряд", "model");
+  NodeId moved = g.AddNode("Функциональный ряд", "model");
+  NodeId dead = g.AddNode("Признак Лейбница", "model");
+  g.MoveNode(moved, {10.0, 20.0});
+  g.DeleteNodes({dead});
+
+  GraphSnapshot dest = g.ToSnapshot();
+  ASSERT_EQ(dest.nodes.size(), 2);
+  ASSERT_EQ(dest.positions.size(), dest.nodes.size());
+  EXPECT_EQ(dest.nodes[0].id(), keep);
+  EXPECT_EQ(dest.positions[0], std::nullopt);  // keep не двигали
+  EXPECT_EQ(dest.nodes[1].id(), moved);
+  EXPECT_EQ(dest.positions[1].value(), ravel::Position(10.0, 20.0));
+}
+
+TEST(GraphRestoreNodes, PositionSurvivesDeleteRestore) {
+  // ADR-003, следствие 4: кадастр позиций переживает анабиоз — undo удаления
+  // возвращает узлу его ручное размещение.
+  Graph g;
+  g.AddNodeType("model", "#4a90d9", "rect", "#000000");
+  NodeId a = g.AddNode("Числовой ряд", "model");
+  NodeId b = g.AddNode("Функциональный ряд", "model");
+  g.MoveNode(b, {42.0, -7.5});
+  Graph before = g;
+
+  g.DeleteNodes({b});
+  EXPECT_THROW((void)g.GetPosition(b), std::invalid_argument);  // зомби недоступен
+  g.RestoreNodes({b});
+  EXPECT_EQ(g.GetPosition(b).value(), ravel::Position(42.0, -7.5));
+  EXPECT_TRUE(g.SessionEqual(before));  // вся сессия, включая positions_, вернулась
 }

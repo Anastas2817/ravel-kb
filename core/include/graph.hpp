@@ -100,7 +100,7 @@ class Node {  // DTO
     return size_;
   }
 
-  // Exact == for doubles is intentional: size_ are stored
+  // Exact == for doubles is intentional: size_ is stored
   // values compared for identity after serialization round-trips, not results
   // of floating-point computation. A bit-level mismatch here is a storage bug
   // and must surface, not be masked by an epsilon. Approximate comparison is
@@ -117,7 +117,6 @@ class Node {  // DTO
   std::string title_;
   std::string description_;
   double size_ = 1;
-  std::optional<std::pair<double, double>> hand_position_ = std::nullopt;
 };
 
 [[nodiscard]] constexpr bool IsValidArrow(std::string_view arrow) {
@@ -211,7 +210,13 @@ struct Position {
   double x_;
   double y_;
 
-  bool operator==(const Position&) const = default;
+  bool operator==(const Position&) const =
+      default;  // Exact == for doubles is intentional: x_, y_ are stored
+  // values compared for identity after serialization round-trips, not results
+  // of floating-point computation. A bit-level mismatch here is a storage bug
+  // and must surface, not be masked by an epsilon. Approximate comparison is
+  // for computed values (layout geometry) only. See implementation.md,
+  // note to rule 18.
 };
 
 struct GraphSnapshot {
@@ -220,7 +225,7 @@ struct GraphSnapshot {
 
   std::vector<Node> nodes;
   std::vector<Relation> relations;
-  std::vector<std::optional<Position>> positions_;
+  std::vector<std::optional<Position>> positions;
 
   NodeId next_id_node = 1;
   RelationId next_id_relation = 1;

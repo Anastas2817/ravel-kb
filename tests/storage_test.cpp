@@ -25,13 +25,13 @@ TEST(StorageLoadSave, RoundTrip) {
 
   src.nodes.push_back(
       Node(1, "Уравнения с разделяющимися переменными", "model", "f(x)dx=g(y)dy", 2));
-  src.positions_.push_back(ravel::Position{1.0, 2.0});
+  src.positions.push_back(ravel::Position{1.0, 2.0});
   src.nodes.push_back(Node(2, "Уравнения, сводящиеся к однородным", "model"));
-  src.positions_.push_back(std::nullopt);
+  src.positions.push_back(std::nullopt);
   src.nodes.push_back(Node(3, "Уравнения Бернулли", "model"));
-  src.positions_.push_back(std::nullopt);
+  src.positions.push_back(std::nullopt);
   src.nodes.push_back(Node(4, "Однородные уравнения", "model"));
-  src.positions_.push_back(std::nullopt);
+  src.positions.push_back(std::nullopt);
 
   src.relations.push_back(Relation(1, 2, 4, "reduce_to"));
   src.relations.push_back(Relation(1, 3, 4, "reduce_to"));
@@ -49,7 +49,7 @@ TEST(StorageLoadSave, RoundTrip) {
 
   EXPECT_EQ(src.nodes, dest.nodes);
   EXPECT_EQ(src.relations, dest.relations);
-  EXPECT_EQ(src.positions_, dest.positions_);
+  EXPECT_EQ(src.positions, dest.positions);
 }
 
 TEST(StorageLoadSave, ValidEmpty) {
@@ -70,19 +70,20 @@ TEST(StorageLoadSave, SurvivalOfLoners) {
   src.ontology_relation.emplace("reduce_to", RelationType("#003d00", "dashed", false, true));
   src.nodes.push_back(
       Node(1, "Уравнения с разделяющимися переменными", "model", "f(x)dx=g(y)dy", 2));
-  src.positions_.push_back(ravel::Position{2.0, 1.0});
+  src.positions.push_back(ravel::Position{2.0, 1.0});
   src.nodes.push_back(Node(2, "Уравнения, сводящиеся к однородным", "model"));
-  src.positions_.push_back(std::nullopt);
+  src.positions.push_back(std::nullopt);
   src.nodes.push_back(Node(3, "Уравнения Бернулли", "model"));
-  src.positions_.push_back(std::nullopt);
+  src.positions.push_back(std::nullopt);
   src.nodes.push_back(Node(4, "Однородные уравнения", "model"));
-  src.positions_.push_back(std::nullopt);
+  src.positions.push_back(std::nullopt);
 
   src.relations.push_back(Relation(1, 2, 4, "reduce_to"));
   src.relations.push_back(Relation(1, 3, 4, "reduce_to"));
   src.relations.push_back(Relation(1, 4, 1, "reduce_to"));
 
   src.nodes.push_back(Node(5, "Уравнение в полных дифференциалах", "model"));
+  src.positions.push_back(std::nullopt);
 
   std::stringstream saved;
   JsonStorage::Save(src, saved);
@@ -96,20 +97,21 @@ TEST(StorageLoadSave, SurvivalOfLoners) {
 
   EXPECT_EQ(src.nodes, dest.nodes);
   EXPECT_EQ(src.relations, dest.relations);
-  EXPECT_EQ(src.positions_, dest.positions_);
+  EXPECT_EQ(src.positions, dest.positions);
 }
 
 TEST(StorageLoad, WrongFormatVersion) {
-  // Тест 1: format_version = 3 (не поддерживается)
+  // Тест 1: format_version = 4 (не поддерживается)
   {
     std::stringstream ss{R"({
-            "format_version": 3,
+            "format_version": 4,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types": [],
             "relation_types": [],
             "nodes": [],
             "relations": [],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -124,6 +126,7 @@ TEST(StorageLoad, WrongFormatVersion) {
             "relation_types": [],
             "nodes": [],
             "relations": [],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -132,13 +135,14 @@ TEST(StorageLoad, WrongFormatVersion) {
   // Тест 3: format_version — строка вместо числа
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": "3",
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types": [],
             "relation_types": [],
             "nodes": [],
             "relations": [],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -155,6 +159,7 @@ TEST(StorageLoad, AbsenceOfAnObject) {
             "relation_types": [],
             "nodes": [],
             "relations": [],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -169,6 +174,7 @@ TEST(StorageLoad, AbsenceOfAnObject) {
             "relation_types": [],
             "nodes": [],
             "relations": [],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -177,12 +183,13 @@ TEST(StorageLoad, AbsenceOfAnObject) {
   // Тест 3: нет node_types
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "relation_types" : [],
             "nodes": [],
             "relations": [],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -191,12 +198,13 @@ TEST(StorageLoad, AbsenceOfAnObject) {
   // Тест 4: нет relation_types
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [],
             "nodes" : [],
             "relations": [],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -205,12 +213,13 @@ TEST(StorageLoad, AbsenceOfAnObject) {
   // Тест 5: нет nodes
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [],
             "relation_types" : [],
             "relations" : [],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -219,12 +228,28 @@ TEST(StorageLoad, AbsenceOfAnObject) {
   // Тест 6: нет relations
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [],
             "relation_types" : [],
             "nodes" : [],
+            "positions": [],
+            "allowed_cycles" : []
+        })"};
+    EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
+  }
+
+  // Тест 7: нет positions
+  {
+    std::stringstream ss{R"({
+            "format_version": 3,
+            "next_id_node": 3,
+            "next_id_relation": 4,
+            "node_types" : [],
+            "relation_types" : [],
+            "nodes" : [],
+            "relations": [],
             "allowed_cycles" : []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -236,12 +261,13 @@ TEST(StorageLoad, WrongTypeObject) {
   {
     std::stringstream ss{R"({
             "format_version": 3,
-            "next_id_node" : "4"
+            "next_id_node" : "4",
             "next_id_relation": 4,
             "node_types": [],
             "relation_types": [],
             "nodes": [],
             "relations": [],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -257,6 +283,7 @@ TEST(StorageLoad, WrongTypeObject) {
             "relation_types": [],
             "nodes": [],
             "relations": [],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -265,13 +292,14 @@ TEST(StorageLoad, WrongTypeObject) {
   // Тест 3: int node_types
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : 7,
             "relation_types" : [],
             "nodes": [],
             "relations": [],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -280,13 +308,14 @@ TEST(StorageLoad, WrongTypeObject) {
   // Тест 4: str relation_types
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [],
             "relation_types" : "wtf",
             "nodes" : [],
             "relations": [],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -295,13 +324,14 @@ TEST(StorageLoad, WrongTypeObject) {
   // Тест 5: str nodes
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [],
             "relation_types" : [],
             "nodes" : "gg",
             "relations" : [],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -310,13 +340,14 @@ TEST(StorageLoad, WrongTypeObject) {
   // Тест 6: int relations
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [],
             "relation_types" : [],
             "nodes" : [],
             "relations" : 97097,
+            "positions": [],
             "allowed_cycles" : []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -325,14 +356,31 @@ TEST(StorageLoad, WrongTypeObject) {
   // Тест 7: int allowed_cycles
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [],
             "relation_types" : [],
             "nodes" : [],
             "relations" : [],
+            "positions": [],
             "allowed_cycles" : 68626
+        })"};
+    EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
+  }
+
+  // Тест 8: int positions
+  {
+    std::stringstream ss{R"({
+            "format_version": 3,
+            "next_id_node": 3,
+            "next_id_relation": 4,
+            "node_types" : [],
+            "relation_types" : [],
+            "nodes" : [],
+            "relations" : [],
+            "positions": 890,
+            "allowed_cycles" : []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
   }
@@ -342,7 +390,7 @@ TEST(StorageLoad, StrangeNodeType) {
   // Тест 1.1: имя отсутствует
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [
@@ -352,6 +400,7 @@ TEST(StorageLoad, StrangeNodeType) {
             "relation_types" : [],
             "nodes": [],
             "relations": [],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -360,7 +409,7 @@ TEST(StorageLoad, StrangeNodeType) {
   // Тест 2.1: color отсутствует
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [
@@ -370,6 +419,7 @@ TEST(StorageLoad, StrangeNodeType) {
             "relation_types" : [],
             "nodes": [],
             "relations": [],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -378,7 +428,7 @@ TEST(StorageLoad, StrangeNodeType) {
   // Тест 3.1: shape отсутствует
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [
@@ -388,6 +438,7 @@ TEST(StorageLoad, StrangeNodeType) {
             "relation_types" : [],
             "nodes": [],
             "relations": [],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -396,7 +447,7 @@ TEST(StorageLoad, StrangeNodeType) {
   // Тест 4.1: frame_color отсутствует
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [
@@ -406,6 +457,7 @@ TEST(StorageLoad, StrangeNodeType) {
             "relation_types" : [],
             "nodes": [],
             "relations": [],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -414,7 +466,7 @@ TEST(StorageLoad, StrangeNodeType) {
   // Тест 1.2: имя int
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [
@@ -424,6 +476,7 @@ TEST(StorageLoad, StrangeNodeType) {
             "relation_types" : [],
             "nodes": [],
             "relations": [],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -432,7 +485,7 @@ TEST(StorageLoad, StrangeNodeType) {
   // Тест 2.2: color array
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [
@@ -442,6 +495,7 @@ TEST(StorageLoad, StrangeNodeType) {
             "relation_types" : [],
             "nodes": [],
             "relations": [],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -450,7 +504,7 @@ TEST(StorageLoad, StrangeNodeType) {
   // Тест 3.2: shape array
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [
@@ -460,6 +514,7 @@ TEST(StorageLoad, StrangeNodeType) {
             "relation_types" : [],
             "nodes": [],
             "relations": [],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -468,7 +523,7 @@ TEST(StorageLoad, StrangeNodeType) {
   // Тест 4.2: frame_color int
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [
@@ -478,6 +533,7 @@ TEST(StorageLoad, StrangeNodeType) {
             "relation_types" : [],
             "nodes": [],
             "relations": [],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -488,7 +544,7 @@ TEST(StorageLoad, StrangeRelationType) {
   // Тест 1.1: name отсутствует
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [],
@@ -498,6 +554,7 @@ TEST(StorageLoad, StrangeRelationType) {
             ],
             "nodes": [],
             "relations": [],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -505,7 +562,7 @@ TEST(StorageLoad, StrangeRelationType) {
   // Тест 2.1: color отсутствует
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [],
@@ -515,6 +572,7 @@ TEST(StorageLoad, StrangeRelationType) {
             ],
             "nodes": [],
             "relations": [],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -522,7 +580,7 @@ TEST(StorageLoad, StrangeRelationType) {
   // Тест 3.1: arrow отсутствует
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [],
@@ -532,6 +590,7 @@ TEST(StorageLoad, StrangeRelationType) {
             ],
             "nodes": [],
             "relations": [],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -539,7 +598,7 @@ TEST(StorageLoad, StrangeRelationType) {
   // Тест 4.1: symmetric отсутствует
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [],
@@ -549,6 +608,7 @@ TEST(StorageLoad, StrangeRelationType) {
             ],
             "nodes": [],
             "relations": [],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -556,7 +616,7 @@ TEST(StorageLoad, StrangeRelationType) {
   // Тест 5.1: transitive отсутствует
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [],
@@ -566,6 +626,7 @@ TEST(StorageLoad, StrangeRelationType) {
             ],
             "nodes": [],
             "relations": [],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -573,7 +634,7 @@ TEST(StorageLoad, StrangeRelationType) {
   // Тест 1.2: name array
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [],
@@ -583,6 +644,7 @@ TEST(StorageLoad, StrangeRelationType) {
             ],
             "nodes": [],
             "relations": [],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -590,7 +652,7 @@ TEST(StorageLoad, StrangeRelationType) {
   // Тест 2.2: color int
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [],
@@ -600,6 +662,7 @@ TEST(StorageLoad, StrangeRelationType) {
             ],
             "nodes": [],
             "relations": [],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -607,7 +670,7 @@ TEST(StorageLoad, StrangeRelationType) {
   // Тест 3.2: arrow array
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [],
@@ -617,6 +680,7 @@ TEST(StorageLoad, StrangeRelationType) {
             ],
             "nodes": [],
             "relations": [],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -624,7 +688,7 @@ TEST(StorageLoad, StrangeRelationType) {
   // Тест 4.2: symmetric str
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [],
@@ -634,6 +698,7 @@ TEST(StorageLoad, StrangeRelationType) {
             ],
             "nodes": [],
             "relations": [],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -641,7 +706,7 @@ TEST(StorageLoad, StrangeRelationType) {
   // Тест 5.2: transitive int
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [],
@@ -651,6 +716,7 @@ TEST(StorageLoad, StrangeRelationType) {
             ],
             "nodes": [],
             "relations": [],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -661,16 +727,17 @@ TEST(StorageLoad, StrangeNode) {
   // Тест 1.1: id отсутствует
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [],
             "relation_types" : [],
             "nodes" : [
               {"title": "Степенная функция", "type": "function",
-              "description": "f(x) = x^n", "hand_position": {"x": 120, "y": 340}}
+              "description": "f(x) = x^n"}
             ],
             "relations": [],
+            "positions": [ null ],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -678,16 +745,17 @@ TEST(StorageLoad, StrangeNode) {
   // Тест 2.1: title отсутствует
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [],
             "relation_types" : [],
             "nodes" : [
               {"id": 1, "type": "function",
-              "description": "f(x) = x^n", "hand_position": {"x": 120, "y": 340}}
+              "description": "f(x) = x^n"}
             ],
             "relations": [],
+            "positions": [ null ],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -695,16 +763,17 @@ TEST(StorageLoad, StrangeNode) {
   // Тест 3.1: type отсутствует
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [],
             "relation_types" : [],
             "nodes" : [
               {"id": 1, "title": "Степенная функция",
-              "description": "f(x) = x^n", "hand_position": {"x": 120, "y": 340}}
+              "description": "f(x) = x^n"}
             ],
             "relations": [],
+            "positions": [ null ],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -712,16 +781,17 @@ TEST(StorageLoad, StrangeNode) {
   // Тест 1.2: id str
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [],
             "relation_types" : [],
             "nodes" : [
               {"id": "max", "title": "Степенная функция", "type": "function",
-              "description": "f(x) = x^n", "hand_position": {"x": 120, "y": 340}}
+              "description": "f(x) = x^n"}
             ],
             "relations": [],
+            "positions": [ null ],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -729,16 +799,17 @@ TEST(StorageLoad, StrangeNode) {
   // Тест 2.2: title int
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [],
             "relation_types" : [],
             "nodes" : [
               {"id": 1, "title": 56, "type": "function",
-              "description": "f(x) = x^n", "hand_position": {"x": 120, "y": 340}}
+              "description": "f(x) = x^n"}
             ],
             "relations": [],
+            "positions": [ null ],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -746,16 +817,17 @@ TEST(StorageLoad, StrangeNode) {
   // Тест 3.2: type array
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [],
             "relation_types" : [],
             "nodes" : [
               {"id": 1, "title": "Степенная функция", "type": [],
-              "description": "f(x) = x^n", "hand_position": {"x": 120, "y": 340}}
+              "description": "f(x) = x^n"}
             ],
             "relations": [],
+            "positions": [ null ],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -763,16 +835,17 @@ TEST(StorageLoad, StrangeNode) {
   // Тест 4.2: description array
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [],
             "relation_types" : [],
             "nodes" : [
               {"id": 1, "title": "Степенная функция", "type": "function",
-              "description": [], "hand_position": {"x": 120, "y": 340}}
+              "description": []}
             ],
             "relations": [],
+            "positions": [ null ],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -780,33 +853,17 @@ TEST(StorageLoad, StrangeNode) {
   // Тест 5.2: size str
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [],
             "relation_types" : [],
             "nodes" : [
               {"id": 1, "title": "Степенная функция", "type": "function",
-              "description": "f(x) = x^n", "size": "big", "hand_position": {"x": 120, "y": 340}}
+              "description": "f(x) = x^n", "size": "big"}
             ],
             "relations": [],
-            "allowed_cycles": []
-        })"};
-    EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
-  }
-  // Тест 6.2: hand_position int
-  {
-    std::stringstream ss{R"({
-            "format_version": "2",
-            "next_id_node": 3,
-            "next_id_relation": 4,
-            "node_types" : [],
-            "relation_types" : [],
-            "nodes" : [
-              {"id": 1, "title": "Степенная функция", "type": "function",
-              "description": "f(x) = x^n", "hand_position": 120.340}
-            ],
-            "relations": [],
+            "positions": [ null ],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -817,7 +874,7 @@ TEST(StorageLoad, StrangeRelation) {
   // Тест 1.1: id отсутствует
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [],
@@ -827,6 +884,7 @@ TEST(StorageLoad, StrangeRelation) {
               {"from": 1, "to": 3, "type": "is_defined_on",
                "description": "степенная функция с натуральным показателем задана на всей прямой"}
             ],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -834,7 +892,7 @@ TEST(StorageLoad, StrangeRelation) {
   // Тест 1.2: from отсутствует
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [],
@@ -844,6 +902,7 @@ TEST(StorageLoad, StrangeRelation) {
               {"id": 5, "to": 3, "type": "is_defined_on",
                "description": "степенная функция с натуральным показателем задана на всей прямой"}
             ],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -851,7 +910,7 @@ TEST(StorageLoad, StrangeRelation) {
   // Тест 3.1: to отсутствует
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [],
@@ -861,6 +920,7 @@ TEST(StorageLoad, StrangeRelation) {
               {"id": 5, "from": 1, "type": "is_defined_on",
                "description": "степенная функция с натуральным показателем задана на всей прямой"}
             ],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -868,7 +928,7 @@ TEST(StorageLoad, StrangeRelation) {
   // Тест 4.1: type отсутствует
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [],
@@ -878,6 +938,7 @@ TEST(StorageLoad, StrangeRelation) {
               {"id": 5, "from": 1, "to": 3,
                "description": "степенная функция с натуральным показателем задана на всей прямой"}
             ],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -885,7 +946,7 @@ TEST(StorageLoad, StrangeRelation) {
   // Тест 1.2: id array
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [],
@@ -895,6 +956,7 @@ TEST(StorageLoad, StrangeRelation) {
               {"id": [], "from": 1, "to": 3, "type": "is_defined_on",
                "description": "степенная функция с натуральным показателем задана на всей прямой"}
             ],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -902,7 +964,7 @@ TEST(StorageLoad, StrangeRelation) {
   // Тест 2.2: from str
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [],
@@ -912,6 +974,7 @@ TEST(StorageLoad, StrangeRelation) {
               {"id": 5, "from": "функция", "to": 3, "type": "is_defined_on",
                "description": "степенная функция с натуральным показателем задана на всей прямой"}
             ],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -919,7 +982,7 @@ TEST(StorageLoad, StrangeRelation) {
   // Тест 3.2: to str
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [],
@@ -929,6 +992,7 @@ TEST(StorageLoad, StrangeRelation) {
               {"id": 5, "from": 1, "to": "3", "type": "is_defined_on",
                "description": "степенная функция с натуральным показателем задана на всей прямой"}
             ],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -936,7 +1000,7 @@ TEST(StorageLoad, StrangeRelation) {
   // Тест 4.2: type int
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [],
@@ -946,6 +1010,7 @@ TEST(StorageLoad, StrangeRelation) {
               {"id": 5, "from": 1, "to": 3, "type": 567,
                "description": "степенная функция с натуральным показателем задана на всей прямой"}
             ],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -953,7 +1018,7 @@ TEST(StorageLoad, StrangeRelation) {
   // Тест 5.2: description array
   {
     std::stringstream ss{R"({
-            "format_version": "2",
+            "format_version": 3,
             "next_id_node": 3,
             "next_id_relation": 4,
             "node_types" : [],
@@ -963,6 +1028,7 @@ TEST(StorageLoad, StrangeRelation) {
               {"id": 5, "from": 1, "to": 3, "type": "is_defined_on",
                "description": []}
             ],
+            "positions": [],
             "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -986,7 +1052,7 @@ TEST(StorageLoad, RepeatedNodeTypeName) {
   // Правило 13/22: повтор имени типа в словаре — битые внешние данные,
   // а не случайность, которую можно проигнорировать.
   std::stringstream ss{R"({
-          "format_version": "2",
+          "format_version": 3,
           "next_id_node": 1,
           "next_id_relation": 1,
           "node_types" : [
@@ -998,6 +1064,7 @@ TEST(StorageLoad, RepeatedNodeTypeName) {
           "relation_types" : [],
           "nodes": [],
           "relations": [],
+          "positions": [],
           "allowed_cycles": []
       })"};
   EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -1006,7 +1073,7 @@ TEST(StorageLoad, RepeatedNodeTypeName) {
 TEST(StorageLoad, RepeatedRelationTypeName) {
   // То же для relation_types.
   std::stringstream ss{R"({
-          "format_version": "2",
+          "format_version": 3,
           "next_id_node": 1,
           "next_id_relation": 1,
           "node_types" : [
@@ -1021,6 +1088,7 @@ TEST(StorageLoad, RepeatedRelationTypeName) {
           ],
           "nodes": [],
           "relations": [],
+          "positions": [],
           "allowed_cycles": []
       })"};
   EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
@@ -1075,6 +1143,82 @@ TEST(StorageLoad, BrokenJson) {
     std::stringstream ss{R"({
             "format_version": 2,
             "next_id_node": undefined
+        })"};
+    EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
+  }
+}
+
+TEST(StorageLoad, StrangePosition) {
+  // ADR-003: элемент positions — объект {"x", "y"} или null. Остальное —
+  // битые внешние данные (правило 22): каждый дефект изолирован и обязан
+  // прилетать как std::runtime_error.
+  // (Число вместо объекта: см. бывший StrangeNode Тест 6.2 — его сюда.)
+
+  // Тест 1: x отсутствует
+  {
+    std::stringstream ss{R"({
+            "format_version": 3,
+            "next_id_node": 2,
+            "next_id_relation": 1,
+            "node_types" : [],
+            "relation_types" : [],
+            "nodes" : [
+              {"id": 1, "title": "Степенная функция", "type": "function"}
+            ],
+            "relations": [],
+            "positions": [ {"y": 5} ],
+            "allowed_cycles": []
+        })"};
+    EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
+  }
+  // Тест 2: x — строка
+  {
+    std::stringstream ss{R"({
+            "format_version": 3,
+            "next_id_node": 2,
+            "next_id_relation": 1,
+            "node_types" : [],
+            "relation_types" : [],
+            "nodes" : [
+              {"id": 1, "title": "Степенная функция", "type": "function"}
+            ],
+            "relations": [],
+            "positions": [ {"x": "широта", "y": 5} ],
+            "allowed_cycles": []
+        })"};
+    EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
+  }
+  // Тест 3: элемент — bool (не объект и не null)
+  {
+    std::stringstream ss{R"({
+            "format_version": 3,
+            "next_id_node": 2,
+            "next_id_relation": 1,
+            "node_types" : [],
+            "relation_types" : [],
+            "nodes" : [
+              {"id": 1, "title": "Степенная функция", "type": "function"}
+            ],
+            "relations": [],
+            "positions": [ true ],
+            "allowed_cycles": []
+        })"};
+    EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
+  }
+  // Тест 4: элемент — число (перенесённый бывший StrangeNode 6.2)
+  {
+    std::stringstream ss{R"({
+            "format_version": 3,
+            "next_id_node": 2,
+            "next_id_relation": 1,
+            "node_types" : [],
+            "relation_types" : [],
+            "nodes" : [
+              {"id": 1, "title": "Степенная функция", "type": "function"}
+            ],
+            "relations": [],
+            "positions": [ 78 ],
+            "allowed_cycles": []
         })"};
     EXPECT_THROW(JsonStorage::Load(ss), std::runtime_error);
   }

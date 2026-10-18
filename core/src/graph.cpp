@@ -240,6 +240,9 @@ Graph Graph::FromSnapshot(const GraphSnapshot& src) {
   if (src.next_id_relation == 1 && !src.relations.empty()) {
     throw std::runtime_error("Graph::FromSnapshot Graph with next_id_relation = 1 has relations");
   }
+  if (src.nodes.size() != src.positions.size()) {
+    throw std::runtime_error("Graph::FromSnapshot positions size != nodes size");
+  }
 
   std::unordered_set<NodeId> alive_nodes;
   for (const Node& i : src.nodes) {
@@ -282,9 +285,9 @@ Graph Graph::FromSnapshot(const GraphSnapshot& src) {
     }
   }
 
-  for (const std::optional<Position>& pos : src.positions_) {
+  for (const std::optional<Position>& pos : src.positions) {
     if ((pos != std::nullopt) && (!std::isfinite(pos->x_) || !std::isfinite(pos->y_))) {
-      throw std::runtime_error("Graph::FromSnapshot tried to add node with nan/inf hand_position");
+      throw std::runtime_error("Graph::FromSnapshot tried to add node with nan/inf position");
     }
   }
   // apply
@@ -297,8 +300,11 @@ Graph Graph::FromSnapshot(const GraphSnapshot& src) {
 
   // placeholder ADR-002 11
   g.nodes_ = std::vector<Node>(src.next_id_node - 1, Node(0, "", "", ""));
-  for (const Node& node : src.nodes) {
+  g.positions_ = std::vector<std::optional<Position>>(src.next_id_node - 1, std::nullopt);
+  for (std::size_t i = 0; i < src.nodes.size(); ++i) {
+    const Node& node = src.nodes[i];
     g.nodes_[node.id() - 1] = node;
+    g.positions_[node.id() - 1] = src.positions[i];
     g.access_.try_emplace(node.id());
   }
   // placeholder ADR-002 11
@@ -308,7 +314,6 @@ Graph Graph::FromSnapshot(const GraphSnapshot& src) {
     g.access_[relation.from()].push_back(relation.id());
     g.access_[relation.to()].push_back(relation.id());
   }
-  g.positions_ = src.positions_;
 
   return g;
 }
@@ -320,8 +325,9 @@ GraphSnapshot Graph::ToSnapshot() const {
   dest.ontology_node = ontology_node_;
   dest.ontology_relation = ontology_relation_;
 
-  ForEachLiveNode([&dest](const Node& node) {
+  ForEachLiveNode([&dest, this](const Node& node) {
     dest.nodes.push_back(node);
+    dest.positions.push_back(positions_[node.id() - 1]);
     return true;
   });
   ForEachLiveRelation([&dest](const Relation& relation) {
