@@ -91,6 +91,20 @@ jobs:
           .fmt-venv/bin/clang-format --dry-run --Werror
           $(find core storage app ui tests -name '*.hpp' -o -name '*.cpp')
 
+  architecture:
+    name: architecture (ui не включает graph.hpp напрямую)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Инвариант 7 в машинном виде: ui зависит только от фасада app.
+      # Транзитивное включение (ui -> controller.hpp -> graph.hpp) разрешено —
+      # проверяется только прямое. Срабатывание на этапе 3 = сигнал
+      # расширить read-API Controller, а не ослабить проверку.
+      - name: Check ui/ direct includes
+        run: bash .github/scripts/check_ui_includes.sh
+
   # Санитайзеры: ручное индексирование id − 1 по плотным векторам — ровно тот
   # код, где off-by-one читается как «работает» на отладочной куче и взрывается
   # у пользователя. ASan ловит выход за границу и use-after-free, UBSan —
