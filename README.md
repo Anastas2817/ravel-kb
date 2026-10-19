@@ -86,11 +86,11 @@ ctest --test-dir build -C Release --output-on-failure
 
 | Компонент | Статус |
 |---|---|
-| Модель данных `Graph` | ✅ закрыто (неделя 1: 30 юнит-тестов на инварианты) |
+| Модель данных `Graph` | ✅ закрыто (неделя 1: 30 юнит-тестов на инварианты + property-based фаззер: 25 сидов × 150 случайных операций, оракулы полного undo, redo и round-trip) |
 | Сериализация JSON | ✅ закрыто (неделя 2: `JsonStorage` Load/Save, 16 тестов, round-trip) |
 | Канвас (QGraphicsView) | 🔧 база (неделя 4): узлы перемещаемы, рёбра следуют |
-| Слой команд (app) | 🔧 база: `AnyCommand` (variant + concept), `CommandChronicle` (один вектор + курсор; Execute/Undo/Redo), 5 команд, 5 тестов (`app_tests`); решения — implementation.md R14 |
-| Controller (app) | 🔧 скелет: Open/Save/SaveAs через JsonStorage; сценарии мутаций — в работе |
+| Слой команд (app) | 🔧 база: `AnyCommand` (variant + concept), `CommandChronicle` (один вектор + курсор; Execute/Undo/Redo), 5 команд, 15 тестов (5 командных + 10 Controller: протокол Open/Save/SaveAs, файловые эффекты, undo/redo-поток); решения — implementation.md R14 |
+| Controller (app) | 🔧 Open/Save/SaveAs через JsonStorage (атомарный SaveAs), покрыто тестами; сценарии мутаций — в работе |
 | Раскладка (Сугияма с онтологическими лентами) | 📋 запланировано |
 | Обнаружение циклов | 📋 запланировано |
 | undo/redo (Command) | 📋 инфраструктура готова (см. «Слой команд»); подключение к UI — впереди |
