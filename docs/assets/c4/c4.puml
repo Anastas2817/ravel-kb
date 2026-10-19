@@ -11,10 +11,11 @@ class Graph {
   +ToSnapshot() : GraphSnapshot
   +AddNodeType / AddRelationType / ResolveNode / ResolveRelation
   +AddNode / AddNodeWithRelations / AddRelation / MoveNode
-  +HasNode / GetNode / DeleteNodes
-  +HasRelation / GetRelation / DeleteRelations
+  +HasNode / GetNode / DeleteNodes / RestoreNodes
+  +HasRelation / GetRelation / DeleteRelations / RestoreRelations
   +GetIncidentRelations / GetNeighbors
   +OntologyNode / OntologyRelation
+  +ForEachLiveNode / ForEachLiveRelation
   --
   -ontology_node_ : unordered_map<string, NodeType>
   -ontology_relation_ : unordered_map<string, RelationType>
@@ -22,6 +23,7 @@ class Graph {
   -relations_ : vector<Relation>
   -access_ : map<NodeId, vector<RelationId>>
   -next_id_node_ / next_id_relation_ : uint64_t
+  -positions : vector<Position {x_; y_}>
 }
 
 class Node <<DTO>> {
@@ -62,6 +64,7 @@ class GraphSnapshot {
   +nodes : vector<Node>
   +relations : vector<Relation>
   +next_id_node / next_id_relation
+  +positions : vector<Position {x_; y_}>
 }
 
 Graph *-- Node
@@ -84,14 +87,14 @@ legend bottom
 
   Инварианты (Graph и только Graph их обеспечивает,
   FromSnapshot обязан отклонять нарушения):
-  1. id не переиспользуются; next_id_* строго
-     больше всех существующих id своего вида.
-  2. Тип каждого узла и ребра существует в словаре.
-  3. from_/to_ каждого живого ребра — живые узлы.
-  4. access_[x] содержит ровно рёбра, инцидентные x,
-     и существует ровно для живых узлов.
-  5. Удалённые узлы/рёбра хранятся фиктивными
-     объектами («дырки», R2): индекс вектора
-     равен id - 1.
+  1. Id не переиспользуются; `next_id_node_` / `next_id_relation_` строго больше всех существующих id своего вида.
+  2. Для любого ребра r и любого узла x: r лежит в `access_[x]` тогда и только тогда, когда x — это from или to ребра r.
+  3.1. `access_` содержит записи ровно для живых узлов: каждый живый узел имеет запись, ни один удалённый — нет.
+  3.2. Каждая запись, кроме того, содержит ровно живые рёбра: в окрестности узла нет ни одного id мёртвого ребра.
+  4. Рёбра ссылаются только на существующие узлы: from и to каждого живого ребра — живые узлы.
+  5. Тип каждого узла и каждого ребра содержится в соответствующем словаре онтологии.
+  6. Тип связи отстаивает своё: фиксированные свойства задаются при создании типа и не меняются.
+  7. Все мутации графа выполняются через команды: единственная точка изменения состояния
+  8. `positions_` параллелен `nodes_`: `positions_.size() == nodes_.size()`, адресация той же формы `id − 1`
 end legend
 @enduml
