@@ -231,7 +231,13 @@ Graph Graph::FromSnapshot(const GraphSnapshot& src) {
   }
   if (src.next_id_node == 1 && src.nodes.empty() && src.next_id_relation == 1 &&
       src.relations.empty()) {
-    return Graph();
+    // Ontology must survive the empty-entities shortcut: a file can carry
+    // types only (no nodes/relations yet) — dropping it would turn a valid
+    // saved session into a graph where AddNode rejects every known type.
+    Graph g;
+    g.ontology_node_ = src.ontology_node;
+    g.ontology_relation_ = src.ontology_relation;
+    return g;
   }
   if (src.next_id_node == 1 &&
       (!src.nodes.empty() || src.next_id_relation != 1 || !src.relations.empty())) {
