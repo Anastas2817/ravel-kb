@@ -1,6 +1,6 @@
 ﻿# ============================================================================
 # ravel_core — ядро: модель данных, алгоритмы раскладки, собственные сигналы.
-# Чистый C++17, БЕЗ Qt и сторонних зависимостей (docs/architecture.md §1.1).
+# Чистый C++23, БЕЗ Qt и сторонних зависимостей (docs/architecture.md §1.1).
 # ============================================================================
 
 file(GLOB RAVEL_CORE_SOURCES CONFIGURE_DEPENDS
@@ -27,4 +27,6 @@ endif()
 
 add_library(ravel::core ALIAS ravel_core)
 
-target_compile_features(ravel_core INTERFACE cxx_std_17)
+# C++23 (см. корневой CMakeLists): concepts и constexpr-хелперы в graph.hpp,
+# дальше по цепочке зависимостей — std::expected в app/command.hpp.
+target_compile_features(ravel_core INTERFACE cxx_std_23)

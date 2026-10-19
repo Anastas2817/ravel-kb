@@ -32,7 +32,7 @@
 
 **Результат:** undo/redo работает; комплект документации; демонстрационная база знаний.
 
-- [ ] Неделя 9: `Command` + `AddNodeCmd`, `AddEdgeCmd`, `MoveNodeCmd`, `RemoveNodeCmd`; undo/redo; тесты «do → undo → состояние совпадает»
+- [ ] Неделя 9: команды + undo/redo. **Инфраструктура закрыта:** концепт `Command` + `AnyCommand` (variant), `CommandChronicle` (один вектор + курсор; Execute/Undo/Redo), пять команд (`AddNodeCmd`, `AddRelationCmd`, `DeleteNodesCmd`, `DeleteRelationsCmd`, `MoveNodeCmd`), тесты «do → undo → состояние совпадает» (`app_tests`) — решения: implementation.md R14. Остаётся: подключение к UI через `Controller` (скелет: Open/Save/SaveAs) и канвас
 - [ ] Неделя 10: пример базы знаний (20–30 узлов, матанализ); скриншоты «до/после раскладки» в README
 - [ ] Неделя 11: покрытие тестами ядра ≥ 50 % строк (lcov); Doxygen по публичному API; актуализация README/spec
 - [ ] Неделя 12: буфер (багфиксы, ответы на типовые вопросы к защите); репетиция демонстрации

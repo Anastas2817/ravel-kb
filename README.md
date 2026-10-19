@@ -76,7 +76,7 @@ cmake --build build --config Release
 ctest --test-dir build -C Release --output-on-failure
 ```
 
-Открыть можно и как `build/ravel-kb.sln`. GoogleTest и nlohmann/json подтягиваются через FetchContent при первой конфигурации (нужен интернет). `windeployqt` запускается автоматически после сборки — собранный `build/bin/Release/ravel.exe` работает вне IDE без дополнительных шагов. CI гоняет матрицу Windows/MSVC и Ubuntu/GCC в Debug и Release (на GCC — `-Wall -Wextra -Werror`), job `format` (clang-format `--dry-run --Werror`) и job `sanitizers` (GCC, ASan+UBSan — ручное индексирование `id − 1` по плотным векторам проверяется на выход за границу на каждом push): заявленная совместимость с MSVC 2022 и портативность ядра проверяются автоматически.
+Открыть можно и как `build/ravel-kb.sln`. GoogleTest и nlohmann/json подтягиваются через FetchContent при первой конфигурации (нужен интернет). `windeployqt` запускается автоматически после сборки — собранный `build/bin/Release/ravel.exe` работает вне IDE без дополнительных шагов. CI гоняет матрицу Windows/MSVC и Ubuntu/GCC в Debug и Release (на GCC — `-Wall -Wextra -Werror`), job `format` (clang-format `--dry-run --Werror`) и job `sanitizers` (GCC, ASan+UBSan — ручное индексирование `id − 1` по плотным векторам проверяется на выход за границу на каждом push): заявленная совместимость с MSVC 2022 и портативность ядра проверяются автоматически. UI-цель в CI сознательно не собирается (`RAVEL_BUILD_UI=OFF` — в раннерах нет Qt): пайплайн проверяет core, storage, app и все тесты; канвас остаётся зоной ручной проверки.
 
 Если официальный установщик Qt недоступен или работает медленно (например, `download.qt.io` не открывается): Qt можно поставить без установщика и регистрации — скачав готовые бинарники с зеркала (например, `ftp.fau.de/qtproject/online/qtsdkrepository/...`) и распаковав их в выбранный каталог. Для разработки на Widgets достаточно архивов `qtbase`, `qttools`, `qtsvg`, `d3dcompiler`, `opengl32sw` (~70 МБ вместо ~2 ГБ полной установки).
 
@@ -86,13 +86,14 @@ ctest --test-dir build -C Release --output-on-failure
 
 | Компонент | Статус |
 |---|---|
-| Модель данных `Graph` | ✅ закрыто (неделя 1: 26 юнит-тестов на инварианты) |
-| Сериализация JSON | ✅ закрыто (неделя 2: `JsonStorage` Load/Save, 15 тестов, round-trip) |
+| Модель данных `Graph` | ✅ закрыто (неделя 1: 30 юнит-тестов на инварианты) |
+| Сериализация JSON | ✅ закрыто (неделя 2: `JsonStorage` Load/Save, 16 тестов, round-trip) |
 | Канвас (QGraphicsView) | 🔧 база (неделя 4): узлы перемещаемы, рёбра следуют |
-| Слой команд (app) | 🔧 база: `AnyCommand` (variant + concept), `CommandChronicle` (один вектор + курсор; Execute/Undo/Redo); решения — implementation.md R14 |
+| Слой команд (app) | 🔧 база: `AnyCommand` (variant + concept), `CommandChronicle` (один вектор + курсор; Execute/Undo/Redo), 5 команд, 5 тестов (`app_tests`); решения — implementation.md R14 |
+| Controller (app) | 🔧 скелет: Open/Save/SaveAs через JsonStorage; сценарии мутаций — в работе |
 | Раскладка (Сугияма с онтологическими лентами) | 📋 запланировано |
 | Обнаружение циклов | 📋 запланировано |
-| undo/redo (Command) | 📋 запланировано (инфраструктура — см. «Слой команд»; стеки ещё не подключены к UI) |
+| undo/redo (Command) | 📋 инфраструктура готова (см. «Слой команд»); подключение к UI — впереди |
 
 Отдалённые перспективы (фрактальная вложенность, алиасы, альтернативные иерархии и др.) вынесены в [docs/perspectives.md](docs/perspectives.md) и в план не входят.
 
