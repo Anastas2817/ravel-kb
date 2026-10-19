@@ -80,7 +80,7 @@ CommandResult Controller::AddRelation(ravel::NodeId from, ravel::NodeId to, std:
 }
 
 CommandResult Controller::DeleteNodes(std::vector<ravel::NodeId> nodes) {
-  ravel::app::DeleteNodesCmd cmd{.ids = nodes};
+  ravel::app::DeleteNodesCmd cmd{nodes, {}};
   return s_.chronicle.Execute(cmd, s_.g);
 }
 
