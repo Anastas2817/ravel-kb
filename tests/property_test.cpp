@@ -150,7 +150,7 @@ void RunFuzz(std::uint32_t seed) {
   for (int step = 0; step < kOps; ++step) {
     const std::size_t dice = rng.Below(100);
     if (dice < 25) {
-      ravel::app::AddNodeCmd cmd{.title = "n", .type = "nt"};
+      ravel::app::AddNodeCmd cmd{.title = "n", .type = "nt", .description = ""};
       ASSERT_TRUE(chronicle.Execute(cmd, g).has_value()) << "seed " << seed << " op " << step;
       // Execute takes the command by value: the caller's copy never receives
       // obtained_id. The created id is still recoverable — ids are never
@@ -166,7 +166,7 @@ void RunFuzz(std::uint32_t seed) {
       // invariant was deliberately left out — so independent picks are fine.
       const ravel::NodeId from = live[rng.Below(live.size())];
       const ravel::NodeId to = live[rng.Below(live.size())];
-      ravel::app::AddRelationCmd cmd{.from = from, .to = to, .type = "rt"};
+      ravel::app::AddRelationCmd cmd{.from = from, .to = to, .type = "rt", .description = ""};
       ASSERT_TRUE(chronicle.Execute(cmd, g).has_value()) << "seed " << seed << " op " << step;
       created_relations.push_back(g.next_id_relation() - 1);
       ++executed;
