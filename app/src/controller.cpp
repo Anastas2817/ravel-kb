@@ -54,6 +54,7 @@ ControllerResult Controller::SaveAs(const std::filesystem::path& p) {
     return std::unexpected(ControllerError::IoError);
   }
 
+  file.close();
   std::error_code ec;
   std::filesystem::rename(temp, p, ec);
   if (ec) {
