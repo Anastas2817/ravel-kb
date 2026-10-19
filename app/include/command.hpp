@@ -64,14 +64,14 @@ struct AddRelationCmd {
 };
 
 struct DeleteNodesCmd {
-  std::vector<ravel::NodeId> nodes;
+  std::vector<ravel::NodeId> ids;
   std::vector<ravel::RelationId> deleted_relations;
   CommandResult Do(ravel::Graph& g) {
-    deleted_relations = g.DeleteNodes(nodes);
+    deleted_relations = g.DeleteNodes(ids);
     return {};
   }
   CommandResult Undo(ravel::Graph& g) {
-    g.RestoreNodes(nodes);
+    g.RestoreNodes(ids);
     g.RestoreRelations(deleted_relations);
     return {};
   }
@@ -127,6 +127,9 @@ inline CommandResult Undo(AnyCommand& c, ravel::Graph& g) {
 
 class CommandChronicle {
  public:
+  std::size_t bookmark() {
+    return bookmark_;
+  }
   template <Command C>
   CommandResult Execute(C cmd, ravel::Graph& g) {
     CommandResult res = cmd.Do(g);
