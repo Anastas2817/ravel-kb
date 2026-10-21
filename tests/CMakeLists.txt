@@ -36,6 +36,10 @@ endif()
 
 add_executable(ravel_tests ${RAVEL_TEST_SOURCES})
 
+# Корень репозитория для тестов на «золотые» файлы (examples/) —
+# cwd при запуске не гарантирован.
+target_compile_definitions(ravel_tests PRIVATE RAVEL_REPO_ROOT="${CMAKE_SOURCE_DIR}")
+
 target_link_libraries(ravel_tests PRIVATE
     ravel::app
     ravel::core
