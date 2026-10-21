@@ -1,7 +1,8 @@
-﻿#ifndef RAVEL_UI_INCLUDE_NODE_ITEM_HPP_
+#ifndef RAVEL_UI_INCLUDE_NODE_ITEM_HPP_
 #define RAVEL_UI_INCLUDE_NODE_ITEM_HPP_
 
 #include <QGraphicsObject>
+#include <QString>
 #include <cstdint>
 
 namespace ravel::ui {
@@ -10,7 +11,7 @@ class NodeItem : public QGraphicsObject {
   Q_OBJECT
 
  public:
-  NodeItem(std::uint64_t id, const QRectF& rect, QGraphicsItem* parent = nullptr);
+  NodeItem(std::uint64_t id, QString title, const QRectF& rect, QGraphicsItem* parent = nullptr);
 
   std::uint64_t id() const {
     return id_;
@@ -26,6 +27,11 @@ class NodeItem : public QGraphicsObject {
 
  private:
   std::uint64_t id_;
+  QString title_ = "wtf";
+  QString name_ = "model";
+  QString color_ = "#b3dcfd";
+  QString shape_ = "rect";
+  QString frame_color_ = "#000000";
   QRectF rect_;
 };
 

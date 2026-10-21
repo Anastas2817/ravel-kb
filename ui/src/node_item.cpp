@@ -9,8 +9,8 @@
 
 namespace ravel::ui {
 
-NodeItem::NodeItem(std::uint64_t id, const QRectF& rect, QGraphicsItem* parent)
-    : QGraphicsObject(parent), id_(id), rect_(rect) {
+NodeItem::NodeItem(std::uint64_t id, QString title, const QRectF& rect, QGraphicsItem* parent)
+    : QGraphicsObject(parent), id_(id), title_(title), rect_(rect) {
   this->setFlag(QGraphicsItem::ItemIsMovable);
   this->setFlag(QGraphicsItem::ItemSendsGeometryChanges);
   this->setAcceptHoverEvents(true);
@@ -22,9 +22,11 @@ QRectF NodeItem::boundingRect() const {
 
 void NodeItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* /*option*/,
                      QWidget* /*widget*/) {
+  painter->setRenderHint(QPainter::Antialiasing);
   painter->setBrush(Qt::blue);
   painter->setPen(Qt::SolidLine);
-  painter->drawRect(rect_);
+  painter->drawRoundedRect(rect_, 10, 10);
+  painter->drawText(rect_, Qt::AlignCenter, title_);
 }
 
 QVariant NodeItem::itemChange(GraphicsItemChange change, const QVariant& value) {

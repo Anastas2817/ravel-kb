@@ -1,4 +1,4 @@
-﻿#ifndef RAVEL_UI_INCLUDE_RELATION_ITEM_HPP_
+#ifndef RAVEL_UI_INCLUDE_RELATION_ITEM_HPP_
 #define RAVEL_UI_INCLUDE_RELATION_ITEM_HPP_
 
 #include <QGraphicsLineItem>
@@ -20,4 +20,4 @@ class RelationItem : public QGraphicsLineItem {
 
 }  // namespace ravel::ui
 
-#endif  // RAVEL_UI_INCLUDE_EDGE_ITEM_HPP_
+#endif  // RAVEL_UI_INCLUDE_RELATION_ITEM_HPP_
