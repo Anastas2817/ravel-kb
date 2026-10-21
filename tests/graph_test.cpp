@@ -730,7 +730,7 @@ TEST(GraphRestoreNodes, ToResurrectNodes) {
   EXPECT_TRUE(dest.SessionEqual(src));
 }
 
-TEST(GraphRestoreNodes, ToRessurectRelations) {
+TEST(GraphRestoreNodes, ToResurrectRelations) {
   Graph src;
   src.AddRelationType("has_special_case", "#000000", "solid", false, true);
   src.AddRelationType("boils_down_to", "#000000", "solid", false, true);
