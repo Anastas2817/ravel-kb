@@ -127,7 +127,7 @@ inline CommandResult Undo(AnyCommand& c, ravel::Graph& g) {
 
 class CommandChronicle {
  public:
-  std::size_t bookmark() {
+  std::size_t bookmark() const noexcept {
     return bookmark_;
   }
   template <Command C>
