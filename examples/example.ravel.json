@@ -1,0 +1,39 @@
+{
+  "format_version": 3,
+  "next_id_node": 1,
+  "next_id_relation": 1,
+  "node_types": [
+    {
+      "name": "function",
+      "color": "#4a90d9",
+      "shape": "rect",
+      "frame_color": "#2c5f94"
+    },
+    {
+      "name": "model",
+      "color": "#7b68ee",
+      "shape": "oval",
+      "frame_color": "#4b3d8f"
+    }
+  ],
+  "relation_types": [
+    {
+      "name": "is_a",
+      "color": "#4a90d9",
+      "arrow": "solid",
+      "symmetric": false,
+      "transitive": true
+    },
+    {
+      "name": "is_defined_on",
+      "color": "#7b68ee",
+      "arrow": "solid",
+      "symmetric": false,
+      "transitive": false
+    }
+  ],
+  "nodes": [],
+  "relations": [],
+  "positions": [],
+  "allowed_cycles": []
+}
