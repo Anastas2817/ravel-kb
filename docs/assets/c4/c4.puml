@@ -28,12 +28,10 @@ class Graph {
 
 class Node <<DTO>> {
   +Id / Type / Title / Description / Size
-  +HandPosition / SetHandPosition
   --
   -id_ : NodeId
   -type_ / title_ / description_ : string
   -size_ : double
-  -hand_position_ : optional<pair<double, double>>
 }
 
 class Relation <<DTO>> {

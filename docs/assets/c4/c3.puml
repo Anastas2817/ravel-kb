@@ -27,9 +27,10 @@ package "Core" {
 }
 
 package "App" {
-  rectangle "Controller" as Ctrl
+  package "Controller" as Ctrl {
+    rectangle "SessionState" as Session
+  }
   rectangle "Command" as Cmd
-  rectangle "SessionState" as Session
 }
 
 package "UI" {
@@ -40,10 +41,12 @@ package "Storage" {
   rectangle "JsonStorage" as JsonS
 }
 
-Ctrl --> Graph : command-мутации
+Ctrl --> Cmd : запрос
+Cmd --> Graph : command-мутации
 Ctrl --> Algo : анализ
 Ctrl --> Layout : геометрия
 JsonS --> Snapshot
+Canvas --> Ctrl : жест пользователя - отклик
 
 legend bottom
   Ответственности (одной фразой):
@@ -55,8 +58,7 @@ legend bottom
   раскладку (выдавать координаты). Планируется.
   Algorithms — анализировать структуру Graph:
   DFS, PageRank, циклы. Планируется.
-  Controller / Command / SessionState / Canvas —
-  планируются (этапы 2 и 4).
+  Canvas — планируется (этапы 2 и 4).
 
   Зависимости читателей: Layout и Algorithms —
   клиенты Graph, Graph о них не знает (защита
