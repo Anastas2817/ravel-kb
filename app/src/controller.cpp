@@ -7,7 +7,7 @@ namespace ravel::app {
 ControllerResult Controller::Open(const std::filesystem::path& p) {
   std::ifstream file(p, std::ios::binary);
   if (!file) {
-    return std::unexpected(ControllerError::NotFound);
+    return std::unexpected(ControllerError::NoPath);
   }
 
   SessionState next;

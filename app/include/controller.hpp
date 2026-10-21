@@ -9,14 +9,7 @@
 
 namespace ravel::app {
 
-enum class ControllerError {
-  NotFound,
-  NoPath,
-  IoError,
-  InvalidInput,
-  NothingToUndo,
-  NothingToRedo
-};
+enum class ControllerError { NoPath, IoError, NothingToUndo, NothingToRedo };
 using ControllerResult = std::expected<void, ControllerError>;
 
 class Controller {

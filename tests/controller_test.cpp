@@ -48,11 +48,11 @@ void WriteGraphWithOntology(const fs::path& p) {
   ravel::JsonStorage::Save(g.ToSnapshot(), out);
 }
 
-TEST_F(ControllerIoTest, OpenMissingFileReturnsNotFound) {
+TEST_F(ControllerIoTest, OpenMissingFileReturnsNoPath) {
   ravel::app::Controller c;
   const auto res = c.Open(good_path_);
   ASSERT_FALSE(res.has_value());
-  EXPECT_EQ(res.error(), ravel::app::ControllerError::NotFound);
+  EXPECT_EQ(res.error(), ravel::app::ControllerError::NoPath);
 }
 
 TEST_F(ControllerIoTest, OpenGarbageFileReturnsIoError) {
