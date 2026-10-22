@@ -11,6 +11,7 @@
 
 #include "storage.hpp"
 
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <stdexcept>
@@ -164,12 +165,16 @@ TEST(ControllerReadApi, FreshControllerIsEmpty) {
   EXPECT_TRUE(c.NodeTypeNames().empty());
 }
 
-TEST_F(ControllerIoTest, NodeTypeNamesSortedFromOntology) {
+TEST_F(ControllerIoTest, NodeTypeNamesFromOntology) {
   WriteGraphWithTwoNodeTypes(good_path_);
   ravel::app::Controller c;
   ASSERT_TRUE(c.Open(good_path_).has_value());
-  const std::vector<std::string> names = c.NodeTypeNames();
+  std::vector<std::string> names = c.NodeTypeNames();
   ASSERT_EQ(names.size(), 2);
+  // Порядок итерации по ontology_node_ (unordered_map) платформо-зависим:
+  // MSVC и libstdc++ раскладывают ключи по бакетам иначе. Сравниваем как
+  // множество — контракт NodeTypeNames порядок не специфицирует.
+  std::ranges::sort(names);
   EXPECT_EQ(names[0], "at");
   EXPECT_EQ(names[1], "nt");
 }
