@@ -276,18 +276,16 @@ class Graph {
   }
 
   [[nodiscard]] const Node& GetNode(NodeId id) const {
-    if (HasNode(id)) {
-      return nodes_[id - 1];
-    } else {
+    if (!HasNode(id)) {
       throw std::invalid_argument("Graph::GetNode tried to access non-existent Node");
     }
+    return nodes_[id - 1];
   }
   [[nodiscard]] std::optional<Position> GetPosition(NodeId id) const {
-    if (HasNode(id)) {
-      return positions_[id - 1];
-    } else {
+    if (!HasNode(id)) {
       throw std::invalid_argument("Graph::GetPosition tried to access non-existent Node");
     }
+    return positions_[id - 1];
   }
   NodeId AddNode(std::string title, std::string type, std::string description = "",
                  double size = 1);
@@ -295,11 +293,10 @@ class Graph {
   RelationId AddRelation(NodeId from, NodeId to, std::string type, std::string description = "");
   [[nodiscard]] bool HasRelation(RelationId id) const noexcept;
   [[nodiscard]] const Relation& GetRelation(RelationId id) const {
-    if (HasRelation(id)) {
-      return relations_[id - 1];
-    } else {
+    if (!HasRelation(id)) {
       throw std::invalid_argument("Graph::GetRelation tried to access non-existent Relation");
     }
+    return relations_[id - 1];
   }
   // Composite convenience: AddNode + AddRelation(s) in one validated call.
   // A real UI scenario exists (create a node already linked), but the
@@ -333,9 +330,8 @@ class Graph {
   [[nodiscard]] const std::vector<RelationId>& GetIncidentRelations(NodeId id) const {
     if (!HasNode(id)) {
       throw std::invalid_argument("Graph::GetIncidentRelations tried to access non-existent Node");
-    } else {
-      return access_.at(id);
     }
+    return access_.at(id);
   }
   // Undo surface (ADR-002, consequence 12). Ownership invariant: called
   // ONLY from the undo stack (App layer) — never directly from UI. The
