@@ -7,6 +7,17 @@
 # Санитайзеры (ASan+UBSan, отдельный job): ручное индексирование id − 1 по плотным
 # векторам — зона повышенного риска off-by-one; санитайзер ловит то, что тесты читают
 # как «работает» на отладочной куче.
+#
+# Покрытие (coverage job): gcovr с гейтом --fail-under-line — порог ратифицирует
+# измеренное значение, а не желаемое; поднимать после прогона, не опускать.
+#
+# clang-tidy (tidy job): пин pip clang-tidy==19.1.0.1 = локальный бинарь
+# в .tidy-venv (симметрия с пином clang-format 19.1.5: «у меня зелёное, в CI
+# красное» лечится одинаковыми версиями на обеих сторонах).
+#
+# Fuzz (fuzz job): libFuzzer + ASan/UBSan над JsonStorage::Load и
+# Graph::FromSnapshot — ручная валидация снапшота ломается malformed-входами
+# чаще, чем штатными путями property-тестов.
 
 name: CI
 
@@ -33,6 +44,15 @@ jobs:
             generator: "Visual Studio 17 2022"
             extra_flags: "-A x64"
             build_type: Release
+            cxx_flags: ""
+          # clang-cl через тулчейн LLVM из образа windows-2022 (-T clangcl).
+          # Дисциплина warnings — та же, что у MSVC-джоба (не -Werror): цель —
+          # другой компилятор/стандартная библиотека, а не новые -Werror-ловушки.
+          - name: "Windows · clang-cl · Debug"
+            os: windows-2022
+            generator: "Visual Studio 17 2022"
+            extra_flags: "-A x64 -T clangcl"
+            build_type: Debug
             cxx_flags: ""
           - name: "Ubuntu · GCC · Debug"
             os: ubuntu-latest
@@ -133,3 +153,123 @@ jobs:
 
       - name: Test
         run: ctest --test-dir build --output-on-failure
+
+  # Покрытие строк core/storage/app + гейт. --coverage = -fprofile-arcs
+  # -ftest-coverage (gcov) для компиляции и линковки. Отчёт и гейт — gcovr;
+  # фильтр ограничивает отчёт нашими исходниками (без gtest/_deps).
+  # Порог 75 — стартовый «не ниже измеренного»: поднимать по итогам прогонов.
+  coverage:
+    name: coverage (Ubuntu · GCC · gcovr)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install gcovr
+        run: python3 -m pip install --user gcovr
+
+      - name: Configure
+        run: >
+          cmake -B build -G Ninja
+          -DCMAKE_BUILD_TYPE=Debug
+          -DRAVEL_BUILD_UI=OFF
+          -DCMAKE_CXX_FLAGS="--coverage -O0"
+          -DCMAKE_EXE_LINKER_FLAGS="--coverage"
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+      # Запуск из build/: gcovr по умолчанию ищет .gcda с текущего каталога.
+      # --filter — регулярки путей относительно --root.
+      - name: Report + gate
+        working-directory: build
+        run: >
+          gcovr --root=..
+          --filter='core/' --filter='storage/' --filter='app/'
+          --txt --fail-under-line=75
+
+  # Статический анализ. Пин pip clang-tidy==19.1.0.1 = локальный бинарь
+  # в .tidy-venv (правило: компилятор автора ≠ компилятору CI лечится
+  # одинаковыми версиями). Конфигурация проверок — .clang-tidy.
+  # Только core/storage/app: UI требует Qt-заголовков, тесты — gtest-макросы,
+  # оба источника шума, не багов.
+  tidy:
+    name: clang-tidy (Ubuntu · Clang)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install clang + clang-tidy (pinned 19.1.0.1)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang
+          python3 -m venv .tidy-venv
+          .tidy-venv/bin/pip install clang-tidy==19.1.0.1
+
+      # compile_commands.json — отсюда clang-tidy берёт include-пути и флаги.
+      - name: Configure
+        run: >
+          cmake -B build -G Ninja
+          -DCMAKE_BUILD_TYPE=Debug
+          -DRAVEL_BUILD_UI=OFF
+          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+          -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+          -DCMAKE_CXX_FLAGS="-Wall -Wextra"
+
+      - name: clang-tidy
+        run: >
+          .tidy-venv/bin/clang-tidy -p build --warnings-as-errors=*
+          $(find core storage app -name '*.cpp')
+
+  # Fuzz: libFuzzer + ASan/UBSan. Санитайзеры через -D (дойти и до линковки,
+  # см. комментарий job sanitizers); -fsanitize=fuzzer добавляет только
+  # цель ravel_storage_fuzz (fuzz/CMakeLists.txt). Исключения из Load/
+  # FromSnapshot на malformed-входе — легальный исход; краш = находка ASan.
+  fuzz:
+    name: fuzz (Ubuntu · Clang · libFuzzer+ASan)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install clang
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang
+
+      - name: Configure
+        run: >
+          cmake -B build -G Ninja
+          -DCMAKE_BUILD_TYPE=RelWithDebInfo
+          -DRAVEL_BUILD_UI=OFF
+          -DRAVEL_BUILD_FUZZ=ON
+          -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+          -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer"
+          -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined"
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      # Корпус посевом из examples/*.ravel.json — мутации от валидного
+      # формата находят края глубже, чем мутации от мусора. 120 секунд —
+      # компромисс между глубиной и ценой job'а.
+      - name: Fuzz (120 s, seeded from examples/)
+        run: |
+          mkdir fuzz-corpus
+          cp examples/*.ravel.json fuzz-corpus/
+          ./build/bin/ravel_storage_fuzz fuzz-corpus -max_total_time=120 -print_final_stats=1
+
+      # Краш-артефакты (crash-*, корпус с находкой) — только при падении.
+      - name: Upload artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-artifacts
+          path: |
+            fuzz-corpus
+            crash-*
+

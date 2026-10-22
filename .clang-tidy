@@ -1,0 +1,43 @@
+# Конфигурация clang-tidy (job tidy в CI, локально — .tidy-venv).
+# Проверяются core/storage/app; UI не берём (нужны Qt-заголовки),
+# тесты — отдельно (gtest-макросы дают шум, не баги).
+#
+# Принципы отбора:
+#  - bugprone/cert/concurrency — классы ошибок, которые тесты ловят плохо
+#    (throw by value, гонки, неинициализированная память);
+#  - performance — дёшево и по делу для горячих путей графа;
+#  - readability — только не-стилевые проверки: стиль закрыт .clang-format,
+#    дублировать его правила here-and-error'ом незачем;
+#  - отключённое — конфликт с осознанными решениями проекта:
+#    * magic-numbers — доменные константы формата (format_version, id ≥ 1);
+#    * identifier-length — id/g/snap приняты в кодовой базе;
+#    * easily-swappable-parameters — сигнатуры доменные (title/type, from/to),
+#      перестановка ловится тестами и ревью, а не NOLINT-простынёй;
+#    * include-cleaner — косвенные включения осознанны (storage.hpp тащит
+#      graph.hpp ради GraphSnapshot).
+#
+# Версия пинится одинаково с обеих сторон: pip clang-tidy==19.1.0.1
+# (симметрия с пином clang-format 19.1.5: «у меня зелёное, в CI красное»
+# лечится одинаковыми бинарями, а не дисциплиной).
+
+Checks: >
+  bugprone-*,
+  cert-*,
+  concurrency-*,
+  cppcoreguidelines-*,
+  misc-*,
+  performance-*,
+  portability-*,
+  readability-*,
+  -bugprone-easily-swappable-parameters,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -misc-include-cleaner,
+  -readability-identifier-length,
+  -readability-magic-numbers,
+  -readability-uppercase-literal-suffix
+
+# Диагностика из наших заголовков (graph.hpp живёт не в главном файле
+# проверки) — но не из STL/nlohmann.
+HeaderFilterRegex: '(core|storage|app)/(include|src)/'
+
+WarningsAsErrors: '*'
