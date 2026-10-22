@@ -308,7 +308,7 @@ class Graph {
                               const std::vector<std::pair<NodeId, std::string>>& tos,
                               std::string description = "", double size = 1);
   std::optional<Position> MoveNode(NodeId id, Position pos);
-  // implementation.md («Контракт удаления») - idempotence for delete*
+  // implementation.md ("Deletion contract" section) - idempotence for delete*
 
   std::vector<RelationId> DeleteNodes(const std::vector<NodeId>& ids);
   void DeleteRelations(const std::vector<RelationId>& ids);

@@ -183,12 +183,17 @@ jobs:
         run: ctest --test-dir build --output-on-failure
 
       # Запуск из build/: gcovr по умолчанию ищет .gcda с текущего каталога.
-      # --filter — регулярки путей относительно --root.
+      # Фильтр обёрнут в .*(...).*: паттерн работает при любой семантике
+      # сопоставления gcovr (search или fullmatch) — первый прогон с
+      # 'core/' отфильтровал все данные («All coverage data is filtered out»,
+      # 2026-10-22). Счётчик .gcda — диагностика: если данных нет, это видно
+      # сразу, а не из косвенного «0.0%».
       - name: Report + gate
         working-directory: build
-        run: >
+        run: |
+          echo "gcda files: $(find . -name '*.gcda' | wc -l)"
           gcovr --root=..
-          --filter='core/' --filter='storage/' --filter='app/'
+          --filter='.*(core|storage|app)/.*'
           --txt --fail-under-line=75
 
   # Статический анализ. Пин pip clang-tidy==19.1.0.1 = локальный бинарь

@@ -216,10 +216,10 @@ void Graph::RestoreRelations(std::vector<RelationId> ids) {
   }
 }
 
-// Cognitive complexity 42 > 25: намеренно. Это цепочка fail-fast проверок
-// инвариантов снапшота; декомпозиция на валидаторы — отдельное направление
-// (roadmap: накопление ошибок валидации, std::expected). Подавление здесь,
-// а не отключение проверки глобально.
+// Cognitive complexity 42 > 25: intentional. This is a chain of fail-fast
+// snapshot-invariant checks; decomposition into validators is a separate
+// track (roadmap: accumulated validation errors, std::expected). Suppressed
+// here rather than disabling the check globally.
 Graph Graph::FromSnapshot(  // NOLINT(readability-function-cognitive-complexity)
     const GraphSnapshot& src) {
   // validate
