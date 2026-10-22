@@ -114,23 +114,21 @@ GraphSnapshot JsonStorage::Load(std::istream& in) {
     g.next_id_relation = j.at("next_id_relation").get<RelationId>();
     for (const json& el : j.at("node_types")) {
       std::string name = el.at("name").get<std::string>();
-      if (g.ontology_node.find(name) == g.ontology_node.end()) {
-        g.ontology_node.emplace(
-            name, NodeType(el.at("color").get<std::string>(), el.at("shape").get<std::string>(),
-                           el.at("frame_color").get<std::string>()));
-      } else {
+      if (g.ontology_node.find(name) != g.ontology_node.end()) {
         throw std::runtime_error("JsonStorage::Load: repeated NodeTypes");
       }
+      g.ontology_node.emplace(
+          name, NodeType(el.at("color").get<std::string>(), el.at("shape").get<std::string>(),
+                         el.at("frame_color").get<std::string>()));
     }
     for (const json& el : j.at("relation_types")) {
       std::string name = el.at("name").get<std::string>();
-      if (g.ontology_relation.find(name) == g.ontology_relation.end()) {
-        g.ontology_relation.emplace(
-            name, RelationType(el.at("color").get<std::string>(), el.at("arrow").get<std::string>(),
-                               el.at("symmetric").get<bool>(), el.at("transitive").get<bool>()));
-      } else {
+      if (g.ontology_relation.find(name) != g.ontology_relation.end()) {
         throw std::runtime_error("JsonStorage::Load: repeated RelationTypes");
       }
+      g.ontology_relation.emplace(
+          name, RelationType(el.at("color").get<std::string>(), el.at("arrow").get<std::string>(),
+                             el.at("symmetric").get<bool>(), el.at("transitive").get<bool>()));
     }
     for (const json& el : j.at("nodes")) {
       g.nodes.push_back(Node(el.at("id").get<NodeId>(), el.at("title").get<std::string>(),
