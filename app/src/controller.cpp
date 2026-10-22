@@ -13,7 +13,7 @@ ControllerResult Controller::Open(const std::filesystem::path& p) {
   SessionState next;
 
   try {
-    next.g = ravel::Graph::FromSnapshot(storage_.Load(file));
+    next.g = ravel::Graph::FromSnapshot(ravel::JsonStorage::Load(file));
     next.chronicle = ravel::app::CommandChronicle{};
     next.file_path = p;
     next.saved_bookmark_ = 0;
@@ -43,7 +43,7 @@ ControllerResult Controller::SaveAs(const std::filesystem::path& p) {
   }
 
   try {
-    storage_.Save(s_.g.ToSnapshot(), file);
+    ravel::JsonStorage::Save(s_.g.ToSnapshot(), file);
     if (!file) {
       throw std::runtime_error("close failed");
     }
@@ -69,24 +69,27 @@ ControllerResult Controller::SaveAs(const std::filesystem::path& p) {
 
 CommandResult Controller::AddNode(std::string title, std::string type, std::string description,
                                   double size) {
-  ravel::app::AddNodeCmd cmd{
-      .title = title, .type = type, .description = description, .size = size};
+  const ravel::app::AddNodeCmd cmd{.title = std::move(title),
+                                   .type = std::move(type),
+                                   .description = std::move(description),
+                                   .size = size};
   return s_.chronicle.Execute(cmd, s_.g);
 }
 
 CommandResult Controller::AddRelation(ravel::NodeId from, ravel::NodeId to, std::string type,
                                       std::string description) {
-  ravel::app::AddRelationCmd cmd{.from = from, .to = to, .type = type, .description = description};
+  const ravel::app::AddRelationCmd cmd{
+      .from = from, .to = to, .type = std::move(type), .description = std::move(description)};
   return s_.chronicle.Execute(cmd, s_.g);
 }
 
 CommandResult Controller::DeleteNodes(std::vector<ravel::NodeId> nodes) {
-  ravel::app::DeleteNodesCmd cmd{nodes, {}};
+  const ravel::app::DeleteNodesCmd cmd{std::move(nodes), {}};
   return s_.chronicle.Execute(cmd, s_.g);
 }
 
 CommandResult Controller::DeleteRelations(std::vector<ravel::RelationId> relations) {
-  ravel::app::DeleteRelationsCmd cmd{.ids = relations};
+  const ravel::app::DeleteRelationsCmd cmd{.ids = std::move(relations)};
   return s_.chronicle.Execute(cmd, s_.g);
 }
 

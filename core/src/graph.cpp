@@ -17,7 +17,7 @@ NodeId Graph::AddNode(std::string title, std::string type, std::string descripti
   }
 
   // apply
-  NodeId id = next_id_node_++;
+  const NodeId id = next_id_node_++;
   nodes_.emplace_back(id, std::move(title), std::move(type), std::move(description), size);
   access_.try_emplace(id);
   positions_.push_back(std::nullopt);
@@ -60,16 +60,16 @@ RelationId Graph::AddRelation(NodeId from, NodeId to, std::string type, std::str
   }
 
   // apply
-  RelationId id = next_id_relation_++;
+  const RelationId id = next_id_relation_++;
   relations_.emplace_back(id, from, to, std::move(type), std::move(description));
   access_[from].push_back(id);
   access_[to].push_back(id);
   return id;
 }
 
-NodeId Graph::AddNodeWithRelations(std::string title, std::string type,
-                                   std::vector<std::pair<NodeId, std::string>> froms,
-                                   std::vector<std::pair<NodeId, std::string>> tos,
+NodeId Graph::AddNodeWithRelations(std::string title, const std::string& type,
+                                   const std::vector<std::pair<NodeId, std::string>>& froms,
+                                   const std::vector<std::pair<NodeId, std::string>>& tos,
                                    std::string description, double size) {
   // validate
   if (!ontology_node_.contains(type)) {
@@ -100,7 +100,7 @@ NodeId Graph::AddNodeWithRelations(std::string title, std::string type,
   }
 
   // apply
-  NodeId cur = AddNode(title, type, description, size);
+  const NodeId cur = AddNode(std::move(title), type, std::move(description), size);
   for (const std::pair<NodeId, std::string>& from : froms) {
     AddRelation(from.first, cur, from.second);
   }
@@ -118,7 +118,7 @@ std::set<NodeId> Graph::GetNeighbors(NodeId id) const {
 
   // apply
   std::set<NodeId> neighbors;
-  for (RelationId rid : access_.at(id)) {
+  for (const RelationId rid : access_.at(id)) {
     const Relation& r = relations_[rid - 1];
     if (r.from() != id) {
       neighbors.insert(r.from());
@@ -140,10 +140,10 @@ std::optional<Position> Graph::MoveNode(NodeId id, Position pos) {
   return prev_pos;
 }
 
-std::vector<RelationId> Graph::DeleteNodes(std::vector<NodeId> ids) {
+std::vector<RelationId> Graph::DeleteNodes(const std::vector<NodeId>& ids) {
   // validate
   std::set<NodeId> unique;
-  for (NodeId id : ids) {
+  for (const NodeId id : ids) {
     if (!HasNode(id)) {
       throw std::invalid_argument("Graph::DeleteNodes tried to delete non-existent Node");
     }
@@ -154,7 +154,7 @@ std::vector<RelationId> Graph::DeleteNodes(std::vector<NodeId> ids) {
   // libstdc++ before GCC 14, and CI runs ubuntu-latest (GCC 13). Plain
   // iterator insert + pair-ctor keep the same complexity and order.
   std::set<RelationId> unique_r;
-  for (NodeId id : unique) {
+  for (const NodeId id : unique) {
     std::vector<RelationId> deleted = access_[id];
     unique_r.insert(deleted.begin(), deleted.end());
     DeleteRelations(deleted);  // by the invariant, only live relations are listed there
@@ -163,19 +163,19 @@ std::vector<RelationId> Graph::DeleteNodes(std::vector<NodeId> ids) {
   return {unique_r.begin(), unique_r.end()};
 }
 
-void Graph::DeleteRelations(std::vector<RelationId> ids) {
+void Graph::DeleteRelations(const std::vector<RelationId>& ids) {
   // validate
   std::set<RelationId> unique;
-  for (RelationId id : ids) {
+  for (const RelationId id : ids) {
     if (!HasRelation(id)) {
       throw std::invalid_argument("Graph::DeleteRelations tried to delete non-existent Relation");
     }
     unique.insert(id);
   }
   // apply
-  for (RelationId id : unique) {
-    NodeId from = relations_[id - 1].from();
-    NodeId to = relations_[id - 1].to();
+  for (const RelationId id : unique) {
+    const NodeId from = relations_[id - 1].from();
+    const NodeId to = relations_[id - 1].to();
     access_[from].erase(std::find(access_[from].begin(), access_[from].end(), id));
     access_[to].erase(std::find(access_[to].begin(), access_[to].end(), id));
   }
@@ -184,15 +184,15 @@ void Graph::DeleteRelations(std::vector<RelationId> ids) {
 void Graph::RestoreNodes(std::vector<NodeId> ids) {
   // validate (asserts vanish under NDEBUG — [[maybe_unused]] keeps
   // -Werror quiet about the loop variable in Release)
-  std::set<NodeId> unique(ids.begin(), ids.end());
-  for ([[maybe_unused]] NodeId id : unique) {
+  const std::set<NodeId> unique(ids.begin(), ids.end());
+  for ([[maybe_unused]] const NodeId id : unique) {
     assert(id < next_id_node_);
     assert(!HasNode(id));
     assert(nodes_[id - 1].id() == id);
   }
 
   // apply
-  for (NodeId id : unique) {
+  for (const NodeId id : unique) {
     access_.try_emplace(id, std::vector<RelationId>());
   }
 }
@@ -201,7 +201,7 @@ void Graph::RestoreRelations(std::vector<RelationId> ids) {
   // validate (asserts vanish under NDEBUG — [[maybe_unused]] keeps
   // -Werror quiet about the loop variable in Release)
   const std::set<RelationId> unique(ids.begin(), ids.end());
-  for ([[maybe_unused]] RelationId id : unique) {
+  for ([[maybe_unused]] const RelationId id : unique) {
     assert(!HasRelation(id));  // bug undo
     assert(id < next_id_relation_);
     assert(relations_[id - 1].id() == id);
@@ -210,13 +210,18 @@ void Graph::RestoreRelations(std::vector<RelationId> ids) {
   }
 
   // apply
-  for (RelationId id : unique) {
+  for (const RelationId id : unique) {
     access_[relations_[id - 1].from()].push_back(id);
     access_[relations_[id - 1].to()].push_back(id);
   }
 }
 
-Graph Graph::FromSnapshot(const GraphSnapshot& src) {
+// Cognitive complexity 42 > 25: намеренно. Это цепочка fail-fast проверок
+// инвариантов снапшота; декомпозиция на валидаторы — отдельное направление
+// (roadmap: накопление ошибок валидации, std::expected). Подавление здесь,
+// а не отключение проверки глобально.
+Graph Graph::FromSnapshot(
+    const GraphSnapshot& src) {  // NOLINT(readability-function-cognitive-complexity)
   // validate
   if (src.next_id_node > kMaxEntities) {
     throw std::runtime_error("Graph::FromSnapshot next_id_node > limit = 1 000 000");

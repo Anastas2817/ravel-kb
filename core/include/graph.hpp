@@ -303,15 +303,15 @@ class Graph {
   // composition itself does not need Graph's privacy — candidate for moving
   // to the App layer (built on public AddNode/AddRelation) once the UI
   // scenario lands. Until then it stays, covered by tests.
-  NodeId AddNodeWithRelations(std::string title, std::string type,
-                              std::vector<std::pair<NodeId, std::string>> froms,
-                              std::vector<std::pair<NodeId, std::string>> tos,
+  NodeId AddNodeWithRelations(std::string title, const std::string& type,
+                              const std::vector<std::pair<NodeId, std::string>>& froms,
+                              const std::vector<std::pair<NodeId, std::string>>& tos,
                               std::string description = "", double size = 1);
   std::optional<Position> MoveNode(NodeId id, Position pos);
   // implementation.md («Контракт удаления») - idempotence for delete*
 
-  std::vector<RelationId> DeleteNodes(std::vector<NodeId> ids);
-  void DeleteRelations(std::vector<RelationId> ids);
+  std::vector<RelationId> DeleteNodes(const std::vector<NodeId>& ids);
+  void DeleteRelations(const std::vector<RelationId>& ids);
 
   /**
    * @brief Ids of all relations incident to a live node (incoming and

@@ -56,7 +56,7 @@ void JsonStorage::Save(const GraphSnapshot& g, std::ostream& out) {
     obj["id"] = node.id();
     obj["title"] = node.title();
     obj["type"] = node.type();
-    if (node.description() != "") {
+    if (!node.description().empty()) {
       obj["description"] = node.description();
     }
     if (node.size() != 1) {
@@ -72,7 +72,7 @@ void JsonStorage::Save(const GraphSnapshot& g, std::ostream& out) {
     obj["from"] = relation.from();
     obj["to"] = relation.to();
     obj["type"] = relation.type();
-    if (relation.description() != "") {
+    if (!relation.description().empty()) {
       obj["description"] = relation.description();
     }
     j["relations"].push_back(obj);
@@ -105,7 +105,7 @@ GraphSnapshot JsonStorage::Load(std::istream& in) {
   }
   try {
     json j = json::parse(in);
-    std::uint64_t format_version = j.at("format_version");
+    const std::uint64_t format_version = j.at("format_version");
     if (format_version != kFormatVersion) {
       throw std::runtime_error("JsonStorage::Load: wrong format_version");
     }
@@ -113,7 +113,7 @@ GraphSnapshot JsonStorage::Load(std::istream& in) {
     g.next_id_node = j.at("next_id_node").get<NodeId>();
     g.next_id_relation = j.at("next_id_relation").get<RelationId>();
     for (const json& el : j.at("node_types")) {
-      std::string name = el.at("name").get<std::string>();
+      const std::string name = el.at("name").get<std::string>();
       if (g.ontology_node.find(name) != g.ontology_node.end()) {
         throw std::runtime_error("JsonStorage::Load: repeated NodeTypes");
       }
@@ -122,7 +122,7 @@ GraphSnapshot JsonStorage::Load(std::istream& in) {
                          el.at("frame_color").get<std::string>()));
     }
     for (const json& el : j.at("relation_types")) {
-      std::string name = el.at("name").get<std::string>();
+      const std::string name = el.at("name").get<std::string>();
       if (g.ontology_relation.find(name) != g.ontology_relation.end()) {
         throw std::runtime_error("JsonStorage::Load: repeated RelationTypes");
       }
