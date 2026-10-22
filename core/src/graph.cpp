@@ -193,7 +193,7 @@ void Graph::RestoreNodes(std::vector<NodeId> ids) {
 
   // apply
   for (NodeId id : unique) {
-    access_.emplace(id, std::vector<RelationId>());
+    access_.try_emplace(id, std::vector<RelationId>());
   }
 }
 
