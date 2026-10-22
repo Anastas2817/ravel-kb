@@ -11,7 +11,8 @@ class NodeItem : public QGraphicsObject {
   Q_OBJECT
 
  public:
-  NodeItem(std::uint64_t id, QString title, const QRectF& rect, QGraphicsItem* parent = nullptr);
+  NodeItem(std::uint64_t id, QString title, QString type, const QRectF& rect,
+           QGraphicsItem* parent = nullptr);
 
   std::uint64_t id() const {
     return id_;
@@ -28,10 +29,11 @@ class NodeItem : public QGraphicsObject {
  private:
   std::uint64_t id_;
   QString title_ = "wtf";
-  QString name_ = "model";
+  QString type_ = "model";
   QString color_ = "#b3dcfd";
   QString shape_ = "rect";
   QString frame_color_ = "#000000";
+
   QRectF rect_;
 };
 

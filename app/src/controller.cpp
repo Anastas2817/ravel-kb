@@ -1,6 +1,7 @@
 #include "controller.hpp"
 
 #include <fstream>
+#include <ranges>
 
 namespace ravel::app {
 
@@ -68,11 +69,13 @@ ControllerResult Controller::SaveAs(const std::filesystem::path& p) {
 }
 
 CommandResult Controller::AddNode(std::string title, std::string type, std::string description,
-                                  double size) {
-  const ravel::app::AddNodeCmd cmd{.title = std::move(title),
-                                   .type = std::move(type),
-                                   .description = std::move(description),
-                                   .size = size};
+                                  double size, std::optional<ravel::Position> position) {
+  const ravel::app::AddNodeCmd cmd{
+      .title = std::move(title),
+      .type = std::move(type),
+      .description = std::move(description),
+      .size = size,
+      .initial_position = position.value_or(ravel::Position{0.0, 0.0})};
   return s_.chronicle.Execute(cmd, s_.g);
 }
 
@@ -99,6 +102,26 @@ CommandResult Controller::Undo() {
 
 CommandResult Controller::Redo() {
   return s_.chronicle.Redo(s_.g);
+}
+
+std::vector<NodeView> Controller::Nodes() const {
+  std::vector<NodeView> result;
+  s_.g.ForEachLiveNode([this, &result](const Node& node) {
+    const ravel::NodeType& t = s_.g.ResolveNode(node.type());
+    result.emplace_back(node.id(), node.title(), node.description(), node.size(),
+                        s_.g.GetPosition(node.id()), node.type(), t.color(), t.shape(),
+                        t.frame_color());
+    return true;
+  });
+  return result;
+}
+
+std::vector<std::string> Controller::NodeTypeNames() const {
+  std::vector<std::string> result;
+  for (const std::string& key : s_.g.ontology_node() | std::views::keys) {
+    result.emplace_back(key);
+  }
+  return result;
 }
 
 }  // namespace ravel::app

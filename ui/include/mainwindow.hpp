@@ -4,11 +4,43 @@
 #include "controller.hpp"
 
 #include <QAction>
+#include <QComboBox>
+#include <QDialog>
 #include <QGraphicsScene>
 #include <QGraphicsView>
+#include <QLineEdit>
 #include <QMainWindow>
+#include <QMouseEvent>
 
 namespace ravel::ui {
+
+class CanvasView : public QGraphicsView {
+  Q_OBJECT
+ public:
+  using QGraphicsView::QGraphicsView;
+ signals:
+  void DoubleClicked(QPointF scene_pos);
+
+ protected:
+  void mouseDoubleClickEvent(QMouseEvent* e) override {
+    if (e->button() == Qt::LeftButton) {
+      emit DoubleClicked(mapToScene(e->pos()));
+    }
+    QGraphicsView::mouseDoubleClickEvent(e);
+  }
+};
+
+class AddNodeDialog : public QDialog {
+  Q_OBJECT
+ public:
+  AddNodeDialog(const QStringList& types, QWidget* parent = nullptr);
+  [[nodiscard]] QString SelectedType() const;
+  [[nodiscard]] QString NodeTitle() const;
+
+ private:
+  QComboBox* type_;
+  QLineEdit* title_;
+};
 
 class MainWindow : public QMainWindow {
   Q_OBJECT
@@ -19,12 +51,14 @@ class MainWindow : public QMainWindow {
   void OnOpen();
   void OnSave();
   void OnSaveAs();
+  void OnSceneDoubleClick(QPointF pos);
+  void ResyncScene();
 
  private:
   static QString ErrorToString(ravel::app::ControllerError err);
 
   QGraphicsScene* scene_;
-  QGraphicsView* view_;
+  CanvasView* view_;
   ravel::app::Controller controller_;
   QAction* open_action_;
   QAction* save_action_;

@@ -7,9 +7,10 @@
 namespace {
 
 // Золотой файл: examples/example.ravel.json — эталонный сценарий «граф
-// только с типами» (регрессионная граница бага пустого снапшота в
-// FromSnapshot). Тест держит пример открываемым: сломался формат или
-// словарь значений (shape/arrow/цвет) — падает здесь, а не в руках юзера.
+// с онтологией и узлами» (регрессионная граница бага пустого снапшота в
+// FromSnapshot + ручной сценарий resync UI). Тест держит пример открываемым:
+// сломался формат или словарь значений (shape/arrow/цвет) — падает здесь,
+// а не в руках юзера.
 TEST(ExampleFile, OpensViaController) {
   const std::filesystem::path p =
       std::filesystem::path(RAVEL_REPO_ROOT) / "examples" / "example.ravel.json";

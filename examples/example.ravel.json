@@ -1,7 +1,7 @@
 {
   "allowed_cycles": [],
   "format_version": 3,
-  "next_id_node": 1,
+  "next_id_node": 7,
   "next_id_relation": 1,
   "node_types": [
     {
@@ -17,8 +17,64 @@
       "shape": "oval"
     }
   ],
-  "nodes": [],
-  "positions": [],
+  "nodes": [
+    {
+      "id": 1,
+      "title": "Математика",
+      "type": "model"
+    },
+    {
+      "id": 2,
+      "title": "ТФКП",
+      "type": "function"
+    },
+    {
+      "id": 3,
+      "title": "Алгебра",
+      "type": "function"
+    },
+    {
+      "id": 4,
+      "title": "Геометрия",
+      "type": "model"
+    },
+    {
+      "id": 5,
+      "title": "Функция",
+      "type": "function"
+    },
+    {
+      "id": 6,
+      "title": "Интегрирование",
+      "type": "function"
+    }
+  ],
+  "positions": [
+    {
+      "x": -42.0,
+      "y": 12.0
+    },
+    {
+      "x": 193.0,
+      "y": -228.0
+    },
+    {
+      "x": -326.0,
+      "y": -348.0
+    },
+    {
+      "x": -366.0,
+      "y": -3.0
+    },
+    {
+      "x": 144.0,
+      "y": -412.0
+    },
+    {
+      "x": -98.0,
+      "y": -308.0
+    }
+  ],
   "relation_types": [
     {
       "arrow": "solid",

@@ -9,8 +9,9 @@
 
 namespace ravel::ui {
 
-NodeItem::NodeItem(std::uint64_t id, QString title, const QRectF& rect, QGraphicsItem* parent)
-    : QGraphicsObject(parent), id_(id), title_(title), rect_(rect) {
+NodeItem::NodeItem(std::uint64_t id, QString title, QString type, const QRectF& rect,
+                   QGraphicsItem* parent)
+    : QGraphicsObject(parent), id_(id), title_(title), type_(type), rect_(rect) {
   this->setFlag(QGraphicsItem::ItemIsMovable);
   this->setFlag(QGraphicsItem::ItemSendsGeometryChanges);
   this->setAcceptHoverEvents(true);

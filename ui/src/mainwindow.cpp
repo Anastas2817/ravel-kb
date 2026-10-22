@@ -1,18 +1,45 @@
 #include "mainwindow.hpp"
 
+#include "node_item.hpp"
+
+#include <QDialogButtonBox>
 #include <QFileDialog>
+#include <QHash>
 #include <QKeySequence>
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QStatusBar>
+#include <QStringList>
+#include <QVBoxLayout>
 
 namespace ravel::ui {
+
+AddNodeDialog::AddNodeDialog(const QStringList& types, QWidget* parent) : QDialog(parent) {
+  auto* layout = new QVBoxLayout(this);
+  type_ = new QComboBox(this);
+  type_->addItems(types);
+  title_ = new QLineEdit(this);
+  auto* buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
+  layout->addWidget(type_);
+  layout->addWidget(title_);
+  layout->addWidget(buttons);
+  connect(buttons, &QDialogButtonBox::accepted, this, &QDialog::accept);
+  connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);
+}
+
+QString AddNodeDialog::SelectedType() const {
+  return type_->currentText();
+}
+
+QString AddNodeDialog::NodeTitle() const {
+  return title_->text();
+}
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent),
       scene_(new QGraphicsScene(this)),
-      view_(new QGraphicsView(this)),
+      view_(new CanvasView(this)),
       open_action_(new QAction(tr("Открыть…"), this)),
       save_action_(new QAction(tr("Сохранить"), this)),
       save_as_action_(new QAction(tr("Сохранить как…"), this)) {
@@ -27,6 +54,8 @@ MainWindow::MainWindow(QWidget* parent)
 
   save_as_action_->setShortcut(QKeySequence::SaveAs);  // Ctrl+Shift+S
   connect(save_as_action_, &QAction::triggered, this, &MainWindow::OnSaveAs);
+
+  connect(view_, &CanvasView::DoubleClicked, this, &MainWindow::OnSceneDoubleClick);
 
   QMenu* file_menu = menuBar()->addMenu(tr("&Файл"));
   file_menu->addAction(open_action_);
@@ -64,6 +93,7 @@ void MainWindow::OnOpen() {
     QMessageBox::warning(this, tr("Ошибка открытия"), ErrorToString(result.error()));
     return;
   }
+  ResyncScene();
   statusBar()->showMessage(tr("Открыто: %1").arg(path));
 }
 
@@ -94,6 +124,73 @@ void MainWindow::OnSaveAs() {
     return;
   }
   statusBar()->showMessage(tr("Сохранено: %1").arg(path));
+}
+
+void MainWindow::ResyncScene() {
+  const std::vector<ravel::app::NodeView> nodes = controller_.Nodes();
+
+  // Index current scene items by model id.
+  QHash<quint64, NodeItem*> items;
+  const QList<QGraphicsItem*> scene_items = scene_->items();
+  for (QGraphicsItem* item : scene_items) {
+    if (auto* node = dynamic_cast<NodeItem*>(item)) {
+      items.insert(node->id(), node);
+    }
+  }
+
+  // NodeItem rect is center-origin: setPos() places the model position at the
+  // visual center of the node.
+  constexpr qreal kWidth = 120.0;
+  constexpr qreal kHeight = 60.0;
+
+  for (const ravel::app::NodeView& view : nodes) {
+    NodeItem* item = items.take(static_cast<quint64>(view.id));
+    if (item == nullptr) {
+      const QRectF rect(-kWidth / 2, -kHeight / 2, kWidth, kHeight);
+      item = new NodeItem(view.id, QString::fromStdString(view.title),
+                          QString::fromStdString(view.type), rect);
+      scene_->addItem(item);
+    }
+    if (view.position.has_value()) {
+      const QPointF target(view.position->x_, view.position->y_);
+      if (item->pos() != target) {
+        item->setPos(target);
+      }
+    }
+  }
+
+  // Whatever is left in `items` no longer exists in the model. removeItem()
+  // passes ownership to the caller, so we delete explicitly (no QObject
+  // parent-child for scene items).
+  for (NodeItem* item : items) {
+    scene_->removeItem(item);
+    delete item;
+  }
+}
+
+QStringList ToQStringList(const std::vector<std::string>& v) {
+  QStringList out;
+  out.reserve(static_cast<qsizetype>(v.size()));
+  for (const auto& s : v) {
+    out << QString::fromStdString(s);
+  }
+  return out;
+}
+
+void MainWindow::OnSceneDoubleClick(QPointF pos) {
+  AddNodeDialog dlg(ToQStringList(controller_.NodeTypeNames()), this);
+  if (dlg.exec() != QDialog::Accepted) {
+    return;
+  }
+  const ravel::app::CommandResult result =
+      controller_.AddNode(dlg.NodeTitle().toStdString(), dlg.SelectedType().toStdString(), "", 1,
+                          ravel::Position{pos.x(), pos.y()});
+  if (!result.has_value()) {
+    QMessageBox::warning(this, tr("Ошибка создания"),
+                         tr("Не удалось создать узел: неизвестный тип (онтология пуста?)."));
+    return;
+  }
+  ResyncScene();
 }
 
 }  // namespace ravel::ui

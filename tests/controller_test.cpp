@@ -1,7 +1,7 @@
-// Тесты Controller (app layer). У Controller нет read-API — observable
-// surface это протокол команд (expected с кодом ошибки) и файловые эффекты
-// Open/Save/SaveAs. Проверяем только это; состояние графа покрывают
-// graph_test (ядро) и property_test (оракулы).
+// Тесты Controller (app layer). Observable surface: протокол команд
+// (expected с кодом ошибки), файловые эффекты Open/Save/SaveAs и read-API
+// (Nodes()/NodeTypeNames() — DTO NodeView). Проверяем это; состояние графа
+// покрывают graph_test (ядро) и property_test (оракулы).
 //
 // Файловые тесты работают в temp_directory_path() с уникальными именами
 // и подчищают за собой. SaveAs атомарен (temp + rename) — его корректность
@@ -144,6 +144,110 @@ TEST_F(ControllerIoTest, CommandFlowAfterOpen) {
   const auto res = c.Undo();
   ASSERT_FALSE(res.has_value());
   EXPECT_EQ(res.error(), ravel::app::CommandError::NothingToUndo);
+}
+
+// ---- read-API (NodeView / NodeTypeNames) ----
+
+// Файл с двумя типами узлов; имена выбраны так, чтобы порядок ключей
+// std::map был очевиден: "at" < "nt".
+void WriteGraphWithTwoNodeTypes(const fs::path& p) {
+  ravel::Graph g;
+  g.AddNodeType("nt", "#112233", "rect", "#445566");
+  g.AddNodeType("at", "#aabbcc", "oval", "#ddeeff");
+  std::ofstream out(p, std::ios::binary);
+  ravel::JsonStorage::Save(g.ToSnapshot(), out);
+}
+
+TEST(ControllerReadApi, FreshControllerIsEmpty) {
+  ravel::app::Controller c;
+  EXPECT_TRUE(c.Nodes().empty());
+  EXPECT_TRUE(c.NodeTypeNames().empty());
+}
+
+TEST_F(ControllerIoTest, NodeTypeNamesSortedFromOntology) {
+  WriteGraphWithTwoNodeTypes(good_path_);
+  ravel::app::Controller c;
+  ASSERT_TRUE(c.Open(good_path_).has_value());
+  const std::vector<std::string> names = c.NodeTypeNames();
+  ASSERT_EQ(names.size(), 2);
+  EXPECT_EQ(names[0], "at");
+  EXPECT_EQ(names[1], "nt");
+}
+
+TEST_F(ControllerIoTest, NodesMapsNodeAndResolvedTypeFields) {
+  WriteGraphWithTwoNodeTypes(good_path_);
+  ravel::app::Controller c;
+  ASSERT_TRUE(c.Open(good_path_).has_value());
+
+  ASSERT_TRUE(c.AddNode("Title", "at", "Desc", 2.5).has_value());
+  const std::vector<ravel::app::NodeView> nodes = c.Nodes();
+  ASSERT_EQ(nodes.size(), 1);
+  const ravel::app::NodeView& v = nodes.front();
+  EXPECT_EQ(v.id, 1);
+  EXPECT_EQ(v.title, "Title");
+  EXPECT_EQ(v.description, "Desc");
+  EXPECT_DOUBLE_EQ(v.size, 2.5);
+  EXPECT_EQ(v.type, "at");
+  EXPECT_EQ(v.color, "#aabbcc");
+  EXPECT_EQ(v.shape, "oval");
+  EXPECT_EQ(v.frame_color, "#ddeeff");
+}
+
+TEST_F(ControllerIoTest, AddNodeWithoutPositionGetsDefaultPlacement) {
+  WriteGraphWithOntology(good_path_);
+  ravel::app::Controller c;
+  ASSERT_TRUE(c.Open(good_path_).has_value());
+  ASSERT_TRUE(c.AddNode("n", "nt").has_value());
+
+  const std::vector<ravel::app::NodeView> nodes = c.Nodes();
+  ASSERT_EQ(nodes.size(), 1);
+  ASSERT_TRUE(nodes.front().position.has_value());
+  EXPECT_EQ(nodes.front().position.value(), (ravel::Position{0.0, 0.0}));
+}
+
+TEST_F(ControllerIoTest, AddNodeStoresExplicitPosition) {
+  WriteGraphWithOntology(good_path_);
+  ravel::app::Controller c;
+  ASSERT_TRUE(c.Open(good_path_).has_value());
+  ASSERT_TRUE(c.AddNode("n", "nt", "", 1, ravel::Position{3.5, -2.0}).has_value());
+
+  const std::vector<ravel::app::NodeView> nodes = c.Nodes();
+  ASSERT_EQ(nodes.size(), 1);
+  ASSERT_TRUE(nodes.front().position.has_value());
+  EXPECT_DOUBLE_EQ(nodes.front().position->x_, 3.5);
+  EXPECT_DOUBLE_EQ(nodes.front().position->y_, -2.0);
+}
+
+TEST_F(ControllerIoTest, NodesReturnsLiveNodesInAscendingIdOrder) {
+  WriteGraphWithOntology(good_path_);
+  ravel::app::Controller c;
+  ASSERT_TRUE(c.Open(good_path_).has_value());
+  ASSERT_TRUE(c.AddNode("A", "nt").has_value());
+  ASSERT_TRUE(c.AddNode("B", "nt").has_value());
+  ASSERT_TRUE(c.AddNode("C", "nt").has_value());
+
+  const std::vector<ravel::app::NodeView> nodes = c.Nodes();
+  ASSERT_EQ(nodes.size(), 3);
+  EXPECT_EQ(nodes[0].id, 1);
+  EXPECT_EQ(nodes[1].id, 2);
+  EXPECT_EQ(nodes[2].id, 3);
+}
+
+TEST_F(ControllerIoTest, NodesFollowsDeleteAndUndo) {
+  WriteGraphWithOntology(good_path_);
+  ravel::app::Controller c;
+  ASSERT_TRUE(c.Open(good_path_).has_value());
+  ASSERT_TRUE(c.AddNode("A", "nt").has_value());
+  ASSERT_TRUE(c.AddNode("B", "nt").has_value());
+
+  ASSERT_TRUE(c.DeleteNodes({1}).has_value());
+  {
+    const std::vector<ravel::app::NodeView> nodes = c.Nodes();
+    ASSERT_EQ(nodes.size(), 1);
+    EXPECT_EQ(nodes.front().id, 2);
+  }
+  ASSERT_TRUE(c.Undo().has_value());
+  EXPECT_EQ(c.Nodes().size(), 2);
 }
 
 }  // namespace

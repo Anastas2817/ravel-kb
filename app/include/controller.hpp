@@ -6,11 +6,26 @@
 
 #include <filesystem>
 #include <optional>
+#include <string>
+#include <vector>
 
 namespace ravel::app {
 
 enum class ControllerError : std::uint8_t { NoPath, IoError, NothingToUndo, NothingToRedo };
 using ControllerResult = std::expected<void, ControllerError>;
+
+struct NodeView {  // DTO
+  ravel::NodeId id;
+  std::string title;
+  std::string description;
+  double size = 0;
+  std::optional<ravel::Position> position;
+
+  std::string type;
+  std::string color;
+  std::string shape;
+  std::string frame_color;
+};
 
 class Controller {
  public:
@@ -19,13 +34,16 @@ class Controller {
   ControllerResult SaveAs(const std::filesystem::path& p);
 
   CommandResult AddNode(std::string title, std::string type, std::string description = "",
-                        double size = 1);
+                        double size = 1, std::optional<ravel::Position> position = std::nullopt);
   CommandResult AddRelation(ravel::NodeId from, ravel::NodeId to, std::string type,
                             std::string description = "");
   CommandResult DeleteNodes(std::vector<ravel::NodeId> nodes);
   CommandResult DeleteRelations(std::vector<ravel::RelationId> relations);
   CommandResult Undo();
   CommandResult Redo();
+
+  std::vector<NodeView> Nodes() const;
+  std::vector<std::string> NodeTypeNames() const;
 
  private:
   struct SessionState {

@@ -34,10 +34,12 @@ struct AddNodeCmd {
   std::string type;
   std::string description;
   double size = 1;
+  Position initial_position{0.0, 0.0};  // helper without layout
   ravel::NodeId obtained_id = 0;
   CommandResult Do(ravel::Graph& g) {
     if (obtained_id == 0) {
       obtained_id = g.AddNode(title, type, description, size);
+      g.MoveNode(obtained_id, initial_position);  // helper without layout
     } else {
       g.RestoreNodes({obtained_id});
     }
