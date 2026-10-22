@@ -125,6 +125,7 @@ inline CommandResult Undo(AnyCommand& c, ravel::Graph& g) {
   return std::visit([&g](auto& x) { return x.Undo(g); }, c);
 }
 
+// The only point of state change in Graph.
 class CommandChronicle {
  public:
   std::size_t bookmark() const noexcept {
