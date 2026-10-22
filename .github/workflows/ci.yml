@@ -187,14 +187,17 @@ jobs:
       # сопоставления gcovr (search или fullmatch) — первый прогон с
       # 'core/' отфильтровал все данные («All coverage data is filtered out»,
       # 2026-10-22). Счётчик .gcda — диагностика: если данных нет, это видно
-      # сразу, а не из косвенного «0.0%».
+      # сразу, а не из косвенного «0.0%». run: > (folded), не | (literal):
+      # строки склеиваются в одну команду — иначе каждая выполняется отдельно
+      # (первый красный прогон: gcovr ушёл без фильтров, а --filter=... ронял
+      # шаг как «No such file or directory», exit 127).
       - name: Report + gate
         working-directory: build
-        run: |
-          echo "gcda files: $(find . -name '*.gcda' | wc -l)"
+        run: >
+          echo "gcda files: $(find . -name '*.gcda' | wc -l)" &&
           gcovr --root=..
           --filter='.*(core|storage|app)/.*'
-          --txt --fail-under-line=75
+          --txt --fail-under-line=85
 
   # Статический анализ. Пин pip clang-tidy==19.1.0.1 = локальный бинарь
   # в .tidy-venv (правило: компилятор автора ≠ компилятору CI лечится
