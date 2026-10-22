@@ -105,37 +105,82 @@ Ravel — десктопный PKM-инструмент с графовой но
 
 ```json
 {
+  "allowed_cycles": [],
   "format_version": 3,
   "next_id_node": 4,
   "next_id_relation": 6,
   "node_types": [
-    {"name": "function", "color": "#4a90d9", "shape": "rect",
-     "frame_color": "#2c5f94"},
-    {"name": "model", "color": "#7b68ee", "shape": "oval",
-     "frame_color": "#4b3d8f"}
-  ],
-  "relation_types": [
-    {"name": "is_a", "color": "#4a90d9", "arrow": "solid",
-     "symmetric": false, "transitive": true},
-    {"name": "is_defined_on", "color": "#7b68ee", "arrow": "solid",
-     "symmetric": false, "transitive": false}
+    {
+      "color": "#4a90d9",
+      "frame_color": "#2c5f94",
+      "name": "function",
+      "shape": "rect"
+    },
+    {
+      "color": "#7b68ee",
+      "frame_color": "#4b3d8f",
+      "name": "model",
+      "shape": "oval"
+    }
   ],
   "nodes": [
-    {"id": 1, "title": "Степенная функция", "type": "function",
-     "description": "f(x) = x^n"},
-    {"id": 2, "title": "Квадратичная функция", "type": "function"},
-    {"id": 3, "title": "Вещественная прямая", "type": "model",
-     "size": 1.5}
-  ],
-  "relations": [
-    {"id": 4, "from": 2, "to": 1, "type": "is_a"},
-    {"id": 5, "from": 1, "to": 3, "type": "is_defined_on",
-     "description": "степенная функция с натуральным показателем задана на всей прямой"}
+    {
+      "description": "f(x) = x^n",
+      "id": 1,
+      "title": "Степенная функция",
+      "type": "function"
+    },
+    {
+      "id": 2,
+      "title": "Квадратичная функция",
+      "type": "function"
+    },
+    {
+      "id": 3,
+      "size": 1.5,
+      "title": "Вещественная прямая",
+      "type": "model"
+    }
   ],
   "positions": [
-    null, null, {"x": 120, "y": 340}
+    null,
+    null,
+    {
+      "x": 120.0,
+      "y": 340.0
+    }
   ],
-  "allowed_cycles": []
+  "relation_types": [
+    {
+      "arrow": "solid",
+      "color": "#4a90d9",
+      "name": "is_a",
+      "symmetric": false,
+      "transitive": true
+    },
+    {
+      "arrow": "solid",
+      "color": "#7b68ee",
+      "name": "is_defined_on",
+      "symmetric": false,
+      "transitive": false
+    }
+  ],
+  "relations": [
+    {
+      "from": 2,
+      "id": 4,
+      "to": 1,
+      "type": "is_a"
+    },
+    {
+      "description": "степенная функция с натуральным показателем задана на всей прямой",
+      "from": 1,
+      "id": 5,
+      "to": 3,
+      "type": "is_defined_on"
+    }
+  ]
 }
 ```
 
