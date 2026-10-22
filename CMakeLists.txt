@@ -46,6 +46,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 
 option(RAVEL_BUILD_UI "Собирать десктопное приложение (требуется Qt 6 Widgets)" ON)
 option(RAVEL_USE_FETCHCONTENT "Подтягивать недостающие зависимости через FetchContent (нужен интернет)" ON)
+option(RAVEL_BUILD_FUZZ "Собирать libFuzzer-таргет (требуется Clang, см. fuzz/CMakeLists.txt)" OFF)
 
 # ---------------------------------------------------------------------------
 # Флаги MSVC (Microsoft Visual C++, Visual Studio 2022)
@@ -77,6 +78,13 @@ add_subdirectory(app)     # команды (Command + undo/redo), контрол
 
 if(RAVEL_BUILD_UI)
     add_subdirectory(ui)  # Qt 6 Widgets; если Qt не найден — цель пропускается с предупреждением
+endif()
+
+# Fuzz target (libFuzzer + ASan/UBSan): только Clang, опция OFF по умолчанию.
+# tests/ не подходит — глоб собирает все *.cpp в ravel_tests, а фуззер имеет
+# свой main (LLVMFuzzerTestOneInput). Отдельный каталог — чтобы жил отдельно.
+if(RAVEL_BUILD_FUZZ)
+    add_subdirectory(fuzz)
 endif()
 
 # Тесты: стандартный переключатель BUILD_TESTING (из CTest).

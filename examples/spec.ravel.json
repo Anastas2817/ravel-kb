@@ -1,0 +1,78 @@
+{
+  "allowed_cycles": [],
+  "format_version": 3,
+  "next_id_node": 4,
+  "next_id_relation": 6,
+  "node_types": [
+    {
+      "color": "#4a90d9",
+      "frame_color": "#2c5f94",
+      "name": "function",
+      "shape": "rect"
+    },
+    {
+      "color": "#7b68ee",
+      "frame_color": "#4b3d8f",
+      "name": "model",
+      "shape": "oval"
+    }
+  ],
+  "nodes": [
+    {
+      "description": "f(x) = x^n",
+      "id": 1,
+      "title": "Степенная функция",
+      "type": "function"
+    },
+    {
+      "id": 2,
+      "title": "Квадратичная функция",
+      "type": "function"
+    },
+    {
+      "id": 3,
+      "size": 1.5,
+      "title": "Вещественная прямая",
+      "type": "model"
+    }
+  ],
+  "positions": [
+    null,
+    null,
+    {
+      "x": 120.0,
+      "y": 340.0
+    }
+  ],
+  "relation_types": [
+    {
+      "arrow": "solid",
+      "color": "#4a90d9",
+      "name": "is_a",
+      "symmetric": false,
+      "transitive": true
+    },
+    {
+      "arrow": "solid",
+      "color": "#7b68ee",
+      "name": "is_defined_on",
+      "symmetric": false,
+      "transitive": false
+    }
+  ],
+  "relations": [
+    {
+      "from": 2,
+      "id": 4,
+      "to": 1,
+      "type": "is_a"
+    },
+    {
+      "description": "степенная функция с натуральным показателем задана на всей прямой",
+      "from": 1,
+      "id": 5,
+      "to": 3,
+      "type": "is_defined_on"
+    }
+  ]
+}
