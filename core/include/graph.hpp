@@ -35,7 +35,7 @@ using RelationId = std::uint64_t;
   return ((shape == "rect") || (shape == "oval"));
 }
 
-class NodeType {
+class NodeType {  // DTO
  public:
   NodeType(std::string color, std::string shape, std::string frame_color)
       : color_(IsValidHexColor(color)
@@ -127,7 +127,7 @@ template <typename Fn>
 concept LiveNodeCallback = std::invocable<Fn&, const Node&> &&
                            std::convertible_to<std::invoke_result_t<Fn&, const Node&>, bool>;
 
-class RelationType {
+class RelationType {  // DTO
  public:
   RelationType(std::string color, std::string arrow, bool symmetric, bool transitive)
       : color_(IsValidHexColor(color)
@@ -206,7 +206,7 @@ concept LiveRelationCallback =
     std::invocable<Fn&, const Relation&> &&
     std::convertible_to<std::invoke_result_t<Fn&, const Relation&>, bool>;
 
-struct Position {
+struct Position {  // DTO
   double x_;
   double y_;
 
