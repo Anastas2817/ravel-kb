@@ -134,6 +134,8 @@ ctest --test-dir build -C Release --output-on-failure
 | [docs/perspectives.md](docs/perspectives.md) | отдалённые перспективы (фрактальность, алиасы, …) |
 | [docs/research.md](docs/research.md) | исследовательская рамка: типизированная метрика, взвешенная раскладка, link prediction без LLM |
 | [docs/c1_scope.md](docs/c1_scope.md) | дополнение к C1: назначение, акторы, сценарии, границы системы |
+| [docs/advisors.md](docs/advisors.md) | «легенда света»: визуальная грамматика слоя advisors — советы без вердиктов (calm technology) |
+| [docs/metaphors.md](docs/metaphors.md) | метафоры проекта и их границы: образ живёт, только если переводится в контракт одной фразой |
 | [docs/assets/c4/](docs/assets/c4/) | C4-диаграммы архитектуры (C1–C4) |
 | [docs/adr/](docs/adr/README.md) | ключевые архитектурные решения (ADR; рекомендованы, не обязательны) |
 
