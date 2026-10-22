@@ -17,6 +17,8 @@ class MainWindow : public QMainWindow {
 
  private slots:
   void OnOpen();
+  void OnSave();
+  void OnSaveAs();
 
  private:
   static QString ErrorToString(ravel::app::ControllerError err);
@@ -25,6 +27,8 @@ class MainWindow : public QMainWindow {
   QGraphicsView* view_;
   ravel::app::Controller controller_;
   QAction* open_action_;
+  QAction* save_action_;
+  QAction* save_as_action_;
 };
 
 }  // namespace ravel::ui

@@ -1,39 +1,39 @@
 {
+  "allowed_cycles": [],
   "format_version": 3,
   "next_id_node": 1,
   "next_id_relation": 1,
   "node_types": [
     {
-      "name": "function",
       "color": "#4a90d9",
-      "shape": "rect",
-      "frame_color": "#2c5f94"
+      "frame_color": "#2c5f94",
+      "name": "function",
+      "shape": "rect"
     },
     {
-      "name": "model",
       "color": "#7b68ee",
-      "shape": "oval",
-      "frame_color": "#4b3d8f"
+      "frame_color": "#4b3d8f",
+      "name": "model",
+      "shape": "oval"
     }
   ],
+  "nodes": [],
+  "positions": [],
   "relation_types": [
     {
-      "name": "is_a",
-      "color": "#4a90d9",
       "arrow": "solid",
+      "color": "#4a90d9",
+      "name": "is_a",
       "symmetric": false,
       "transitive": true
     },
     {
-      "name": "is_defined_on",
-      "color": "#7b68ee",
       "arrow": "solid",
+      "color": "#7b68ee",
+      "name": "is_defined_on",
       "symmetric": false,
       "transitive": false
     }
   ],
-  "nodes": [],
-  "relations": [],
-  "positions": [],
-  "allowed_cycles": []
+  "relations": []
 }
