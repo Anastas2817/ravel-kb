@@ -220,8 +220,8 @@ void Graph::RestoreRelations(std::vector<RelationId> ids) {
 // инвариантов снапшота; декомпозиция на валидаторы — отдельное направление
 // (roadmap: накопление ошибок валидации, std::expected). Подавление здесь,
 // а не отключение проверки глобально.
-Graph Graph::FromSnapshot(
-    const GraphSnapshot& src) {  // NOLINT(readability-function-cognitive-complexity)
+Graph Graph::FromSnapshot(  // NOLINT(readability-function-cognitive-complexity)
+    const GraphSnapshot& src) {
   // validate
   if (src.next_id_node > kMaxEntities) {
     throw std::runtime_error("Graph::FromSnapshot next_id_node > limit = 1 000 000");

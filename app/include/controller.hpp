@@ -9,7 +9,7 @@
 
 namespace ravel::app {
 
-enum class ControllerError { NoPath, IoError, NothingToUndo, NothingToRedo };
+enum class ControllerError : std::uint8_t { NoPath, IoError, NothingToUndo, NothingToRedo };
 using ControllerResult = std::expected<void, ControllerError>;
 
 class Controller {
@@ -28,8 +28,6 @@ class Controller {
   CommandResult Redo();
 
  private:
-  ravel::JsonStorage storage_;
-
   struct SessionState {
     ravel::Graph g;
     ravel::app::CommandChronicle chronicle;

@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
 #include <expected>
 #include <string>
 #include <utility>
@@ -13,7 +14,13 @@
 
 namespace ravel::app {
 
-enum class CommandError { UnknownType, EntityGone, QuotaExceeded, NothingToUndo, NothingToRedo };
+enum class CommandError : std::uint8_t {
+  UnknownType,
+  EntityGone,
+  QuotaExceeded,
+  NothingToUndo,
+  NothingToRedo
+};
 
 using CommandResult = std::expected<void, CommandError>;
 
@@ -70,7 +77,7 @@ struct DeleteNodesCmd {
     deleted_relations = g.DeleteNodes(ids);
     return {};
   }
-  CommandResult Undo(ravel::Graph& g) {
+  CommandResult Undo(ravel::Graph& g) const {
     g.RestoreNodes(ids);
     g.RestoreRelations(deleted_relations);
     return {};
@@ -79,11 +86,11 @@ struct DeleteNodesCmd {
 
 struct DeleteRelationsCmd {
   std::vector<ravel::RelationId> ids;
-  CommandResult Do(ravel::Graph& g) {
+  CommandResult Do(ravel::Graph& g) const {
     g.DeleteRelations(ids);
     return {};
   }
-  CommandResult Undo(ravel::Graph& g) {
+  CommandResult Undo(ravel::Graph& g) const {
     g.RestoreRelations(ids);
     return {};
   }
@@ -98,10 +105,11 @@ struct MoveNodeCmd {
   Position from;
   Position to;
   CommandResult Do(ravel::Graph& g) {
-    from = g.MoveNode(id, to).value();
+    // .value() is deliberate: see the struct comment above (R14).
+    from = g.MoveNode(id, to).value();  // NOLINT(bugprone-unchecked-optional-access)
     return {};
   }
-  CommandResult Undo(ravel::Graph& g) {
+  CommandResult Undo(ravel::Graph& g) const {
     g.MoveNode(id, from);
     return {};
   }
@@ -135,7 +143,11 @@ class CommandChronicle {
   CommandResult Execute(C cmd, ravel::Graph& g) {
     CommandResult res = cmd.Do(g);
     if (res) {
-      chronicle_.erase(chronicle_.begin() + bookmark_, chronicle_.end());
+      // NOLINTNEXTLINE(bugprone-narrowing-conversions): bookmark_ <=
+      // chronicle_.size() (class invariant), so the size_t fits ptrdiff_t on
+      // any platform where a vector of this size could exist.
+      chronicle_.erase(chronicle_.begin() + static_cast<std::ptrdiff_t>(bookmark_),
+                       chronicle_.end());
       chronicle_.emplace_back(std::move(cmd));
       ++bookmark_;
     }

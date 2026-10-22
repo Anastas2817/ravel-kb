@@ -39,15 +39,15 @@ class NodeType {  // DTO
  public:
   NodeType(std::string color, std::string shape, std::string frame_color)
       : color_(IsValidHexColor(color)
-                   ? color
+                   ? std::move(color)
                    : throw std::invalid_argument(
                          "NodeType::NodeType tried to create NodeType with non-valid color")),
-        shape_(IsValidShape(shape) ? shape
+        shape_(IsValidShape(shape) ? std::move(shape)
                                    : throw std::invalid_argument(
                                          "NodeType tried to create NodeType with non-valid shape")),
         frame_color_(
             IsValidHexColor(frame_color)
-                ? frame_color
+                ? std::move(frame_color)
                 : throw std::invalid_argument(
                       "NodeType::NodeType tried to create NodeType with non-valid frame_color")) {
   }
@@ -131,11 +131,11 @@ class RelationType {  // DTO
  public:
   RelationType(std::string color, std::string arrow, bool symmetric, bool transitive)
       : color_(IsValidHexColor(color)
-                   ? color
+                   ? std::move(color)
                    : throw std::invalid_argument("RelationType::RelationType tried to create "
                                                  "RelationType with non-valid color")),
         arrow_(IsValidArrow(arrow)
-                   ? arrow
+                   ? std::move(arrow)
                    : throw std::invalid_argument("RelationType::RelationType tried to create "
                                                  "RelationType with non-valid arrow")),
         symmetric_(symmetric),
@@ -258,7 +258,7 @@ class Graph {
       throw std::invalid_argument("Graph::AddNodeType tried to add the same NodeType");
     }
     ontology_node_.try_emplace(
-        name, NodeType(std::move(color), std::move(shape), std::move(frame_color)));
+        std::move(name), NodeType(std::move(color), std::move(shape), std::move(frame_color)));
   }
   void AddRelationType(std::string name, std::string color, std::string arrow, bool symmetric,
                        bool transitive) {
@@ -266,7 +266,7 @@ class Graph {
       throw std::invalid_argument("Graph::AddRelationType tried to add the same RelationType");
     }
     ontology_relation_.try_emplace(
-        name, RelationType(std::move(color), std::move(arrow), symmetric, transitive));
+        std::move(name), RelationType(std::move(color), std::move(arrow), symmetric, transitive));
   }
   [[nodiscard]] const NodeType& ResolveNode(const std::string& name) const {
     return ontology_node_.at(name);
@@ -349,9 +349,11 @@ class Graph {
   // The single sanctioned iteration point over live nodes, in ascending id
   // order. Callback contract: do not mutate the graph during iteration — UB
   // (ADR-002, "Decision"); mutations go through collect-then-apply. Returning
-  // false stops the iteration early (early exit for algorithms).
+  // false stops the iteration early (early exit for algorithms). Fn&& is
+  // never std::forward'ed on purpose: fn is invoked repeatedly inside the
+  // loop — forwarding would move from it on the first call.
   template <LiveNodeCallback Fn>
-  void ForEachLiveNode(Fn&& fn) const {
+  void ForEachLiveNode(Fn&& fn) const {  // NOLINT(cppcoreguidelines-missing-std-forward)
     for (const NodeId id : access_ | std::views::keys) {
       if (!fn(nodes_[id - 1])) {
         return;
@@ -361,9 +363,9 @@ class Graph {
   // Same for relations: dense vector with a liveness filter — each live
   // relation exactly once, in id order. Iterating access_ is not an option:
   // a relation is listed in the neighborhoods of both endpoints and would be
-  // visited twice.
+  // visited twice. Same no-forward contract as ForEachLiveNode.
   template <LiveRelationCallback Fn>
-  void ForEachLiveRelation(Fn&& fn) const {
+  void ForEachLiveRelation(Fn&& fn) const {  // NOLINT(cppcoreguidelines-missing-std-forward)
     for (const Relation& relation : relations_) {
       if (HasRelation(relation.id()) && !fn(relation)) {
         return;
@@ -374,7 +376,7 @@ class Graph {
   static Graph FromSnapshot(const GraphSnapshot& src);
   GraphSnapshot ToSnapshot() const;
 
-  [[nodiscard]] bool SessionEqual(const Graph&) const;
+  [[nodiscard]] bool SessionEqual(const Graph& other) const;
 
  private:
   std::unordered_map<std::string, NodeType> ontology_node_;

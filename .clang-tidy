@@ -14,7 +14,10 @@
 #    * easily-swappable-parameters — сигнатуры доменные (title/type, from/to),
 #      перестановка ловится тестами и ревью, а не NOLINT-простынёй;
 #    * include-cleaner — косвенные включения осознанны (storage.hpp тащит
-#      graph.hpp ради GraphSnapshot).
+#      graph.hpp ради GraphSnapshot);
+#    * non-private-member-variables-in-classes — aggregate-DTO с публичными
+#      полями это дизайн проекта (команды, Position, GraphSnapshot; private
+#      сломал бы designated initializers).
 #
 # Версия пинится одинаково с обеих сторон: pip clang-tidy==19.1.0.1
 # (симметрия с пином clang-format 19.1.5: «у меня зелёное, в CI красное»
@@ -32,12 +35,15 @@ Checks: >
   -bugprone-easily-swappable-parameters,
   -cppcoreguidelines-avoid-magic-numbers,
   -misc-include-cleaner,
+  -misc-non-private-member-variables-in-classes,
   -readability-identifier-length,
   -readability-magic-numbers,
   -readability-uppercase-literal-suffix
 
 # Диагностика из наших заголовков (graph.hpp живёт не в главном файле
-# проверки) — но не из STL/nlohmann.
-HeaderFilterRegex: '(core|storage|app)/(include|src)/'
+# проверки) — но не из STL/nlohmann. [/\\] — Windows-пути локально и
+# POSIX-пути CI должны проходить через фильтр одинаково: из-за разделителя
+# локальный прогон молча терял находки из заголовков (2026-10-22).
+HeaderFilterRegex: '(core|storage|app)[/\\](include|src)[/\\]'
 
 WarningsAsErrors: '*'
