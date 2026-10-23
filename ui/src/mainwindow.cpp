@@ -42,7 +42,9 @@ MainWindow::MainWindow(QWidget* parent)
       view_(new CanvasView(this)),
       open_action_(new QAction(tr("Открыть…"), this)),
       save_action_(new QAction(tr("Сохранить"), this)),
-      save_as_action_(new QAction(tr("Сохранить как…"), this)) {
+      save_as_action_(new QAction(tr("Сохранить как…"), this)),
+      undo_action_(new QAction(tr("Отменить"), this)),
+      redo_action_(new QAction(tr("Восстановить"), this)) {
   setCentralWidget(view_);
   view_->setScene(scene_);
 
@@ -55,12 +57,21 @@ MainWindow::MainWindow(QWidget* parent)
   save_as_action_->setShortcut(QKeySequence::SaveAs);  // Ctrl+Shift+S
   connect(save_as_action_, &QAction::triggered, this, &MainWindow::OnSaveAs);
 
+  undo_action_->setShortcut(QKeySequence::Undo);  // Ctrl+Z
+  connect(undo_action_, &QAction::triggered, this, &MainWindow::OnUndo);
+
+  redo_action_->setShortcut(QKeySequence::Redo);  // Ctrl+Y on Windows, Ctrl+Shift+Z on macOS/Linux
+  connect(redo_action_, &QAction::triggered, this, &MainWindow::OnRedo);
+
   connect(view_, &CanvasView::DoubleClicked, this, &MainWindow::OnSceneDoubleClick);
 
   QMenu* file_menu = menuBar()->addMenu(tr("&Файл"));
   file_menu->addAction(open_action_);
   file_menu->addAction(save_action_);
   file_menu->addAction(save_as_action_);
+  QMenu* edit = menuBar()->addMenu(tr("&Правка"));
+  edit->addAction(undo_action_);
+  edit->addAction(redo_action_);
 
   statusBar()->showMessage(tr("Готово"));
 }
@@ -150,6 +161,7 @@ void MainWindow::ResyncScene() {
       item = new NodeItem(view.id, QString::fromStdString(view.title),
                           QString::fromStdString(view.type), rect);
       scene_->addItem(item);
+      connect(item, &NodeItem::MoveFinished, this, &MainWindow::OnNodeMoved);
     }
     if (view.position.has_value()) {
       const QPointF target(view.position->x_, view.position->y_);
@@ -188,6 +200,34 @@ void MainWindow::OnSceneDoubleClick(QPointF pos) {
   if (!result.has_value()) {
     QMessageBox::warning(this, tr("Ошибка создания"),
                          tr("Не удалось создать узел: неизвестный тип (онтология пуста?)."));
+    return;
+  }
+  ResyncScene();
+}
+
+void MainWindow::OnUndo() {
+  const ravel::app::CommandResult result = controller_.Undo();
+  if (!result.has_value()) {
+    QMessageBox::warning(this, tr("Ошибка отмены"), tr("нечего отменять?"));
+    return;
+  }
+  ResyncScene();
+}
+
+void MainWindow::OnRedo() {
+  const ravel::app::CommandResult result = controller_.Redo();
+  if (!result.has_value()) {
+    QMessageBox::warning(this, tr("Ошибка отмены"), tr("нечего восстанавливать?"));
+    return;
+  }
+  ResyncScene();
+}
+
+void MainWindow::OnNodeMoved(std::uint64_t id, QPointF to) {
+  const ravel::app::CommandResult result =
+      controller_.MoveNode(id, ravel::Position{to.x(), to.y()});
+  if (!result.has_value()) {
+    QMessageBox::warning(this, tr("Ошибка перемещения"), tr("не отменить операцию"));
     return;
   }
   ResyncScene();

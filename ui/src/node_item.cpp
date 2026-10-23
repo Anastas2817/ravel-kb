@@ -5,6 +5,7 @@
 
 #include "node_item.hpp"
 
+#include <QGraphicsSceneMouseEvent>
 #include <QPainter>
 
 namespace ravel::ui {
@@ -35,6 +36,23 @@ QVariant NodeItem::itemChange(GraphicsItemChange change, const QVariant& value) 
     emit Moved(id_, value.toPointF());
   }
   return QGraphicsObject::itemChange(change, value);
+}
+
+void NodeItem::mousePressEvent(QGraphicsSceneMouseEvent* e) {
+  if (e->button() == Qt::LeftButton) {
+    drag_start_ = this->pos();
+  }
+  QGraphicsObject::mousePressEvent(e);
+}
+
+void NodeItem::mouseReleaseEvent(QGraphicsSceneMouseEvent* e) {
+  if (e->button() == Qt::LeftButton) {
+    QPointF cur = this->pos();
+    if (cur != drag_start_) {
+      emit MoveFinished(id_, cur);
+    }
+  }
+  QGraphicsObject::mouseReleaseEvent(e);
 }
 
 }  // namespace ravel::ui

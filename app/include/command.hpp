@@ -104,8 +104,8 @@ struct DeleteRelationsCmd {
 // implementation.md R14.
 struct MoveNodeCmd {
   ravel::NodeId id;
-  Position from;
-  Position to;
+  ravel::Position from{};  // captured by Do()
+  ravel::Position to;
   CommandResult Do(ravel::Graph& g) {
     // .value() is deliberate: see the struct comment above (R14).
     from = g.MoveNode(id, to).value();  // NOLINT(bugprone-unchecked-optional-access)

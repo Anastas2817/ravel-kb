@@ -41,6 +41,7 @@ class Controller {
   CommandResult DeleteRelations(std::vector<ravel::RelationId> relations);
   CommandResult Undo();
   CommandResult Redo();
+  CommandResult MoveNode(ravel::NodeId id, ravel::Position to);
 
   std::vector<NodeView> Nodes() const;
   std::vector<std::string> NodeTypeNames() const;

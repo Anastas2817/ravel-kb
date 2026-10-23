@@ -53,6 +53,9 @@ class MainWindow : public QMainWindow {
   void OnSaveAs();
   void OnSceneDoubleClick(QPointF pos);
   void ResyncScene();
+  void OnUndo();
+  void OnRedo();
+  void OnNodeMoved(std::uint64_t id, QPointF to);
 
  private:
   static QString ErrorToString(ravel::app::ControllerError err);
@@ -63,6 +66,8 @@ class MainWindow : public QMainWindow {
   QAction* open_action_;
   QAction* save_action_;
   QAction* save_as_action_;
+  QAction* undo_action_;
+  QAction* redo_action_;
 };
 
 }  // namespace ravel::ui

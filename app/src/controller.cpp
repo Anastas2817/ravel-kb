@@ -104,6 +104,11 @@ CommandResult Controller::Redo() {
   return s_.chronicle.Redo(s_.g);
 }
 
+CommandResult Controller::MoveNode(ravel::NodeId id, ravel::Position to) {
+  const ravel::app::MoveNodeCmd cmd{.id = id, .to = to};
+  return s_.chronicle.Execute(cmd, s_.g);
+}
+
 std::vector<NodeView> Controller::Nodes() const {
   std::vector<NodeView> result;
   s_.g.ForEachLiveNode([this, &result](const Node& node) {

@@ -255,4 +255,38 @@ TEST_F(ControllerIoTest, NodesFollowsDeleteAndUndo) {
   EXPECT_EQ(c.Nodes().size(), 2);
 }
 
+TEST_F(ControllerIoTest, MoveNodeUpdatesPositionVisibleViaNodes) {
+  WriteGraphWithOntology(good_path_);
+  ravel::app::Controller c;
+  ASSERT_TRUE(c.Open(good_path_).has_value());
+  ASSERT_TRUE(c.AddNode("n", "nt", "", 1, ravel::Position{1.0, 2.0}).has_value());
+
+  ASSERT_TRUE(c.MoveNode(1, ravel::Position{5.0, -3.0}).has_value());
+  const std::vector<ravel::app::NodeView> nodes = c.Nodes();
+  ASSERT_EQ(nodes.size(), 1);
+  ASSERT_TRUE(nodes.front().position.has_value());
+  EXPECT_EQ(nodes.front().position.value(), (ravel::Position{5.0, -3.0}));
+}
+
+TEST_F(ControllerIoTest, MoveNodeUndoRedoRoundTrip) {
+  WriteGraphWithOntology(good_path_);
+  ravel::app::Controller c;
+  ASSERT_TRUE(c.Open(good_path_).has_value());
+  ASSERT_TRUE(c.AddNode("n", "nt", "", 1, ravel::Position{1.0, 2.0}).has_value());
+
+  ASSERT_TRUE(c.MoveNode(1, ravel::Position{5.0, -3.0}).has_value());
+  ASSERT_TRUE(c.Undo().has_value());
+  {
+    const std::vector<ravel::app::NodeView> nodes = c.Nodes();
+    ASSERT_TRUE(nodes.front().position.has_value());
+    EXPECT_EQ(nodes.front().position.value(), (ravel::Position{1.0, 2.0}));
+  }
+  ASSERT_TRUE(c.Redo().has_value());
+  {
+    const std::vector<ravel::app::NodeView> nodes = c.Nodes();
+    ASSERT_TRUE(nodes.front().position.has_value());
+    EXPECT_EQ(nodes.front().position.value(), (ravel::Position{5.0, -3.0}));
+  }
+}
+
 }  // namespace
