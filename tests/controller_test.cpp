@@ -289,4 +289,44 @@ TEST_F(ControllerIoTest, MoveNodeUndoRedoRoundTrip) {
   }
 }
 
+TEST_F(ControllerIoTest, RelationsReturnsLiveRelationsInAscendingIdOrder) {
+  WriteGraphWithOntology(good_path_);
+  ravel::app::Controller c;
+  ASSERT_TRUE(c.Open(good_path_).has_value());
+  ASSERT_TRUE(c.AddNode("A", "nt").has_value());
+  ASSERT_TRUE(c.AddNode("B", "nt").has_value());
+  ASSERT_TRUE(c.AddNode("C", "nt").has_value());
+  ASSERT_TRUE(c.AddRelation(1, 2, "rt").has_value());
+  ASSERT_TRUE(c.AddRelation(2, 3, "rt").has_value());
+  ASSERT_TRUE(c.AddRelation(3, 1, "rt").has_value());
+
+  const std::vector<ravel::app::RelationView> relations = c.Relations();
+  ASSERT_EQ(relations.size(), 3);
+  EXPECT_EQ(relations[0].id, 1);
+  EXPECT_EQ(relations[1].id, 2);
+  EXPECT_EQ(relations[2].id, 3);
+}
+
+TEST_F(ControllerIoTest, RelationsFollowsDeleteAndUndo) {
+  WriteGraphWithOntology(good_path_);
+  ravel::app::Controller c;
+  ASSERT_TRUE(c.Open(good_path_).has_value());
+  ASSERT_TRUE(c.AddNode("A", "nt").has_value());
+  ASSERT_TRUE(c.AddNode("B", "nt").has_value());
+  ASSERT_TRUE(c.AddNode("C", "nt").has_value());
+  ASSERT_TRUE(c.AddRelation(1, 2, "rt").has_value());
+  ASSERT_TRUE(c.AddRelation(2, 3, "rt").has_value());
+  ASSERT_TRUE(c.AddRelation(3, 1, "rt").has_value());
+
+  ASSERT_TRUE(c.DeleteRelations({2}).has_value());
+  {
+    const std::vector<ravel::app::RelationView> relations = c.Relations();
+    ASSERT_EQ(relations.size(), 2);
+    EXPECT_EQ(relations.front().id, 1);
+    EXPECT_EQ(relations.back().id, 3);
+  }
+  ASSERT_TRUE(c.Undo().has_value());
+  EXPECT_EQ(c.Relations().size(), 3);
+}
+
 }  // namespace

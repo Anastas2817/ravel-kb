@@ -129,4 +129,23 @@ std::vector<std::string> Controller::NodeTypeNames() const {
   return result;
 }
 
+std::vector<RelationView> Controller::Relations() const {
+  std::vector<RelationView> result;
+  s_.g.ForEachLiveRelation([this, &result](const Relation& rel) {
+    const ravel::RelationType& t = s_.g.ResolveRelation(rel.type());
+    result.emplace_back(rel.id(), rel.from(), rel.to(), rel.description(), rel.type(), t.color(),
+                        t.arrow(), t.symmetric());
+    return true;
+  });
+  return result;
+}
+
+std::vector<std::string> Controller::RelationTypeNames() const {
+  std::vector<std::string> result;
+  for (const std::string& key : s_.g.ontology_relation() | std::views::keys) {
+    result.emplace_back(key);
+  }
+  return result;
+}
+
 }  // namespace ravel::app

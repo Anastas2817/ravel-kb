@@ -27,6 +27,18 @@ struct NodeView {  // DTO
   std::string frame_color;
 };
 
+struct RelationView {
+  ravel::RelationId id;
+  ravel::NodeId from;
+  ravel::NodeId to;
+  std::string description;
+
+  std::string type;
+  std::string color;
+  std::string arrow;
+  bool symmetric;
+};
+
 class Controller {
  public:
   ControllerResult Open(const std::filesystem::path& p);
@@ -45,6 +57,9 @@ class Controller {
 
   std::vector<NodeView> Nodes() const;
   std::vector<std::string> NodeTypeNames() const;
+
+  std::vector<RelationView> Relations() const;
+  std::vector<std::string> RelationTypeNames() const;
 
  private:
   struct SessionState {
