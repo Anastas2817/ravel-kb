@@ -111,14 +111,18 @@ CommandResult Controller::MoveNode(ravel::NodeId id, ravel::Position to) {
 
 CommandResult Controller::ChangeNode(ravel::NodeId id, std::string title, std::string type,
                                      std::string description, double size) {
-  const ravel::app::ChangeNodeCmd cmd{
-      .id = id, .title = title, .type = type, .description = description, .size = size};
+  const ravel::app::ChangeNodeCmd cmd{.id = id,
+                                      .title = std::move(title),
+                                      .type = std::move(type),
+                                      .description = std::move(description),
+                                      .size = size};
   return s_.chronicle.Execute(cmd, s_.g);
 }
 
 CommandResult Controller::ChangeRelation(ravel::RelationId id, std::string type,
                                          std::string description) {
-  const ravel::app::ChangeRelationCmd cmd{.id = id, .type = type, .description = description};
+  const ravel::app::ChangeRelationCmd cmd{
+      .id = id, .type = std::move(type), .description = std::move(description)};
   return s_.chronicle.Execute(cmd, s_.g);
 }
 

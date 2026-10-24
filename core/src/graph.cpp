@@ -32,8 +32,8 @@ bool Graph::HasNode(NodeId id) const noexcept {
   return access_.contains(id);
 }
 
-Node Graph::ChangeNode(NodeId id, std::string title, std::string type, std::string description,
-                       double size) {
+Node Graph::ChangeNode(NodeId id, const std::string& title, const std::string& type,
+                       const std::string& description, double size) {
   // validate
   if (!HasNode(id)) {
     throw std::invalid_argument("Graph::ChangeNode tried to change non-existent Node");
@@ -91,7 +91,8 @@ RelationId Graph::AddRelation(NodeId from, NodeId to, std::string type, std::str
   return id;
 }
 
-Relation Graph::ChangeRelation(RelationId id, std::string type, std::string description) {
+Relation Graph::ChangeRelation(RelationId id, const std::string& type,
+                               const std::string& description) {
   // validate
   if (!HasRelation(id)) {
     throw std::invalid_argument("Graph::ChangeRelation tried to change non-existent Relation");
