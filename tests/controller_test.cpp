@@ -335,4 +335,146 @@ TEST_F(ControllerIoTest, RelationsFollowsDeleteAndUndo) {
   EXPECT_EQ(c.Relations().size(), 3);
 }
 
+TEST_F(ControllerIoTest, ChangeNodeUpdatesFieldsVisibleViaNodes) {
+  WriteGraphWithOntology(good_path_);
+  ravel::app::Controller c;
+  ASSERT_TRUE(c.Open(good_path_).has_value());
+  ASSERT_TRUE(c.AddNode("n", "nt", "", 1).has_value());
+
+  ASSERT_TRUE(c.ChangeNode(1, "renamed", "nt", "details", 2).has_value());
+  const std::vector<ravel::app::NodeView> nodes = c.Nodes();
+  ASSERT_EQ(nodes.size(), 1);
+  EXPECT_EQ(nodes.front().title, "renamed");
+  EXPECT_EQ(nodes.front().description, "details");
+  EXPECT_EQ(nodes.front().size, 2);
+}
+
+// Style fields of NodeView are derived from the node's type, so a type
+// change must be observable through the read-API with the new style —
+// this is exactly what a canvas resync will rely on.
+TEST_F(ControllerIoTest, ChangeNodeTypeChangeResolvesNewStyle) {
+  {
+    ravel::Graph g;
+    g.AddNodeType("nt", "#112233", "rect", "#445566");
+    g.AddNodeType("nt2", "#AABBCC", "oval", "#DDEEFF");
+    std::ofstream out(good_path_, std::ios::binary);
+    ravel::JsonStorage::Save(g.ToSnapshot(), out);
+  }
+  ravel::app::Controller c;
+  ASSERT_TRUE(c.Open(good_path_).has_value());
+  ASSERT_TRUE(c.AddNode("n", "nt").has_value());
+  EXPECT_EQ(c.Nodes().front().color, "#112233");
+
+  ASSERT_TRUE(c.ChangeNode(1, "n", "nt2", "", 1).has_value());
+  const std::vector<ravel::app::NodeView> nodes = c.Nodes();
+  ASSERT_EQ(nodes.size(), 1);
+  EXPECT_EQ(nodes.front().type, "nt2");
+  EXPECT_EQ(nodes.front().color, "#AABBCC");
+  EXPECT_EQ(nodes.front().shape, "oval");
+  EXPECT_EQ(nodes.front().frame_color, "#DDEEFF");
+}
+
+TEST_F(ControllerIoTest, ChangeNodeUndoRedoRoundTrip) {
+  WriteGraphWithOntology(good_path_);
+  ravel::app::Controller c;
+  ASSERT_TRUE(c.Open(good_path_).has_value());
+  ASSERT_TRUE(c.AddNode("n", "nt", "old", 1).has_value());
+
+  ASSERT_TRUE(c.ChangeNode(1, "renamed", "nt", "new", 3).has_value());
+  ASSERT_TRUE(c.Undo().has_value());
+  {
+    const std::vector<ravel::app::NodeView> nodes = c.Nodes();
+    ASSERT_EQ(nodes.size(), 1);
+    EXPECT_EQ(nodes.front().title, "n");
+    EXPECT_EQ(nodes.front().description, "old");
+    EXPECT_EQ(nodes.front().size, 1);
+  }
+  ASSERT_TRUE(c.Redo().has_value());
+  {
+    const std::vector<ravel::app::NodeView> nodes = c.Nodes();
+    ASSERT_EQ(nodes.size(), 1);
+    EXPECT_EQ(nodes.front().title, "renamed");
+    EXPECT_EQ(nodes.front().description, "new");
+    EXPECT_EQ(nodes.front().size, 3);
+  }
+}
+
+// Current contract of domain validation — exceptions (the expected-based
+// rewrite is recorded in roadmap as a direction). Regression boundary:
+// an invalid Change must throw, not corrupt the session.
+TEST_F(ControllerIoTest, ChangeNodeUnknownTypeThrowsThrough) {
+  WriteGraphWithOntology(good_path_);
+  ravel::app::Controller c;
+  ASSERT_TRUE(c.Open(good_path_).has_value());
+  ASSERT_TRUE(c.AddNode("n", "nt").has_value());
+  EXPECT_THROW((void)c.ChangeNode(1, "n", "missing", "", 1), std::invalid_argument);
+  // Failed command must not have touched the node nor been pushed: the only
+  // undoable step left is AddNode, and Undo removing the node proves it.
+  EXPECT_EQ(c.Nodes().front().type, "nt");
+  ASSERT_TRUE(c.Undo().has_value());
+  EXPECT_TRUE(c.Nodes().empty());
+}
+
+TEST_F(ControllerIoTest, ChangeNodeUnknownIdThrowsThrough) {
+  WriteGraphWithOntology(good_path_);
+  ravel::app::Controller c;
+  ASSERT_TRUE(c.Open(good_path_).has_value());
+  EXPECT_THROW((void)c.ChangeNode(42, "n", "nt", "", 1), std::invalid_argument);
+}
+
+TEST_F(ControllerIoTest, ChangeRelationUpdatesTypeAndDescriptionVisibleViaRelations) {
+  {
+    ravel::Graph g;
+    g.AddNodeType("nt", "#112233", "rect", "#445566");
+    g.AddRelationType("rt", "#112233", "solid", false, true);
+    g.AddRelationType("rt2", "#AABBCC", "dashed", true, false);
+    std::ofstream out(good_path_, std::ios::binary);
+    ravel::JsonStorage::Save(g.ToSnapshot(), out);
+  }
+  ravel::app::Controller c;
+  ASSERT_TRUE(c.Open(good_path_).has_value());
+  ASSERT_TRUE(c.AddNode("A", "nt").has_value());
+  ASSERT_TRUE(c.AddNode("B", "nt").has_value());
+  ASSERT_TRUE(c.AddRelation(1, 2, "rt").has_value());
+
+  ASSERT_TRUE(c.ChangeRelation(1, "rt2", "why").has_value());
+  const std::vector<ravel::app::RelationView> relations = c.Relations();
+  ASSERT_EQ(relations.size(), 1);
+  const ravel::app::RelationView& rel = relations.front();
+  EXPECT_EQ(rel.type, "rt2");
+  EXPECT_EQ(rel.description, "why");
+  EXPECT_EQ(rel.color, "#AABBCC");
+  EXPECT_EQ(rel.arrow, "dashed");
+  EXPECT_TRUE(rel.symmetric);
+  // Endpoints are immutable — ChangeRelation must not touch them.
+  EXPECT_EQ(rel.from, 1);
+  EXPECT_EQ(rel.to, 2);
+}
+
+TEST_F(ControllerIoTest, ChangeRelationUndoRestoresPreviousType) {
+  WriteGraphWithOntology(good_path_);
+  ravel::app::Controller c;
+  ASSERT_TRUE(c.Open(good_path_).has_value());
+  ASSERT_TRUE(c.AddNode("A", "nt").has_value());
+  ASSERT_TRUE(c.AddNode("B", "nt").has_value());
+  ASSERT_TRUE(c.AddRelation(1, 2, "rt").has_value());
+
+  ASSERT_TRUE(c.ChangeRelation(1, "rt", "why").has_value());
+  ASSERT_TRUE(c.Undo().has_value());
+  const std::vector<ravel::app::RelationView> relations = c.Relations();
+  ASSERT_EQ(relations.size(), 1);
+  EXPECT_EQ(relations.front().type, "rt");
+  EXPECT_EQ(relations.front().description, "");
+}
+
+TEST_F(ControllerIoTest, ChangeRelationUnknownTypeThrowsThrough) {
+  WriteGraphWithOntology(good_path_);
+  ravel::app::Controller c;
+  ASSERT_TRUE(c.Open(good_path_).has_value());
+  ASSERT_TRUE(c.AddNode("A", "nt").has_value());
+  ASSERT_TRUE(c.AddNode("B", "nt").has_value());
+  ASSERT_TRUE(c.AddRelation(1, 2, "rt").has_value());
+  EXPECT_THROW((void)c.ChangeRelation(1, "missing", ""), std::invalid_argument);
+}
+
 }  // namespace

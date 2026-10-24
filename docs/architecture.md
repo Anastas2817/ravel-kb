@@ -133,29 +133,27 @@ tools/jdk-21.0.12.1+1-jre/bin/java -jar tools/plantuml.jar -Playout=smetana -cha
 
 ```
 ravel-kb/
-├── core/            # чистый C++23: модель, снимок, свои контракты
-│   ├── include/     # graph.hpp
-│   └── src/         # graph.cpp
+├── core/            # чистый C++23: модель (graph), алгоритмы (algorithms), снимок
+│   ├── include/     # graph.hpp, algorithms.hpp
+│   └── src/         # graph.cpp, algorithms.cpp
 ├── app/             # команды (command.hpp, header-only), CommandChronicle, Controller
 │   ├── include/     # command.hpp, controller.hpp (read-модели NodeView/RelationView)
 │   └── src/         # controller.cpp
-├── ui/              # Canvas (Qt Widgets): MainWindow, NodeItem, RelationItem,
-│   │                # диалоги; читает модель только через app (инвариант 7)
-│   ├── include/
-│   └── src/
+├── ui/              # Canvas (Qt Widgets): MainWindow, NodeItem, RelationItem, диалоги
+│   ├── include/     # mainwindow.hpp, node_item.hpp, relation_item.hpp
+│   └── src/         # main.cpp, mainwindow.cpp, node_item.cpp, relation_item.cpp
 ├── storage/         # JsonStorage (потоки, nlohmann/json)
 │   ├── include/     # storage.hpp
 │   └── src/         # storage.cpp
-├── tests/           # GoogleTest: graph_test, storage_test, app_tests
-│   │                # (команды), controller_test, property_test, example_file_test
+├── tests/           # GoogleTest: graph_test, storage_test, app_tests (команды),
+│                    # controller_test, property_test, example_file_test
 ├── fuzz/            # libFuzzer-таргет (опция RAVEL_BUILD_FUZZ, нужен Clang)
 ├── examples/        # example.ravel.json, spec.ravel.json — эталоны ручной проверки UI
-├── docs/            # spec, architecture, roadmap, perspectives, research,
-│   │                # c1_scope, implementation, metaphors, advisors,
-│   │                # assets/ (в т.ч. C4-диаграммы)
+├── docs/            # spec, architecture, roadmap, perspectives, research, c1_scope,
+│                    # implementation, metaphors, advisors; assets/ (в т.ч. C4)
 │   └── assets/c4/   # C1.png … C4.png — источник истины по архитектуре
-├── .github/         # CI (матрица core без Qt, format, architecture,
-│                    # sanitizers, coverage, tidy, fuzz) + scripts/
+├── .github/         # CI (матрица core без Qt, format, architecture, sanitizers,
+│                    # coverage, tidy, fuzz) + scripts/
 ├── .clang-format / .clang-tidy / .editorconfig  # пины и конфиги инструментов
 └── CMakeLists.txt
 ```
