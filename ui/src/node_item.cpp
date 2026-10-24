@@ -5,6 +5,7 @@
 
 #include "node_item.hpp"
 
+#include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>
 
@@ -39,6 +40,12 @@ QVariant NodeItem::itemChange(GraphicsItemChange change, const QVariant& value) 
 }
 
 void NodeItem::mousePressEvent(QGraphicsSceneMouseEvent* e) {
+  if (e->button() == Qt::LeftButton && (e->modifiers() & Qt::ControlModifier)) {
+    rel_ = new QGraphicsLineItem;
+    rel_->setLine(QLineF(pos(), e->scenePos()));
+    scene()->addItem(rel_);
+    return;
+  }
   if (e->button() == Qt::LeftButton) {
     drag_start_ = this->pos();
   }
@@ -46,6 +53,21 @@ void NodeItem::mousePressEvent(QGraphicsSceneMouseEvent* e) {
 }
 
 void NodeItem::mouseReleaseEvent(QGraphicsSceneMouseEvent* e) {
+  if (rel_ != nullptr) {
+    scene()->removeItem(rel_);
+    delete rel_;
+    rel_ = nullptr;
+    if (e->button() == Qt::LeftButton) {
+      const QList<QGraphicsItem*> under_cursor = scene()->items(e->scenePos());
+      for (QGraphicsItem* cur : under_cursor) {
+        if (auto* target = dynamic_cast<NodeItem*>(cur); target != nullptr && target != this) {
+          emit RelationFinished(id_, target->id());
+          break;
+        }
+      }
+    }
+    return;
+  }
   if (e->button() == Qt::LeftButton) {
     QPointF cur = this->pos();
     if (cur != drag_start_) {
@@ -53,6 +75,14 @@ void NodeItem::mouseReleaseEvent(QGraphicsSceneMouseEvent* e) {
     }
   }
   QGraphicsObject::mouseReleaseEvent(e);
+}
+
+void NodeItem::mouseMoveEvent(QGraphicsSceneMouseEvent* e) {
+  if (rel_ != nullptr) {
+    rel_->setLine(QLineF(pos(), e->scenePos()));
+    return;
+  }
+  QGraphicsObject::mouseMoveEvent(e);
 }
 
 }  // namespace ravel::ui

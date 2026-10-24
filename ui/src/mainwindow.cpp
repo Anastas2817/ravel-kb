@@ -1,6 +1,7 @@
 #include "mainwindow.hpp"
 
 #include "node_item.hpp"
+#include "relation_item.hpp"
 
 #include <QDialogButtonBox>
 #include <QFileDialog>
@@ -34,6 +35,21 @@ QString AddNodeDialog::SelectedType() const {
 
 QString AddNodeDialog::NodeTitle() const {
   return title_->text();
+}
+
+AddRelationDialog::AddRelationDialog(const QStringList& types, QWidget* parent) : QDialog(parent) {
+  auto* layout = new QVBoxLayout(this);
+  type_ = new QComboBox(this);
+  type_->addItems(types);
+  auto* buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
+  layout->addWidget(type_);
+  layout->addWidget(buttons);
+  connect(buttons, &QDialogButtonBox::accepted, this, &QDialog::accept);
+  connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);
+}
+
+QString AddRelationDialog::SelectedType() const {
+  return type_->currentText();
 }
 
 MainWindow::MainWindow(QWidget* parent)
@@ -139,6 +155,7 @@ void MainWindow::OnSaveAs() {
 
 void MainWindow::ResyncScene() {
   const std::vector<ravel::app::NodeView> nodes = controller_.Nodes();
+  const std::vector<ravel::app::RelationView> relations = controller_.Relations();
 
   // Index current scene items by model id.
   QHash<quint64, NodeItem*> items;
@@ -162,6 +179,9 @@ void MainWindow::ResyncScene() {
                           QString::fromStdString(view.type), rect);
       scene_->addItem(item);
       connect(item, &NodeItem::MoveFinished, this, &MainWindow::OnNodeMoved);
+      connect(item, &NodeItem::RelationFinished, this, &MainWindow::OnAddRelation);
+      // Per-step geometry broadcast: RelationItems follow the dragged node.
+      connect(item, &NodeItem::Moved, this, &MainWindow::OnNodeDragged);
     }
     if (view.position.has_value()) {
       const QPointF target(view.position->x_, view.position->y_);
@@ -177,6 +197,32 @@ void MainWindow::ResyncScene() {
   for (NodeItem* item : items) {
     scene_->removeItem(item);
     delete item;
+  }
+
+  // Reconcile relation items by model id (same pattern as nodes). Geometry is
+  // refreshed on every resync; live following during drag is driven by
+  // NodeItem::Moved (OnNodeDragged).
+  QHash<quint64, RelationItem*> rel_items;
+  for (QGraphicsItem* item : scene_->items()) {
+    if (auto* rel = dynamic_cast<RelationItem*>(item)) {
+      rel_items.insert(rel->id(), rel);
+    }
+  }
+  for (const ravel::app::RelationView& view : relations) {
+    RelationItem* rel = rel_items.take(view.id);
+    if (rel == nullptr) {
+      rel = new RelationItem(view.id, view.from, view.to);
+      scene_->addItem(rel);
+    }
+    const NodeItem* from_item = FindNode(view.from);
+    const NodeItem* to_item = FindNode(view.to);
+    if (from_item != nullptr && to_item != nullptr) {
+      rel->setLine(QLineF(from_item->pos(), to_item->pos()));
+    }
+  }
+  for (RelationItem* rel : rel_items) {
+    scene_->removeItem(rel);
+    delete rel;
   }
 }
 
@@ -200,6 +246,21 @@ void MainWindow::OnSceneDoubleClick(QPointF pos) {
   if (!result.has_value()) {
     QMessageBox::warning(this, tr("Ошибка создания"),
                          tr("Не удалось создать узел: неизвестный тип (онтология пуста?)."));
+    return;
+  }
+  ResyncScene();
+}
+
+void MainWindow::OnAddRelation(std::uint64_t from, std::uint64_t to) {
+  AddRelationDialog dlg(ToQStringList(controller_.RelationTypeNames()), this);
+  if (dlg.exec() != QDialog::Accepted) {
+    return;
+  }
+  const ravel::app::CommandResult result =
+      controller_.AddRelation(from, to, dlg.SelectedType().toStdString(), "");
+  if (!result.has_value()) {
+    QMessageBox::warning(this, tr("Ошибка создания"),
+                         tr("Не удалось создать отношение: неизвестный тип (онтология пуста?)."));
     return;
   }
   ResyncScene();
@@ -231,6 +292,34 @@ void MainWindow::OnNodeMoved(std::uint64_t id, QPointF to) {
     return;
   }
   ResyncScene();
+}
+
+NodeItem* MainWindow::FindNode(std::uint64_t id) const {
+  for (QGraphicsItem* item : scene_->items()) {
+    if (auto* node = dynamic_cast<NodeItem*>(item)) {
+      if (node->id() == id) {
+        return node;
+      }
+    }
+  }
+  return nullptr;
+}
+
+void MainWindow::OnNodeDragged(std::uint64_t id, const QPointF& new_pos) {
+  for (QGraphicsItem* item : scene_->items()) {
+    auto* rel = dynamic_cast<RelationItem*>(item);
+    if (rel == nullptr || (rel->from() != id && rel->to() != id)) {
+      continue;
+    }
+    const NodeItem* from_item = FindNode(rel->from());
+    const NodeItem* to_item = FindNode(rel->to());
+    if (from_item == nullptr || to_item == nullptr) {
+      continue;
+    }
+    const QPointF a = (rel->from() == id) ? new_pos : from_item->pos();
+    const QPointF b = (rel->to() == id) ? new_pos : to_item->pos();
+    rel->setLine(QLineF(a, b));
+  }
 }
 
 }  // namespace ravel::ui

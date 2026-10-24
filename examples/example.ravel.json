@@ -2,7 +2,7 @@
   "allowed_cycles": [],
   "format_version": 3,
   "next_id_node": 7,
-  "next_id_relation": 1,
+  "next_id_relation": 5,
   "node_types": [
     {
       "color": "#4a90d9",
@@ -51,8 +51,8 @@
   ],
   "positions": [
     {
-      "x": -42.0,
-      "y": 12.0
+      "x": 137.0,
+      "y": 110.0
     },
     {
       "x": 193.0,
@@ -79,6 +79,13 @@
     {
       "arrow": "solid",
       "color": "#4a90d9",
+      "name": "has_part",
+      "symmetric": false,
+      "transitive": true
+    },
+    {
+      "arrow": "solid",
+      "color": "#4a90d9",
       "name": "is_a",
       "symmetric": false,
       "transitive": true
@@ -91,5 +98,24 @@
       "transitive": false
     }
   ],
-  "relations": []
+  "relations": [
+    {
+      "from": 1,
+      "id": 1,
+      "to": 3,
+      "type": "has_part"
+    },
+    {
+      "from": 1,
+      "id": 2,
+      "to": 2,
+      "type": "has_part"
+    },
+    {
+      "from": 1,
+      "id": 3,
+      "to": 4,
+      "type": "has_part"
+    }
+  ]
 }

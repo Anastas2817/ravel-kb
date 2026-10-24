@@ -303,8 +303,14 @@ TEST_F(ControllerIoTest, RelationsReturnsLiveRelationsInAscendingIdOrder) {
   const std::vector<ravel::app::RelationView> relations = c.Relations();
   ASSERT_EQ(relations.size(), 3);
   EXPECT_EQ(relations[0].id, 1);
+  EXPECT_EQ(relations[0].from, 1);
+  EXPECT_EQ(relations[0].to, 2);
   EXPECT_EQ(relations[1].id, 2);
+  EXPECT_EQ(relations[1].from, 2);
+  EXPECT_EQ(relations[1].to, 3);
   EXPECT_EQ(relations[2].id, 3);
+  EXPECT_EQ(relations[2].from, 3);
+  EXPECT_EQ(relations[2].to, 1);
 }
 
 TEST_F(ControllerIoTest, RelationsFollowsDeleteAndUndo) {

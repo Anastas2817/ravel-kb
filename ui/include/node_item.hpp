@@ -1,6 +1,7 @@
 #ifndef RAVEL_UI_INCLUDE_NODE_ITEM_HPP_
 #define RAVEL_UI_INCLUDE_NODE_ITEM_HPP_
 
+#include <QGraphicsLineItem>
 #include <QGraphicsObject>
 #include <QString>
 #include <cstdint>
@@ -23,11 +24,13 @@ class NodeItem : public QGraphicsObject {
  signals:
   void Moved(std::uint64_t id, const QPointF& new_pos);
   void MoveFinished(std::uint64_t id, const QPointF& pos);
+  void RelationFinished(std::uint64_t from, std::uint64_t to);
 
  protected:
   QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
   void mouseReleaseEvent(QGraphicsSceneMouseEvent* e) override;
   void mousePressEvent(QGraphicsSceneMouseEvent* e) override;
+  void mouseMoveEvent(QGraphicsSceneMouseEvent* e) override;
 
  private:
   std::uint64_t id_;
@@ -39,6 +42,7 @@ class NodeItem : public QGraphicsObject {
 
   QPointF drag_start_;
   QRectF rect_;
+  QGraphicsLineItem* rel_ = nullptr;
 };
 
 }  // namespace ravel::ui

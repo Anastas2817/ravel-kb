@@ -11,16 +11,8 @@
 
 namespace ravel::ui {
 
-RelationItem::RelationItem(NodeItem* from, NodeItem* to) : from_(from), to_(to) {
-  QObject::connect(from, &NodeItem::Moved, [this]() { Update(); });
-  QObject::connect(to, &NodeItem::Moved, [this]() { Update(); });
-  Update();
-}
-
-void RelationItem::Update() {
-  const QPointF src = from_->pos() + from_->boundingRect().center();
-  const QPointF dest = to_->pos() + to_->boundingRect().center();
-  setLine(QLineF(src, dest));
+RelationItem::RelationItem(std::uint64_t id, std::uint64_t from, std::uint64_t to)
+    : id_(id), from_(from), to_(to) {
 }
 
 }  // namespace ravel::ui

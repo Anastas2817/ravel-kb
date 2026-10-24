@@ -14,6 +14,8 @@
 
 namespace ravel::ui {
 
+class NodeItem;
+
 class CanvasView : public QGraphicsView {
   Q_OBJECT
  public:
@@ -42,6 +44,16 @@ class AddNodeDialog : public QDialog {
   QLineEdit* title_;
 };
 
+class AddRelationDialog : public QDialog {
+  Q_OBJECT
+ public:
+  AddRelationDialog(const QStringList& types, QWidget* parent = nullptr);
+  [[nodiscard]] QString SelectedType() const;
+
+ private:
+  QComboBox* type_;
+};
+
 class MainWindow : public QMainWindow {
   Q_OBJECT
  public:
@@ -56,9 +68,12 @@ class MainWindow : public QMainWindow {
   void OnUndo();
   void OnRedo();
   void OnNodeMoved(std::uint64_t id, QPointF to);
+  void OnNodeDragged(std::uint64_t id, const QPointF& new_pos);
+  void OnAddRelation(std::uint64_t from, std::uint64_t to);
 
  private:
   static QString ErrorToString(ravel::app::ControllerError err);
+  NodeItem* FindNode(std::uint64_t id) const;
 
   QGraphicsScene* scene_;
   CanvasView* view_;
