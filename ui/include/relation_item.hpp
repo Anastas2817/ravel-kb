@@ -1,17 +1,19 @@
 #ifndef RAVEL_UI_INCLUDE_RELATION_ITEM_HPP_
 #define RAVEL_UI_INCLUDE_RELATION_ITEM_HPP_
 
-#include <QGraphicsLineItem>
+#include <QGraphicsItem>
+#include <QLineF>
+#include <QPainter>
 #include <QString>
 #include <cstdint>
+#include <string>
 
 namespace ravel::ui {
 
-class NodeItem;
-
-class RelationItem : public QGraphicsLineItem {
+class RelationItem : public QGraphicsItem {
  public:
-  RelationItem(std::uint64_t id, std::uint64_t from, std::uint64_t to);
+  RelationItem(std::uint64_t id, std::uint64_t from, std::uint64_t to, QString color,
+               std::string arrow, bool symmetric);
 
   std::uint64_t id() const {
     return id_;
@@ -23,7 +25,24 @@ class RelationItem : public QGraphicsLineItem {
     return to_;
   }
 
+  [[nodiscard]] QRectF boundingRect() const override;
+  void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
+
+  void setLine(const QLineF& line) {
+    if (line_ == line) {
+      return;
+    }
+    // boundingRect() depends on line_: the scene must repaint the old region
+    // and reindex the item. Without this the old pixels stay (trail) and the
+    // new position is not repainted (line lags behind the dragged node).
+    prepareGeometryChange();
+    line_ = line;
+    update();
+  }
+
  private:
+  QLineF line_;
+
   std::uint64_t id_;
   std::uint64_t from_;
   std::uint64_t to_;
@@ -31,7 +50,7 @@ class RelationItem : public QGraphicsLineItem {
 
   QString type_;
   QString color_;
-  QString arrow_;
+  std::string arrow_;
   bool symmetric_;
 };
 

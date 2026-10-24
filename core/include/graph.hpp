@@ -32,7 +32,7 @@ using RelationId = std::uint64_t;
          std::all_of(color.begin() + 1, color.end(), IsHexDigit);
 }
 [[nodiscard]] constexpr bool IsValidShape(std::string_view shape) {
-  return ((shape == "rect") || (shape == "oval"));
+  return ((shape == "rect") || (shape == "oval") || (shape == "rounded_rect"));
 }
 
 class NodeType {  // DTO

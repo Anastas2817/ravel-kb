@@ -5,6 +5,7 @@
 #include <QGraphicsObject>
 #include <QString>
 #include <cstdint>
+#include <string>
 
 namespace ravel::ui {
 
@@ -12,14 +13,19 @@ class NodeItem : public QGraphicsObject {
   Q_OBJECT
 
  public:
-  NodeItem(std::uint64_t id, QString title, QString type, const QRectF& rect,
-           QGraphicsItem* parent = nullptr);
+  NodeItem(std::uint64_t id, QString title, QString type, const QRectF& rect, QString color,
+           std::string shape, QString frame_color, QGraphicsItem* parent = nullptr);
 
   std::uint64_t id() const {
     return id_;
   }
   QRectF boundingRect() const override;
   void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
+
+  // Border point of this node's rect facing `other_center` — where a
+  // connection arriving from that direction should attach, so the line ends
+  // at the border instead of being hidden under the node.
+  [[nodiscard]] QPointF AnchorTowards(const QPointF& other_center) const;
 
  signals:
   void Moved(std::uint64_t id, const QPointF& new_pos);
@@ -34,11 +40,12 @@ class NodeItem : public QGraphicsObject {
 
  private:
   std::uint64_t id_;
-  QString title_ = "wtf";
-  QString type_ = "model";
-  QString color_ = "#b3dcfd";
-  QString shape_ = "rect";
-  QString frame_color_ = "#000000";
+  QString title_;
+
+  QString type_;
+  QString color_;
+  std::string shape_;
+  QString frame_color_;
 
   QPointF drag_start_;
   QRectF rect_;

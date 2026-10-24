@@ -8,12 +8,22 @@
 #include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>
+#include <algorithm>
+#include <cmath>
+#include <limits>
 
 namespace ravel::ui {
 
-NodeItem::NodeItem(std::uint64_t id, QString title, QString type, const QRectF& rect,
-                   QGraphicsItem* parent)
-    : QGraphicsObject(parent), id_(id), title_(title), type_(type), rect_(rect) {
+NodeItem::NodeItem(std::uint64_t id, QString title, QString type, const QRectF& rect, QString color,
+                   std::string shape, QString frame_color, QGraphicsItem* parent)
+    : QGraphicsObject(parent),
+      id_(id),
+      title_(title),
+      type_(type),
+      rect_(rect),
+      color_(color),
+      shape_(shape),
+      frame_color_(frame_color) {
   this->setFlag(QGraphicsItem::ItemIsMovable);
   this->setFlag(QGraphicsItem::ItemSendsGeometryChanges);
   this->setAcceptHoverEvents(true);
@@ -23,18 +33,45 @@ QRectF NodeItem::boundingRect() const {
   return rect_;
 }
 
+QPointF NodeItem::AnchorTowards(const QPointF& other_center) const {
+  // Parametrize the ray center -> other and find where it exits the rect:
+  // t = min over axes of half_extent / |direction_axis|. For an "oval" shape
+  // this is the bounding-rect approximation (line may graze the corner).
+  const QPointF self_center = pos();
+  const QPointF d = other_center - self_center;
+  if (d.x() == 0 && d.y() == 0) {
+    return self_center;
+  }
+  const double hw = rect_.width() / 2.0;
+  const double hh = rect_.height() / 2.0;
+  constexpr double kInf = std::numeric_limits<double>::max();
+  const double tx = (d.x() != 0) ? hw / std::abs(d.x()) : kInf;
+  const double ty = (d.y() != 0) ? hh / std::abs(d.y()) : kInf;
+  return self_center + d * std::min(tx, ty);
+}
+
 void NodeItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* /*option*/,
                      QWidget* /*widget*/) {
   painter->setRenderHint(QPainter::Antialiasing);
-  painter->setBrush(Qt::blue);
-  painter->setPen(Qt::SolidLine);
-  painter->drawRoundedRect(rect_, 10, 10);
+  painter->setBrush(QColor(color_));
+  painter->setPen(QColor(frame_color_));
+  if (shape_ == "rect") {
+    painter->drawRect(rect_);
+  } else if (shape_ == "rounded_rect") {
+    painter->drawRoundedRect(rect_, 10, 10);
+  } else if (shape_ == "oval") {
+    painter->drawEllipse(rect_);
+  }
   painter->drawText(rect_, Qt::AlignCenter, title_);
 }
 
 QVariant NodeItem::itemChange(GraphicsItemChange change, const QVariant& value) {
-  if (change == ItemPositionChange) {
-    emit Moved(id_, value.toPointF());
+  // Notify AFTER the position is committed, not during ItemPositionChange:
+  // Moved handlers touch other items (RelationItem::setLine), and mutating
+  // the scene from inside the change-negotiation phase makes the scene drop
+  // or defer those repaint requests (stale arrows, smear trails).
+  if (change == ItemPositionHasChanged) {
+    emit Moved(id_, pos());
   }
   return QGraphicsObject::itemChange(change, value);
 }

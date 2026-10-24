@@ -16,6 +16,13 @@
 
 namespace ravel::ui {
 
+namespace {
+// Border-to-border line between two nodes.
+QLineF RelationLine(const NodeItem* from, const NodeItem* to) {
+  return QLineF(from->AnchorTowards(to->pos()), to->AnchorTowards(from->pos()));
+}
+}  // namespace
+
 AddNodeDialog::AddNodeDialog(const QStringList& types, QWidget* parent) : QDialog(parent) {
   auto* layout = new QVBoxLayout(this);
   type_ = new QComboBox(this);
@@ -63,6 +70,11 @@ MainWindow::MainWindow(QWidget* parent)
       redo_action_(new QAction(tr("Восстановить"), this)) {
   setCentralWidget(view_);
   view_->setScene(scene_);
+  // Full redraw instead of the default MinimalViewportUpdate: with region
+  // updates the scene left smear trails behind dragged relations (the root
+  // cause sits in Qt's deferred dirty-item processing; not worth chasing for
+  // this scale). At 10^2-10^3 items a full viewport repaint is unnoticeable.
+  view_->setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
 
   open_action_->setShortcut(QKeySequence::Open);  // Ctrl+O
   connect(open_action_, &QAction::triggered, this, &MainWindow::OnOpen);
@@ -175,8 +187,9 @@ void MainWindow::ResyncScene() {
     NodeItem* item = items.take(static_cast<quint64>(view.id));
     if (item == nullptr) {
       const QRectF rect(-kWidth / 2, -kHeight / 2, kWidth, kHeight);
-      item = new NodeItem(view.id, QString::fromStdString(view.title),
-                          QString::fromStdString(view.type), rect);
+      item = new NodeItem(
+          view.id, QString::fromStdString(view.title), QString::fromStdString(view.type), rect,
+          QString::fromStdString(view.color), view.shape, QString::fromStdString(view.frame_color));
       scene_->addItem(item);
       connect(item, &NodeItem::MoveFinished, this, &MainWindow::OnNodeMoved);
       connect(item, &NodeItem::RelationFinished, this, &MainWindow::OnAddRelation);
@@ -211,13 +224,14 @@ void MainWindow::ResyncScene() {
   for (const ravel::app::RelationView& view : relations) {
     RelationItem* rel = rel_items.take(view.id);
     if (rel == nullptr) {
-      rel = new RelationItem(view.id, view.from, view.to);
+      rel = new RelationItem(view.id, view.from, view.to, QString::fromStdString(view.color),
+                             view.arrow, view.symmetric);
       scene_->addItem(rel);
     }
     const NodeItem* from_item = FindNode(view.from);
     const NodeItem* to_item = FindNode(view.to);
     if (from_item != nullptr && to_item != nullptr) {
-      rel->setLine(QLineF(from_item->pos(), to_item->pos()));
+      rel->setLine(RelationLine(from_item, to_item));
     }
   }
   for (RelationItem* rel : rel_items) {
@@ -305,7 +319,9 @@ NodeItem* MainWindow::FindNode(std::uint64_t id) const {
   return nullptr;
 }
 
-void MainWindow::OnNodeDragged(std::uint64_t id, const QPointF& new_pos) {
+void MainWindow::OnNodeDragged(std::uint64_t id, const QPointF& /*new_pos*/) {
+  // new_pos equals the node's pos(): Moved is emitted from ItemPositionHasChanged,
+  // after the position is committed.
   for (QGraphicsItem* item : scene_->items()) {
     auto* rel = dynamic_cast<RelationItem*>(item);
     if (rel == nullptr || (rel->from() != id && rel->to() != id)) {
@@ -316,9 +332,7 @@ void MainWindow::OnNodeDragged(std::uint64_t id, const QPointF& new_pos) {
     if (from_item == nullptr || to_item == nullptr) {
       continue;
     }
-    const QPointF a = (rel->from() == id) ? new_pos : from_item->pos();
-    const QPointF b = (rel->to() == id) ? new_pos : to_item->pos();
-    rel->setLine(QLineF(a, b));
+    rel->setLine(RelationLine(from_item, to_item));
   }
 }
 
