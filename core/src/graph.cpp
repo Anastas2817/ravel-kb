@@ -32,6 +32,30 @@ bool Graph::HasNode(NodeId id) const noexcept {
   return access_.contains(id);
 }
 
+Node Graph::ChangeNode(NodeId id, std::string title, std::string type, std::string description,
+                       double size) {
+  // validate
+  if (!HasNode(id)) {
+    throw std::invalid_argument("Graph::ChangeNode tried to change non-existent Node");
+  }
+  if (!ontology_node_.contains(type)) {
+    throw std::invalid_argument("Graph::ChangeNode tried to change Node with non-existent type");
+  }
+  if (!std::isfinite(size) || size <= 0) {
+    throw std::invalid_argument(
+        "Graph::ChangeNode tried to change Node with non-positive/inf size");
+  }
+
+  // apply
+  Node src = nodes_[id - 1];
+  if (title == src.title() && type == src.type() && description == src.description() &&
+      size == src.size()) {
+    return src;
+  }
+  nodes_[id - 1] = Node(id, title, type, description, size);
+  return src;
+}
+
 bool Graph::HasRelation(RelationId id) const noexcept {
   const bool is_not_zombie =
       (id >= 1) && (id < next_id_relation_) && (relations_[id - 1].id() == id);
@@ -65,6 +89,25 @@ RelationId Graph::AddRelation(NodeId from, NodeId to, std::string type, std::str
   access_[from].push_back(id);
   access_[to].push_back(id);
   return id;
+}
+
+Relation Graph::ChangeRelation(RelationId id, std::string type, std::string description) {
+  // validate
+  if (!HasRelation(id)) {
+    throw std::invalid_argument("Graph::ChangeRelation tried to change non-existent Relation");
+  }
+  if (!ontology_relation_.contains(type)) {
+    throw std::invalid_argument(
+        "Graph::ChangeRelation tried to change Relation with non-existent type");
+  }
+
+  // apply
+  Relation src = relations_[id - 1];
+  if (type == src.type() && description == src.description()) {
+    return src;
+  }
+  relations_[id - 1] = Relation(id, src.from(), src.to(), type, description);
+  return src;
 }
 
 NodeId Graph::AddNodeWithRelations(std::string title, const std::string& type,

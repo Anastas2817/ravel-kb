@@ -290,6 +290,8 @@ class Graph {
   NodeId AddNode(std::string title, std::string type, std::string description = "",
                  double size = 1);
   [[nodiscard]] bool HasNode(NodeId id) const noexcept;
+  Node ChangeNode(NodeId id, std::string title, std::string type, std::string description,
+                  double size);
   RelationId AddRelation(NodeId from, NodeId to, std::string type, std::string description = "");
   [[nodiscard]] bool HasRelation(RelationId id) const noexcept;
   [[nodiscard]] const Relation& GetRelation(RelationId id) const {
@@ -298,6 +300,7 @@ class Graph {
     }
     return relations_[id - 1];
   }
+  Relation ChangeRelation(RelationId id, std::string type, std::string description);
   // Composite convenience: AddNode + AddRelation(s) in one validated call.
   // A real UI scenario exists (create a node already linked), but the
   // composition itself does not need Graph's privacy — candidate for moving

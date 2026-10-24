@@ -54,6 +54,9 @@ class Controller {
   CommandResult Undo();
   CommandResult Redo();
   CommandResult MoveNode(ravel::NodeId id, ravel::Position to);
+  CommandResult ChangeNode(ravel::NodeId id, std::string title, std::string type,
+                           std::string description, double size);
+  CommandResult ChangeRelation(ravel::RelationId id, std::string type, std::string description);
 
   std::vector<NodeView> Nodes() const;
   std::vector<std::string> NodeTypeNames() const;

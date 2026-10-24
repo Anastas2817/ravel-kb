@@ -109,6 +109,19 @@ CommandResult Controller::MoveNode(ravel::NodeId id, ravel::Position to) {
   return s_.chronicle.Execute(cmd, s_.g);
 }
 
+CommandResult Controller::ChangeNode(ravel::NodeId id, std::string title, std::string type,
+                                     std::string description, double size) {
+  const ravel::app::ChangeNodeCmd cmd{
+      .id = id, .title = title, .type = type, .description = description, .size = size};
+  return s_.chronicle.Execute(cmd, s_.g);
+}
+
+CommandResult Controller::ChangeRelation(ravel::RelationId id, std::string type,
+                                         std::string description) {
+  const ravel::app::ChangeRelationCmd cmd{.id = id, .type = type, .description = description};
+  return s_.chronicle.Execute(cmd, s_.g);
+}
+
 std::vector<NodeView> Controller::Nodes() const {
   std::vector<NodeView> result;
   s_.g.ForEachLiveNode([this, &result](const Node& node) {

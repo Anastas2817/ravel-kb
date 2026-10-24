@@ -117,16 +117,50 @@ struct MoveNodeCmd {
   }
 };
 
+struct ChangeNodeCmd {
+  ravel::NodeId id;
+  std::string title;
+  std::string type;
+  std::string description;
+  double size;
+  ravel::Node prev{0, "", ""};  // captured by Do(); braces: parens would parse as a method
+  CommandResult Do(ravel::Graph& g) {
+    prev = g.ChangeNode(id, title, type, description, size);
+    return {};
+  }
+  CommandResult Undo(ravel::Graph& g) const {
+    g.ChangeNode(prev.id(), prev.title(), prev.type(), prev.description(), prev.size());
+    return {};
+  }
+};
+
+struct ChangeRelationCmd {
+  ravel::RelationId id;
+  std::string type;
+  std::string description;
+  // Relation has no default for `type` — provide an empty one for the placeholder.
+  ravel::Relation prev{0, 0, 0, ""};
+  CommandResult Do(ravel::Graph& g) {
+    prev = g.ChangeRelation(id, type, description);
+    return {};
+  }
+  CommandResult Undo(ravel::Graph& g) const {
+    g.ChangeRelation(prev.id(), prev.type(), prev.description());
+    return {};
+  }
+};
+
 template <typename C>
 concept Command = requires(C& c, ravel::Graph& g) {
   { c.Do(g) } -> std::same_as<CommandResult>;
   { c.Undo(g) } -> std::same_as<CommandResult>;
 };
 static_assert(Command<AddNodeCmd> && Command<AddRelationCmd> && Command<DeleteNodesCmd> &&
-              Command<DeleteRelationsCmd> && Command<MoveNodeCmd>);
+              Command<DeleteRelationsCmd> && Command<MoveNodeCmd> && Command<ChangeNodeCmd> &&
+              Command<ChangeRelationCmd>);
 
-using AnyCommand =
-    std::variant<AddNodeCmd, AddRelationCmd, DeleteNodesCmd, DeleteRelationsCmd, MoveNodeCmd>;
+using AnyCommand = std::variant<AddNodeCmd, AddRelationCmd, DeleteNodesCmd, DeleteRelationsCmd,
+                                MoveNodeCmd, ChangeNodeCmd, ChangeRelationCmd>;
 
 inline CommandResult Do(AnyCommand& c, ravel::Graph& g) {
   return std::visit([&g](auto& x) { return x.Do(g); }, c);
