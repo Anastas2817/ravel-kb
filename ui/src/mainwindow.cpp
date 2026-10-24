@@ -67,7 +67,8 @@ MainWindow::MainWindow(QWidget* parent)
       save_action_(new QAction(tr("Сохранить"), this)),
       save_as_action_(new QAction(tr("Сохранить как…"), this)),
       undo_action_(new QAction(tr("Отменить"), this)),
-      redo_action_(new QAction(tr("Восстановить"), this)) {
+      redo_action_(new QAction(tr("Восстановить"), this)),
+      delete_action_(new QAction(tr("Удалить"), this)) {
   setCentralWidget(view_);
   view_->setScene(scene_);
   // Full redraw instead of the default MinimalViewportUpdate: with region
@@ -75,6 +76,7 @@ MainWindow::MainWindow(QWidget* parent)
   // cause sits in Qt's deferred dirty-item processing; not worth chasing for
   // this scale). At 10^2-10^3 items a full viewport repaint is unnoticeable.
   view_->setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
+  view_->setDragMode(QGraphicsView::RubberBandDrag);
 
   open_action_->setShortcut(QKeySequence::Open);  // Ctrl+O
   connect(open_action_, &QAction::triggered, this, &MainWindow::OnOpen);
@@ -91,12 +93,16 @@ MainWindow::MainWindow(QWidget* parent)
   redo_action_->setShortcut(QKeySequence::Redo);  // Ctrl+Y on Windows, Ctrl+Shift+Z on macOS/Linux
   connect(redo_action_, &QAction::triggered, this, &MainWindow::OnRedo);
 
+  delete_action_->setShortcuts({QKeySequence("Ctrl+D"), QKeySequence::Delete});
+  connect(delete_action_, &QAction::triggered, this, &MainWindow::OnDeleteSelected);
+
   connect(view_, &CanvasView::DoubleClicked, this, &MainWindow::OnSceneDoubleClick);
 
   QMenu* file_menu = menuBar()->addMenu(tr("&Файл"));
   file_menu->addAction(open_action_);
   file_menu->addAction(save_action_);
   file_menu->addAction(save_as_action_);
+  file_menu->addAction(delete_action_);
   QMenu* edit = menuBar()->addMenu(tr("&Правка"));
   edit->addAction(undo_action_);
   edit->addAction(redo_action_);
@@ -334,6 +340,37 @@ void MainWindow::OnNodeDragged(std::uint64_t id, const QPointF& /*new_pos*/) {
     }
     rel->setLine(RelationLine(from_item, to_item));
   }
+}
+
+void MainWindow::OnDeleteSelected() {
+  std::vector<ravel::NodeId> node_ids;
+  std::vector<ravel::RelationId> rel_ids;
+  for (QGraphicsItem* item : scene_->selectedItems()) {
+    if (auto* node = dynamic_cast<NodeItem*>(item)) {
+      node_ids.push_back(node->id());
+    } else if (auto* rel = dynamic_cast<RelationItem*>(item)) {
+      rel_ids.push_back(rel->id());
+    }
+  }
+  if (node_ids.empty() && rel_ids.empty()) {
+    return;
+  }
+
+  if (!rel_ids.empty()) {  //  first for undo
+    const ravel::app::CommandResult r = controller_.DeleteRelations(rel_ids);
+    if (!r.has_value()) {
+      QMessageBox::warning(this, tr("Ошибка удаления"), tr("не удалось удалить рёбра"));
+      return;
+    }
+  }
+  if (!node_ids.empty()) {
+    const ravel::app::CommandResult r = controller_.DeleteNodes(node_ids);
+    if (!r.has_value()) {
+      QMessageBox::warning(this, tr("Ошибка удаления"), tr("не удалось удалить рёбра"));
+      return;
+    }
+  }
+  ResyncScene();
 }
 
 }  // namespace ravel::ui

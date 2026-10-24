@@ -26,6 +26,7 @@ NodeItem::NodeItem(std::uint64_t id, QString title, QString type, const QRectF& 
       frame_color_(frame_color) {
   this->setFlag(QGraphicsItem::ItemIsMovable);
   this->setFlag(QGraphicsItem::ItemSendsGeometryChanges);
+  setFlag(QGraphicsItem::ItemIsSelectable);
   this->setAcceptHoverEvents(true);
 }
 

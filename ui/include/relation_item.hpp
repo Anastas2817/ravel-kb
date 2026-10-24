@@ -27,6 +27,7 @@ class RelationItem : public QGraphicsItem {
 
   [[nodiscard]] QRectF boundingRect() const override;
   void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
+  [[nodiscard]] QPainterPath shape() const override;
 
   void setLine(const QLineF& line) {
     if (line_ == line) {

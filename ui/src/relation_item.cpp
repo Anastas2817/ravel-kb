@@ -6,6 +6,8 @@
 #include "relation_item.hpp"
 
 #include <QColor>
+#include <QPainterPath>
+#include <QPainterPathStroker>
 #include <QPen>
 #include <QPolygonF>
 
@@ -23,6 +25,7 @@ RelationItem::RelationItem(std::uint64_t id, std::uint64_t from, std::uint64_t t
                            std::string arrow, bool symmetric)
     : id_(id), from_(from), to_(to), color_(color), arrow_(arrow), symmetric_(symmetric) {
   setZValue(-1);
+  setFlag(QGraphicsItem::ItemIsSelectable);
 }
 
 QRectF RelationItem::boundingRect() const {
@@ -60,6 +63,17 @@ void RelationItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* /*op
     painter->setBrush(QColor(color_));
     painter->drawPolygon(head);
   }
+}
+
+QPainterPath RelationItem::shape() const {
+  // Clickable thickness for hit-testing/selection: the visible line is 1px,
+  // too thin for a mouse. boundingRect() stays as is (paint clip).
+  QPainterPath path;
+  path.moveTo(line_.p1());
+  path.lineTo(line_.p2());
+  QPainterPathStroker stroker;
+  stroker.setWidth(10.0);
+  return stroker.createStroke(path);
 }
 
 }  // namespace ravel::ui

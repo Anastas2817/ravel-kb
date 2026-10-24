@@ -70,6 +70,7 @@ class MainWindow : public QMainWindow {
   void OnNodeMoved(std::uint64_t id, QPointF to);
   void OnNodeDragged(std::uint64_t id, const QPointF& new_pos);
   void OnAddRelation(std::uint64_t from, std::uint64_t to);
+  void OnDeleteSelected();
 
  private:
   static QString ErrorToString(ravel::app::ControllerError err);
@@ -83,6 +84,7 @@ class MainWindow : public QMainWindow {
   QAction* save_as_action_;
   QAction* undo_action_;
   QAction* redo_action_;
+  QAction* delete_action_;
 };
 
 }  // namespace ravel::ui
