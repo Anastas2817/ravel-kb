@@ -136,15 +136,23 @@ ravel-kb/
 ├── core/            # чистый C++23: модель, снимок, свои контракты
 │   ├── include/     # graph.hpp
 │   └── src/         # graph.cpp
-├── app/             # команды (command.hpp), CommandChronicle, Controller
-├── ui/              # Canvas (Qt Widgets)
+├── app/             # команды (command.hpp, header-only), CommandChronicle, Controller
+│   ├── include/     # command.hpp, controller.hpp (read-модели NodeView/RelationView)
+│   └── src/         # controller.cpp
+├── ui/              # Canvas (Qt Widgets): MainWindow, NodeItem, RelationItem,
+│   │                # диалоги; читает модель только через app (инвариант 7)
+│   ├── include/
+│   └── src/
 ├── storage/         # JsonStorage (потоки, nlohmann/json)
 │   ├── include/     # storage.hpp
 │   └── src/         # storage.cpp
-├── tests/           # GoogleTest: graph_test.cpp, storage_test.cpp, app_tests.cpp
+├── tests/           # GoogleTest: graph_test, storage_test, app_tests
+│   │                # (команды), controller_test, property_test, example_file_test
 ├── fuzz/            # libFuzzer-таргет (опция RAVEL_BUILD_FUZZ, нужен Clang)
+├── examples/        # example.ravel.json, spec.ravel.json — эталоны ручной проверки UI
 ├── docs/            # spec, architecture, roadmap, perspectives, research,
-│   │                # c1_scope, assets/ (в т.ч. C4-диаграммы)
+│   │                # c1_scope, implementation, metaphors, advisors,
+│   │                # assets/ (в т.ч. C4-диаграммы)
 │   └── assets/c4/   # C1.png … C4.png — источник истины по архитектуре
 ├── .github/         # CI (матрица core без Qt, format, architecture,
 │                    # sanitizers, coverage, tidy, fuzz) + scripts/
