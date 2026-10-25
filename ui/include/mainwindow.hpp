@@ -1,58 +1,16 @@
 #ifndef RAVEL_UI_INCLUDE_MAINWINDOW_HPP_
 #define RAVEL_UI_INCLUDE_MAINWINDOW_HPP_
 
+#include "canvas_view.hpp"
 #include "controller.hpp"
 
 #include <QAction>
-#include <QComboBox>
-#include <QDialog>
 #include <QGraphicsScene>
-#include <QGraphicsView>
-#include <QLineEdit>
 #include <QMainWindow>
-#include <QMouseEvent>
 
 namespace ravel::ui {
 
 class NodeItem;
-
-class CanvasView : public QGraphicsView {
-  Q_OBJECT
- public:
-  using QGraphicsView::QGraphicsView;
- signals:
-  void DoubleClicked(QPointF scene_pos);
-
- protected:
-  void mouseDoubleClickEvent(QMouseEvent* e) override {
-    if (e->button() == Qt::LeftButton) {
-      emit DoubleClicked(mapToScene(e->pos()));
-    }
-    QGraphicsView::mouseDoubleClickEvent(e);
-  }
-};
-
-class AddNodeDialog : public QDialog {
-  Q_OBJECT
- public:
-  AddNodeDialog(const QStringList& types, QWidget* parent = nullptr);
-  [[nodiscard]] QString SelectedType() const;
-  [[nodiscard]] QString NodeTitle() const;
-
- private:
-  QComboBox* type_;
-  QLineEdit* title_;
-};
-
-class AddRelationDialog : public QDialog {
-  Q_OBJECT
- public:
-  AddRelationDialog(const QStringList& types, QWidget* parent = nullptr);
-  [[nodiscard]] QString SelectedType() const;
-
- private:
-  QComboBox* type_;
-};
 
 class MainWindow : public QMainWindow {
   Q_OBJECT
@@ -69,7 +27,8 @@ class MainWindow : public QMainWindow {
   void OnRedo();
   void OnNodeMoved(std::uint64_t id, QPointF to);
   void OnNodeDragged(std::uint64_t id, const QPointF& new_pos);
-  void OnAddRelation(std::uint64_t from, std::uint64_t to);
+  void OnAddRelation(std::uint64_t from, std::uint64_t to, const QString& from_title,
+                     const QString& to_title);
   void OnDeleteSelected();
 
  private:

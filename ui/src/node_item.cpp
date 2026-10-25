@@ -14,12 +14,13 @@
 
 namespace ravel::ui {
 
-NodeItem::NodeItem(std::uint64_t id, QString title, QString type, const QRectF& rect, QString color,
-                   std::string shape, QString frame_color, QGraphicsItem* parent)
+NodeItem::NodeItem(std::uint64_t id, QString title, QString type, double size, const QRectF& rect,
+                   QString color, std::string shape, QString frame_color, QGraphicsItem* parent)
     : QGraphicsObject(parent),
       id_(id),
       title_(title),
       type_(type),
+      size_(size),
       rect_(rect),
       color_(color),
       shape_(shape),
@@ -28,6 +29,16 @@ NodeItem::NodeItem(std::uint64_t id, QString title, QString type, const QRectF& 
   this->setFlag(QGraphicsItem::ItemSendsGeometryChanges);
   setFlag(QGraphicsItem::ItemIsSelectable);
   this->setAcceptHoverEvents(true);
+}
+
+void NodeItem::SetRect(const QRectF& r, double size) {
+  if (r == rect_) {
+    return;
+  }
+  prepareGeometryChange();
+  rect_ = r;
+  size_ = size;
+  update();
 }
 
 QRectF NodeItem::boundingRect() const {
@@ -54,6 +65,9 @@ QPointF NodeItem::AnchorTowards(const QPointF& other_center) const {
 void NodeItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* /*option*/,
                      QWidget* /*widget*/) {
   painter->setRenderHint(QPainter::Antialiasing);
+  QFont f = painter->font();
+  f.setPointSizeF(f.pointSizeF() * size_);
+  painter->setFont(f);
   painter->setBrush(QColor(color_));
   painter->setPen(QColor(frame_color_));
   if (shape_ == "rect") {
@@ -99,7 +113,7 @@ void NodeItem::mouseReleaseEvent(QGraphicsSceneMouseEvent* e) {
       const QList<QGraphicsItem*> under_cursor = scene()->items(e->scenePos());
       for (QGraphicsItem* cur : under_cursor) {
         if (auto* target = dynamic_cast<NodeItem*>(cur); target != nullptr && target != this) {
-          emit RelationFinished(id_, target->id());
+          emit RelationFinished(id_, target->id_, title_, target->title_);
           break;
         }
       }

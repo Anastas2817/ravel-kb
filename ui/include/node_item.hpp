@@ -13,13 +13,14 @@ class NodeItem : public QGraphicsObject {
   Q_OBJECT
 
  public:
-  NodeItem(std::uint64_t id, QString title, QString type, const QRectF& rect, QString color,
-           std::string shape, QString frame_color, QGraphicsItem* parent = nullptr);
+  NodeItem(std::uint64_t id, QString title, QString type, double size, const QRectF& rect,
+           QString color, std::string shape, QString frame_color, QGraphicsItem* parent = nullptr);
 
   std::uint64_t id() const {
     return id_;
   }
   QRectF boundingRect() const override;
+  void SetRect(const QRectF& r, double size);
   void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
 
   // Border point of this node's rect facing `other_center` — where a
@@ -30,7 +31,7 @@ class NodeItem : public QGraphicsObject {
  signals:
   void Moved(std::uint64_t id, const QPointF& new_pos);
   void MoveFinished(std::uint64_t id, const QPointF& pos);
-  void RelationFinished(std::uint64_t from, std::uint64_t to);
+  void RelationFinished(std::uint64_t from, std::uint64_t to, QString from_title, QString to_title);
 
  protected:
   QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
@@ -41,6 +42,7 @@ class NodeItem : public QGraphicsObject {
  private:
   std::uint64_t id_;
   QString title_;
+  double size_;
 
   QString type_;
   QString color_;

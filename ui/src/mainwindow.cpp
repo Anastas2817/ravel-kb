@@ -1,9 +1,10 @@
 #include "mainwindow.hpp"
 
+#include "add_node_dialog.hpp"
+#include "add_relation_dialog.hpp"
 #include "node_item.hpp"
 #include "relation_item.hpp"
 
-#include <QDialogButtonBox>
 #include <QFileDialog>
 #include <QHash>
 #include <QKeySequence>
@@ -12,7 +13,6 @@
 #include <QMessageBox>
 #include <QStatusBar>
 #include <QStringList>
-#include <QVBoxLayout>
 
 namespace ravel::ui {
 
@@ -22,42 +22,6 @@ QLineF RelationLine(const NodeItem* from, const NodeItem* to) {
   return QLineF(from->AnchorTowards(to->pos()), to->AnchorTowards(from->pos()));
 }
 }  // namespace
-
-AddNodeDialog::AddNodeDialog(const QStringList& types, QWidget* parent) : QDialog(parent) {
-  auto* layout = new QVBoxLayout(this);
-  type_ = new QComboBox(this);
-  type_->addItems(types);
-  title_ = new QLineEdit(this);
-  auto* buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
-  layout->addWidget(type_);
-  layout->addWidget(title_);
-  layout->addWidget(buttons);
-  connect(buttons, &QDialogButtonBox::accepted, this, &QDialog::accept);
-  connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);
-}
-
-QString AddNodeDialog::SelectedType() const {
-  return type_->currentText();
-}
-
-QString AddNodeDialog::NodeTitle() const {
-  return title_->text();
-}
-
-AddRelationDialog::AddRelationDialog(const QStringList& types, QWidget* parent) : QDialog(parent) {
-  auto* layout = new QVBoxLayout(this);
-  type_ = new QComboBox(this);
-  type_->addItems(types);
-  auto* buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
-  layout->addWidget(type_);
-  layout->addWidget(buttons);
-  connect(buttons, &QDialogButtonBox::accepted, this, &QDialog::accept);
-  connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);
-}
-
-QString AddRelationDialog::SelectedType() const {
-  return type_->currentText();
-}
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent),
@@ -76,7 +40,6 @@ MainWindow::MainWindow(QWidget* parent)
   // cause sits in Qt's deferred dirty-item processing; not worth chasing for
   // this scale). At 10^2-10^3 items a full viewport repaint is unnoticeable.
   view_->setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
-  view_->setDragMode(QGraphicsView::RubberBandDrag);
 
   open_action_->setShortcut(QKeySequence::Open);  // Ctrl+O
   connect(open_action_, &QAction::triggered, this, &MainWindow::OnOpen);
@@ -184,18 +147,18 @@ void MainWindow::ResyncScene() {
     }
   }
 
-  // NodeItem rect is center-origin: setPos() places the model position at the
-  // visual center of the node.
-  constexpr qreal kWidth = 120.0;
-  constexpr qreal kHeight = 60.0;
-
   for (const ravel::app::NodeView& view : nodes) {
+    // NodeItem rect is center-origin: setPos() places the model position at the
+    // visual center of the node.
+    const qreal kWidth = 140.0 * view.size;
+    const qreal kHeight = 60.0 * view.size;
+    const QRectF rect(-kWidth / 2, -kHeight / 2, kWidth, kHeight);
     NodeItem* item = items.take(static_cast<quint64>(view.id));
     if (item == nullptr) {
-      const QRectF rect(-kWidth / 2, -kHeight / 2, kWidth, kHeight);
-      item = new NodeItem(
-          view.id, QString::fromStdString(view.title), QString::fromStdString(view.type), rect,
-          QString::fromStdString(view.color), view.shape, QString::fromStdString(view.frame_color));
+      item = new NodeItem(view.id, QString::fromStdString(view.title),
+                          QString::fromStdString(view.type), view.size, rect,
+                          QString::fromStdString(view.color), view.shape,
+                          QString::fromStdString(view.frame_color));
       scene_->addItem(item);
       connect(item, &NodeItem::MoveFinished, this, &MainWindow::OnNodeMoved);
       connect(item, &NodeItem::RelationFinished, this, &MainWindow::OnAddRelation);
@@ -207,6 +170,9 @@ void MainWindow::ResyncScene() {
       if (item->pos() != target) {
         item->setPos(target);
       }
+    }
+    if (item->boundingRect() != rect) {
+      item->SetRect(rect, view.size);
     }
   }
 
@@ -257,12 +223,14 @@ QStringList ToQStringList(const std::vector<std::string>& v) {
 
 void MainWindow::OnSceneDoubleClick(QPointF pos) {
   AddNodeDialog dlg(ToQStringList(controller_.NodeTypeNames()), this);
+  dlg.setWindowOpacity(0.9);
+  dlg.setWindowTitle(tr("Новое понятие"));
   if (dlg.exec() != QDialog::Accepted) {
     return;
   }
-  const ravel::app::CommandResult result =
-      controller_.AddNode(dlg.NodeTitle().toStdString(), dlg.SelectedType().toStdString(), "", 1,
-                          ravel::Position{pos.x(), pos.y()});
+  const ravel::app::CommandResult result = controller_.AddNode(
+      dlg.title().toStdString(), dlg.type().toStdString(), dlg.description().toStdString(),
+      dlg.size(), ravel::Position{pos.x(), pos.y()});
   if (!result.has_value()) {
     QMessageBox::warning(this, tr("Ошибка создания"),
                          tr("Не удалось создать узел: неизвестный тип (онтология пуста?)."));
@@ -271,13 +239,16 @@ void MainWindow::OnSceneDoubleClick(QPointF pos) {
   ResyncScene();
 }
 
-void MainWindow::OnAddRelation(std::uint64_t from, std::uint64_t to) {
-  AddRelationDialog dlg(ToQStringList(controller_.RelationTypeNames()), this);
+void MainWindow::OnAddRelation(std::uint64_t from, std::uint64_t to, const QString& from_title,
+                               const QString& to_title) {
+  AddRelationDialog dlg(ToQStringList(controller_.RelationTypeNames()), from_title, to_title, this);
+  dlg.setWindowOpacity(0.9);
+  dlg.setWindowTitle(tr("Новая связь"));
   if (dlg.exec() != QDialog::Accepted) {
     return;
   }
   const ravel::app::CommandResult result =
-      controller_.AddRelation(from, to, dlg.SelectedType().toStdString(), "");
+      controller_.AddRelation(from, to, dlg.type().toStdString(), dlg.description().toStdString());
   if (!result.has_value()) {
     QMessageBox::warning(this, tr("Ошибка создания"),
                          tr("Не удалось создать отношение: неизвестный тип (онтология пуста?)."));
