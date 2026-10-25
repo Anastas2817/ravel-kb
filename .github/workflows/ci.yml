@@ -1,5 +1,6 @@
 # CI: сборка ядра (core + storage + tests) без Qt, матрица платформ и конфигураций.
-# UI-слой (Qt 6) намеренно исключён — job `core` по docs/roadmap.md (неделя 3).
+# UI-слой (Qt 6) собирается отдельным job'ом `ui` — только факт компиляции,
+# без прогона (у приложения нет автотестов; ручная проверка — за автором).
 #
 # MSVC (Windows): warnings-as-errors НЕ включён — системные заголовки nlohmann/json
 # дают предупреждения уровня /W4; лечение через /external отложено.
@@ -90,6 +91,37 @@ jobs:
 
       - name: Test
         run: ctest --test-dir build -C ${{ matrix.build_type }} --output-on-failure
+
+  # UI: только сборка. Цель job'а — поймать «у меня собирается, в CI нет»
+  # и регрессии компиляции ui/ от правок в core/app (сигнатуры фасада).
+  # Qt 6 из apt образа ubuntu-latest (6.4.x) — минимальная версия, под которую
+  # обязан собираться код: локально у автора Qt новее, ловить дрейф API
+  # здесь, а не у пользователя. -Werror нет намеренно: предупреждения из
+  # Qt-заголовков (та же история, что у MSVC-джоба ядра). Тесты не гоняем:
+  # ctest-покрытие — job'ами ядра, здесь важен факт линковки ravel.
+  ui:
+    name: ui build (Ubuntu · Qt 6 · GCC)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # qt6-base-dev — Widgets + CMake-конфиги Qt6; qt6-base-dev-tools —
+      # moc/uic для automoc; libgl1-mesa-dev — заголовки OpenGL, без них
+      # Qt-конфиг падает на поиске GL при первом configure.
+      - name: Install Qt 6
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qt6-base-dev qt6-base-dev-tools libgl1-mesa-dev
+
+      - name: Configure
+        run: >
+          cmake -B build -G Ninja
+          -DCMAKE_BUILD_TYPE=Release
+          -DRAVEL_BUILD_UI=ON
+
+      - name: Build
+        run: cmake --build build --target ravel --parallel
 
   format:
     name: clang-format
