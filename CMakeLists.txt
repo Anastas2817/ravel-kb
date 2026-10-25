@@ -96,7 +96,7 @@ if(BUILD_TESTING)
     add_subdirectory(tests) # GoogleTest; FetchContent — только если есть тесты
 endif()
 
-# Приложение — стартовый проект при открытии ravel-kb.sln
+# Приложение — стартовый проект при открытии *.sln
 if(TARGET ravel)
     set_property(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" PROPERTY VS_STARTUP_PROJECT ravel)
 endif()

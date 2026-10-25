@@ -132,7 +132,7 @@ tools/jdk-21.0.12.1+1-jre/bin/java -jar tools/plantuml.jar -Playout=smetana -cha
 ## 5. Структура репозитория
 
 ```
-ravel-kb/
+ravel-pkm/
 ├── core/            # чистый C++23: модель (graph), алгоритмы (algorithms), снимок
 │   ├── include/     # graph.hpp, algorithms.hpp
 │   └── src/         # graph.cpp, algorithms.cpp

@@ -6,7 +6,7 @@
 ![lang](https://img.shields.io/badge/C%2B%2B-23-blue)
 ![qt](https://img.shields.io/badge/Qt-6%20Widgets-green)
 ![build](https://img.shields.io/badge/CMake-%3E%3D3.20-blue)
-[![CI](https://github.com/Anastas2817/ravel-kb/actions/workflows/ci.yml/badge.svg)](https://github.com/Anastas2817/ravel-kb/actions/workflows/ci.yml)
+[![CI](https://github.com/Anastas2817/ravel-pkm/actions/workflows/ci.yml/badge.svg)](https://github.com/Anastas2817/ravel-pkm/actions/workflows/ci.yml)
 ![license](https://img.shields.io/badge/license-MIT-purple)
 
 > **In English.** Ravel is a desktop PKM tool with a graph notation: relations are typed entities with properties (symmetry, transitivity); the layout is semantic — hierarchy top-down (Sugiyama), ontological bands left-to-right; and control is fully manual — automation only advises (cycle detection, overloaded hubs), the user decides. Local-first: one human-readable, git-friendly JSON file, no cloud. C++23 / Qt 6, MIT. *Full documentation is in Russian.*
@@ -55,8 +55,8 @@
 Требования: CMake ≥ 3.20, компилятор с C++23, Qt 6 (модуль Widgets).
 
 ```bash
-git clone https://github.com/Anastas2817/ravel-kb.git
-cd ravel-kb
+git clone https://github.com/Anastas2817/ravel-pkm.git
+cd ravel-pkm
 cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build
 ./build/bin/ravel
@@ -76,7 +76,7 @@ cmake --build build --config Release
 ctest --test-dir build -C Release --output-on-failure
 ```
 
-Открыть можно и как `build/ravel-kb.sln`. GoogleTest и nlohmann/json подтягиваются через FetchContent при первой конфигурации (нужен интернет). `windeployqt` запускается автоматически после сборки — собранный `build/bin/Release/ravel.exe` работает вне IDE без дополнительных шагов. CI гоняет матрицу Windows/MSVC и Ubuntu/GCC в Debug и Release (на GCC — `-Wall -Wextra -Werror`), job `format` (clang-format `--dry-run --Werror`) и job `sanitizers` (GCC, ASan+UBSan — ручное индексирование `id − 1` по плотным векторам проверяется на выход за границу на каждом push): заявленная совместимость с MSVC 2022 и портативность ядра проверяются автоматически. UI-цель в CI сознательно не собирается (`RAVEL_BUILD_UI=OFF` — в раннерах нет Qt): пайплайн проверяет core, storage, app и все тесты; канвас остаётся зоной ручной проверки.
+Открыть можно и как `build/ravel-pkm.sln`. GoogleTest и nlohmann/json подтягиваются через FetchContent при первой конфигурации (нужен интернет). `windeployqt` запускается автоматически после сборки — собранный `build/bin/Release/ravel.exe` работает вне IDE без дополнительных шагов. CI гоняет матрицу Windows/MSVC и Ubuntu/GCC в Debug и Release (на GCC — `-Wall -Wextra -Werror`), job `format` (clang-format `--dry-run --Werror`) и job `sanitizers` (GCC, ASan+UBSan — ручное индексирование `id − 1` по плотным векторам проверяется на выход за границу на каждом push): заявленная совместимость с MSVC 2022 и портативность ядра проверяются автоматически. UI-цель в CI сознательно не собирается (`RAVEL_BUILD_UI=OFF` — в раннерах нет Qt): пайплайн проверяет core, storage, app и все тесты; канвас остаётся зоной ручной проверки.
 
 Если официальный установщик Qt недоступен или работает медленно (например, `download.qt.io` не открывается): Qt можно поставить без установщика и регистрации — скачав готовые бинарники с зеркала (например, `ftp.fau.de/qtproject/online/qtsdkrepository/...`) и распаковав их в выбранный каталог. Для разработки на Widgets достаточно архивов `qtbase`, `qttools`, `qtsvg`, `d3dcompiler`, `opengl32sw` (~70 МБ вместо ~2 ГБ полной установки).
 
