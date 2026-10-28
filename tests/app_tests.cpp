@@ -114,7 +114,7 @@ TEST(DeleteCmd, DoUndoRedo) {
   ravel::app::CommandChronicle chronicle;
 
   // One gesture: node b (cascade takes ab and bc) + explicit edge cd.
-  ravel::app::DeleteCmd cmd{{b}, {cd}};
+  ravel::app::DeleteCmd cmd{{b}, {cd}, {}};
   ASSERT_TRUE(chronicle.Execute(cmd, g).has_value());
   EXPECT_FALSE(g.HasNode(b));
   EXPECT_FALSE(g.HasRelation(ab));  // cascade
@@ -146,7 +146,7 @@ TEST(DeleteCmd, ExplicitRelationIncidentToDeletedNodeIsNotDuplicated) {
   // Delete named it twice, Undo would pass a duplicate id to
   // RestoreRelations. Execute stores its own copy, so the capture is checked
   // indirectly — a successful Undo + SessionEqual means the list was clean.
-  ravel::app::DeleteCmd cmd{{a, b}, {ab}};
+  ravel::app::DeleteCmd cmd{{a, b}, {ab}, {}};
   ASSERT_TRUE(chronicle.Execute(cmd, g).has_value());
 
   ASSERT_TRUE(chronicle.Undo(g).has_value());
