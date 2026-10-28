@@ -101,7 +101,7 @@ struct DeleteRelationsCmd {
 struct DeleteCmd {
   std::vector<ravel::NodeId> node_ids;
   std::vector<ravel::RelationId> rel_ids;
-  std::vector<ravel::RelationId> deleted_relations;
+  std::vector<ravel::RelationId> deleted_relations = {};  // captured by Do()
   CommandResult Do(ravel::Graph& g) {
     deleted_relations = g.Delete(node_ids, rel_ids);
     return {};

@@ -214,9 +214,8 @@ void MainWindow::ResyncScene() {
       rel->setLine(RelationLine(from_item, to_item));
     }
     if (rel->GetType() != view.type) {
-      rel->Change(QString::fromStdString(view.type),
-                   QString::fromStdString(view.color), view.arrow,
-                   view.symmetric);
+      rel->Change(QString::fromStdString(view.type), QString::fromStdString(view.color), view.arrow,
+                  view.symmetric);
     }
   }
   for (RelationItem* rel : rel_items) {

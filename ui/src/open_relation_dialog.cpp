@@ -7,8 +7,8 @@
 namespace ravel::ui {
 
 OpenRelationDialog::OpenRelationDialog(ravel::app::RelationView rel, const QStringList& types,
-                                       const QString& from_title,
-                                       const QString& to_title, QWidget* parent)
+                                       const QString& from_title, const QString& to_title,
+                                       QWidget* parent)
     : QDialog(parent) {
   auto* layout = new QVBoxLayout(this);
 
