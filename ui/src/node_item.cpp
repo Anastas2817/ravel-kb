@@ -80,6 +80,20 @@ void NodeItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* /*option
   painter->drawText(rect_, Qt::AlignCenter, title_);
 }
 
+void NodeItem::Change(const QString& title, const QString& type, const QString& color,
+                      const std::string& shape, const QString& frame_color) {
+  if (title_ == title && type_ == type && color_ == color && shape_ == shape &&
+      frame_color_ == frame_color) {
+    return;
+  }
+  title_ = title;
+  type_ = type;
+  color_ = color;
+  shape_ = shape;
+  frame_color_ = frame_color;
+  update();
+}
+
 QVariant NodeItem::itemChange(GraphicsItemChange change, const QVariant& value) {
   // Notify AFTER the position is committed, not during ItemPositionChange:
   // Moved handlers touch other items (RelationItem::setLine), and mutating

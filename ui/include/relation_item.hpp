@@ -24,10 +24,15 @@ class RelationItem : public QGraphicsItem {
   std::uint64_t to() const {
     return to_;
   }
+  QString GetType() const {
+    return type_;
+  }
 
   [[nodiscard]] QRectF boundingRect() const override;
   void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
   [[nodiscard]] QPainterPath shape() const override;
+
+  void Change(const QString& type, const QString& color, const std::string& arrow, bool symmetric);
 
   void setLine(const QLineF& line) {
     if (line_ == line) {

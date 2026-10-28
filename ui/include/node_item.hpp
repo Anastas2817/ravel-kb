@@ -19,9 +19,18 @@ class NodeItem : public QGraphicsObject {
   std::uint64_t id() const {
     return id_;
   }
+  QString title() const {
+    return title_;
+  }
+  QString GetType() const {
+    return type_;
+  }
   QRectF boundingRect() const override;
   void SetRect(const QRectF& r, double size);
   void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
+
+  void Change(const QString& title, const QString& type, const QString& color,
+              const std::string& shape, const QString& frame_color);
 
   // Border point of this node's rect facing `other_center` — where a
   // connection arriving from that direction should attach, so the line ends

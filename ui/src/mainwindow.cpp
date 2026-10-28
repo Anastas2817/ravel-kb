@@ -3,6 +3,8 @@
 #include "add_node_dialog.hpp"
 #include "add_relation_dialog.hpp"
 #include "node_item.hpp"
+#include "open_node_dialog.hpp"
+#include "open_relation_dialog.hpp"
 #include "relation_item.hpp"
 
 #include <QFileDialog>
@@ -13,6 +15,7 @@
 #include <QMessageBox>
 #include <QStatusBar>
 #include <QStringList>
+#include <optional>
 
 namespace ravel::ui {
 
@@ -65,10 +68,10 @@ MainWindow::MainWindow(QWidget* parent)
   file_menu->addAction(open_action_);
   file_menu->addAction(save_action_);
   file_menu->addAction(save_as_action_);
-  file_menu->addAction(delete_action_);
   QMenu* edit = menuBar()->addMenu(tr("&Правка"));
   edit->addAction(undo_action_);
   edit->addAction(redo_action_);
+  edit->addAction(delete_action_);
 
   statusBar()->showMessage(tr("Готово"));
 }
@@ -174,6 +177,11 @@ void MainWindow::ResyncScene() {
     if (item->boundingRect() != rect) {
       item->SetRect(rect, view.size);
     }
+    if (item->title() != view.title || item->GetType() != view.type) {
+      item->Change(QString::fromStdString(view.title), QString::fromStdString(view.type),
+                   QString::fromStdString(view.color), view.shape,
+                   QString::fromStdString(view.frame_color));
+    }
   }
 
   // Whatever is left in `items` no longer exists in the model. removeItem()
@@ -205,6 +213,11 @@ void MainWindow::ResyncScene() {
     if (from_item != nullptr && to_item != nullptr) {
       rel->setLine(RelationLine(from_item, to_item));
     }
+    if (rel->GetType() != view.type) {
+      rel->Change(QString::fromStdString(view.type),
+                   QString::fromStdString(view.color), view.arrow,
+                   view.symmetric);
+    }
   }
   for (RelationItem* rel : rel_items) {
     scene_->removeItem(rel);
@@ -222,20 +235,76 @@ QStringList ToQStringList(const std::vector<std::string>& v) {
 }
 
 void MainWindow::OnSceneDoubleClick(QPointF pos) {
-  AddNodeDialog dlg(ToQStringList(controller_.NodeTypeNames()), this);
-  dlg.setWindowOpacity(0.9);
-  dlg.setWindowTitle(tr("Новое понятие"));
-  if (dlg.exec() != QDialog::Accepted) {
-    return;
+  RelationItem* rel = nullptr;
+  for (QGraphicsItem* item : scene_->items(pos)) {
+    if (auto* node = dynamic_cast<NodeItem*>(item)) {
+      std::optional<ravel::app::NodeView> cur = controller_.FindNode(node->id());
+      if (!cur) {
+        return;
+      }
+      OpenNodeDialog dlg(cur.value(), ToQStringList(controller_.NodeTypeNames()), this);
+      dlg.setWindowOpacity(0.9);
+      dlg.setWindowTitle(tr("Редактирование понятия"));
+      if (dlg.exec() != QDialog::Accepted) {
+        return;
+      }
+      const ravel::app::CommandResult result =
+          controller_.ChangeNode(node->id(), dlg.title().toStdString(), dlg.type().toStdString(),
+                                 dlg.description().toStdString(), dlg.size());
+      if (!result.has_value()) {
+        QMessageBox::warning(this, tr("Ошибка редактирования"),
+                             tr("Не удалось изменить узел: неизвестный тип (онтология пуста?)."));
+        return;
+      }
+      ResyncScene();
+      return;
+    } else if (auto* cur = dynamic_cast<RelationItem*>(item)) {
+      rel = cur;
+    }
   }
-  const ravel::app::CommandResult result = controller_.AddNode(
-      dlg.title().toStdString(), dlg.type().toStdString(), dlg.description().toStdString(),
-      dlg.size(), ravel::Position{pos.x(), pos.y()});
-  if (!result.has_value()) {
-    QMessageBox::warning(this, tr("Ошибка создания"),
-                         tr("Не удалось создать узел: неизвестный тип (онтология пуста?)."));
-    return;
+
+  if (rel != nullptr) {
+    std::optional<ravel::app::RelationView> cur = controller_.FindRelation(rel->id());
+    if (!cur) {
+      return;
+    }
+    std::optional<ravel::app::NodeView> from = controller_.FindNode(cur.value().from);
+    std::optional<ravel::app::NodeView> to = controller_.FindNode(cur.value().to);
+    if (!from || !to) {
+      return;
+    }
+    OpenRelationDialog dlg(cur.value(), ToQStringList(controller_.RelationTypeNames()),
+                           QString::fromStdString(from.value().title),
+                           QString::fromStdString(to.value().title), this);
+    dlg.setWindowOpacity(0.9);
+    dlg.setWindowTitle(tr("Редактирование связи"));
+    if (dlg.exec() != QDialog::Accepted) {
+      return;
+    }
+    const ravel::app::CommandResult result = controller_.ChangeRelation(
+        rel->id(), dlg.type().toStdString(), dlg.description().toStdString());
+    if (!result.has_value()) {
+      QMessageBox::warning(this, tr("Ошибка редактирования"),
+                           tr("Не удалось изменить связь: неизвестный тип (онтология пуста?)."));
+      return;
+    }
+  } else {
+    AddNodeDialog dlg(ToQStringList(controller_.NodeTypeNames()), this);
+    dlg.setWindowOpacity(0.9);
+    dlg.setWindowTitle(tr("Новое понятие"));
+    if (dlg.exec() != QDialog::Accepted) {
+      return;
+    }
+    const ravel::app::CommandResult result = controller_.AddNode(
+        dlg.title().toStdString(), dlg.type().toStdString(), dlg.description().toStdString(),
+        dlg.size(), ravel::Position{pos.x(), pos.y()});
+    if (!result.has_value()) {
+      QMessageBox::warning(this, tr("Ошибка создания"),
+                           tr("Не удалось создать узел: неизвестный тип (онтология пуста?)."));
+      return;
+    }
   }
+
   ResyncScene();
 }
 
@@ -327,20 +396,12 @@ void MainWindow::OnDeleteSelected() {
     return;
   }
 
-  if (!rel_ids.empty()) {  //  first for undo
-    const ravel::app::CommandResult r = controller_.DeleteRelations(rel_ids);
-    if (!r.has_value()) {
-      QMessageBox::warning(this, tr("Ошибка удаления"), tr("не удалось удалить рёбра"));
-      return;
-    }
+  const ravel::app::CommandResult r = controller_.Delete(node_ids, rel_ids);
+  if (!r.has_value()) {
+    QMessageBox::warning(this, tr("Ошибка удаления"), tr("не удалось удалить"));
+    return;
   }
-  if (!node_ids.empty()) {
-    const ravel::app::CommandResult r = controller_.DeleteNodes(node_ids);
-    if (!r.has_value()) {
-      QMessageBox::warning(this, tr("Ошибка удаления"), tr("не удалось удалить рёбра"));
-      return;
-    }
-  }
+
   ResyncScene();
 }
 

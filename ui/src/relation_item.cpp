@@ -76,4 +76,16 @@ QPainterPath RelationItem::shape() const {
   return stroker.createStroke(path);
 }
 
+void RelationItem::Change(const QString& type, const QString& color, const std::string& arrow,
+                          bool symmetric) {
+  if ((type_ == type) && (color_ == color) && (arrow_ == arrow) && (symmetric_ == symmetric)) {
+    return;
+  }
+  type_ = type;
+  color_ = color;
+  arrow_ = arrow;
+  symmetric_ = symmetric;
+  update();
+}
+
 }  // namespace ravel::ui

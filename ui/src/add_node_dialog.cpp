@@ -12,7 +12,7 @@ AddNodeDialog::AddNodeDialog(const QStringList& types, QWidget* parent) : QDialo
   description_ = new QPlainTextEdit(this);
   size_ = new QDoubleSpinBox(this);
   size_->setValue(1.0);
-  size_->setRange(0.1, 5.0);
+  size_->setRange(0.5, 5.0);
   size_->setSingleStep(0.1);
   size_->setDecimals(1);
   auto* buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);

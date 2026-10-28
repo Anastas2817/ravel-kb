@@ -117,6 +117,14 @@ CommandResult Controller::MoveNode(ravel::NodeId id, ravel::Position to) {
 
 CommandResult Controller::ChangeNode(ravel::NodeId id, std::string title, std::string type,
                                      std::string description, double size) {
+  // No-op guard applies only to LIVE nodes: a dead id must fall through to
+  // the command and throw std::invalid_argument from core (see the
+  // ChangeNodeUnknownIdThrowsThrough contract test).
+  const std::optional<NodeView> node = FindNode(id);
+  if (node.has_value() && node->title == title && node->type == type &&
+      node->description == description && node->size == size) {
+    return {};
+  }
   const ravel::app::ChangeNodeCmd cmd{.id = id,
                                       .title = std::move(title),
                                       .type = std::move(type),
@@ -127,6 +135,10 @@ CommandResult Controller::ChangeNode(ravel::NodeId id, std::string title, std::s
 
 CommandResult Controller::ChangeRelation(ravel::RelationId id, std::string type,
                                          std::string description) {
+  const std::optional<RelationView> rel = FindRelation(id);
+  if (rel.has_value() && rel->type == type && rel->description == description) {
+    return {};
+  }
   const ravel::app::ChangeRelationCmd cmd{
       .id = id, .type = std::move(type), .description = std::move(description)};
   return s_.chronicle.Execute(cmd, s_.g);
@@ -142,6 +154,15 @@ std::vector<NodeView> Controller::Nodes() const {
     return true;
   });
   return result;
+}
+
+std::optional<NodeView> Controller::FindNode(ravel::NodeId id) const {
+  for (const NodeView& node : this->Nodes()) {
+    if (node.id == id) {
+      return node;
+    }
+  }
+  return std::nullopt;
 }
 
 std::vector<std::string> Controller::NodeTypeNames() const {
@@ -161,6 +182,15 @@ std::vector<RelationView> Controller::Relations() const {
     return true;
   });
   return result;
+}
+
+std::optional<RelationView> Controller::FindRelation(ravel::RelationId id) const {
+  for (const RelationView& rel : this->Relations()) {
+    if (rel.id == id) {
+      return rel;
+    }
+  }
+  return std::nullopt;
 }
 
 std::vector<std::string> Controller::RelationTypeNames() const {

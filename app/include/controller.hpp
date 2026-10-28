@@ -60,9 +60,11 @@ class Controller {
   CommandResult ChangeRelation(ravel::RelationId id, std::string type, std::string description);
 
   std::vector<NodeView> Nodes() const;
+  std::optional<NodeView> FindNode(ravel::NodeId id) const;
   std::vector<std::string> NodeTypeNames() const;
 
   std::vector<RelationView> Relations() const;
+  std::optional<RelationView> FindRelation(ravel::RelationId id) const;
   std::vector<std::string> RelationTypeNames() const;
 
  private:
