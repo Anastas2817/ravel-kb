@@ -335,6 +335,46 @@ TEST_F(ControllerIoTest, RelationsFollowsDeleteAndUndo) {
   EXPECT_EQ(c.Relations().size(), 3);
 }
 
+TEST_F(ControllerIoTest, DeleteMixedSelectionIsOneUndoStep) {
+  WriteGraphWithOntology(good_path_);
+  ravel::app::Controller c;
+  ASSERT_TRUE(c.Open(good_path_).has_value());
+  ASSERT_TRUE(c.AddNode("A", "nt").has_value());
+  ASSERT_TRUE(c.AddNode("B", "nt").has_value());
+  ASSERT_TRUE(c.AddNode("C", "nt").has_value());
+  ASSERT_TRUE(c.AddRelation(1, 2, "rt").has_value());  // id 1: touches node 2
+  ASSERT_TRUE(c.AddRelation(2, 3, "rt").has_value());  // id 2: touches node 2
+  ASSERT_TRUE(c.AddRelation(3, 1, "rt").has_value());  // id 3: survives node 2
+
+  // Selection: node 2 (cascade takes edges 1 and 2) + explicit edge 3,
+  // whose endpoints survive on their own.
+  ASSERT_TRUE(c.Delete({2}, {3}).has_value());
+  EXPECT_EQ(c.Nodes().size(), 2);
+  EXPECT_EQ(c.Relations().size(), 0);
+
+  // The regression this guards: one Ctrl+Z must restore nodes AND edges —
+  // not «nodes first, edges on the second undo».
+  ASSERT_TRUE(c.Undo().has_value());
+  EXPECT_EQ(c.Nodes().size(), 3);
+  EXPECT_EQ(c.Relations().size(), 3);
+
+  ASSERT_TRUE(c.Redo().has_value());
+  EXPECT_EQ(c.Nodes().size(), 2);
+  EXPECT_EQ(c.Relations().size(), 0);
+}
+
+TEST_F(ControllerIoTest, DeleteDeadIdThrowsInvalidArgument) {
+  WriteGraphWithOntology(good_path_);
+  ravel::app::Controller c;
+  ASSERT_TRUE(c.Open(good_path_).has_value());
+  ASSERT_TRUE(c.AddNode("A", "nt").has_value());
+
+  // Contract as it stands: core validates and throws, the command does not
+  // translate it into CommandError (DeleteNodesCmd behaves the same way).
+  // UI must only send live ids.
+  EXPECT_THROW((void)c.Delete({42}, {}), std::invalid_argument);
+}
+
 TEST_F(ControllerIoTest, ChangeNodeUpdatesFieldsVisibleViaNodes) {
   WriteGraphWithOntology(good_path_);
   ravel::app::Controller c;

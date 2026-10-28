@@ -98,6 +98,21 @@ struct DeleteRelationsCmd {
   }
 };
 
+struct DeleteCmd {
+  std::vector<ravel::NodeId> node_ids;
+  std::vector<ravel::RelationId> rel_ids;
+  std::vector<ravel::RelationId> deleted_relations;
+  CommandResult Do(ravel::Graph& g) {
+    deleted_relations = g.Delete(node_ids, rel_ids);
+    return {};
+  }
+  CommandResult Undo(ravel::Graph& g) const {
+    g.RestoreNodes(node_ids);
+    g.RestoreRelations(deleted_relations);
+    return {};
+  }
+};
+
 // Precondition: the node already has a position. The first (computed)
 // placement by layout is initialization, not a user action, and bypasses
 // the undo stack — hence .value(), which throws on violation. See
@@ -157,10 +172,10 @@ concept Command = requires(C& c, ravel::Graph& g) {
 };
 static_assert(Command<AddNodeCmd> && Command<AddRelationCmd> && Command<DeleteNodesCmd> &&
               Command<DeleteRelationsCmd> && Command<MoveNodeCmd> && Command<ChangeNodeCmd> &&
-              Command<ChangeRelationCmd>);
+              Command<ChangeRelationCmd> && Command<DeleteCmd>);
 
 using AnyCommand = std::variant<AddNodeCmd, AddRelationCmd, DeleteNodesCmd, DeleteRelationsCmd,
-                                MoveNodeCmd, ChangeNodeCmd, ChangeRelationCmd>;
+                                MoveNodeCmd, ChangeNodeCmd, ChangeRelationCmd, DeleteCmd>;
 
 inline CommandResult Do(AnyCommand& c, ravel::Graph& g) {
   return std::visit([&g](auto& x) { return x.Do(g); }, c);
