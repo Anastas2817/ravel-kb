@@ -10,20 +10,25 @@ class Graph {
   {static} +FromSnapshot(src) : Graph
   +ToSnapshot() : GraphSnapshot
   +AddNodeType / AddRelationType / ResolveNode / ResolveRelation
-  +AddNode / AddNodeWithRelations / AddRelation / MoveNode
-  +HasNode / GetNode / DeleteNodes / RestoreNodes
-  +HasRelation / GetRelation / DeleteRelations / RestoreRelations
-  +GetIncidentRelations / GetNeighbors
+  +AddNode / AddNodeWithRelations / AddRelation
+  +ChangeNode / ChangeRelation
+  +MoveNode
+  +HasNode / GetNode / HasRelation / GetRelation
+  +Delete(node_ids, rel_ids) : vector<RelationId>
+  +DeleteNodes / DeleteRelations (делегаты Delete)
+  +RestoreNodes / RestoreRelations
+  +GetPosition / GetIncidentRelations / GetNeighbors
   +OntologyNode / OntologyRelation
   +ForEachLiveNode / ForEachLiveRelation
+  +SessionEqual
   --
   -ontology_node_ : unordered_map<string, NodeType>
   -ontology_relation_ : unordered_map<string, RelationType>
   -nodes_ : vector<Node>
   -relations_ : vector<Relation>
   -access_ : map<NodeId, vector<RelationId>>
+  -positions_ : vector<optional<Position>>
   -next_id_node_ / next_id_relation_ : uint64_t
-  -positions : vector<Position {x_; y_}>
 }
 
 class Node <<DTO>> {
@@ -40,6 +45,10 @@ class Relation <<DTO>> {
   -id_ : RelationId
   -from_ / to_ : NodeId
   -type_ / description_ : string
+}
+
+class Position <<DTO>> {
+  +x_ / y_ : double
 }
 
 class NodeType {
@@ -62,13 +71,14 @@ class GraphSnapshot {
   +nodes : vector<Node>
   +relations : vector<Relation>
   +next_id_node / next_id_relation
-  +positions : vector<Position {x_; y_}>
+  +positions : vector<optional<Position>>
 }
 
 Graph *-- Node
 Graph *-- Relation
 Graph *-- NodeType
 Graph *-- RelationType
+Graph *-- Position : positions_
 Graph ..> GraphSnapshot : ToSnapshot
 GraphSnapshot ..> Graph : FromSnapshot
 Node ..> NodeType : type по имени
@@ -76,12 +86,18 @@ Relation ..> RelationType : type по имени
 
 legend bottom
   Обязанности: Graph — единственный владелец
-  инвариантов модели; Node/Relation — DTO
+  инвариантов модели; Node/Relation/Position — DTO
   (данные + читающие геттеры, без логики);
   NodeType/RelationType — неизменяемые после
   создания (R8, «тип отстаивает своё»);
   GraphSnapshot — нейтральные данные для переноса
   состояния между слоями (без знания формата).
+
+  Удаление — единая точка входа Delete: выделение
+  «узлы + связи» одним жестом и одним undo;
+  каскад инцидентных связей поглощает явные дубликаты;
+  возврат — объединение удалённых id (поверхность
+  undo для RestoreRelations, R20-смежное решение).
 
   Инварианты (Graph и только Graph их обеспечивает,
   FromSnapshot обязан отклонять нарушения):

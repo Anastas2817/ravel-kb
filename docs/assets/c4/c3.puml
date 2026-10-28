@@ -17,6 +17,7 @@ package "Core" {
 
   rectangle "Graph" as Graph #LightSkyBlue
   rectangle "GraphSnapshot" as Snapshot
+  rectangle "Position" as Pos
   rectangle "Layout" as Layout
   rectangle "Algorithms" as Algo
 
@@ -28,37 +29,51 @@ package "Core" {
 
 package "App" {
   package "Controller" as Ctrl {
-    rectangle "SessionState" as Session
+    rectangle "SessionState\n(Graph + Chronicle)" as Session
   }
-  rectangle "Command" as Cmd
+  rectangle "CommandChronicle\n(variant AnyCommand, курсор bookmark)" as Chron
+  rectangle "Команды\n(Add/Delete/Move/Change Cmd)" as Cmd
 }
 
 package "UI" {
-  rectangle "Canvas" as Canvas
+  rectangle "MainWindow\n(ResyncScene, reconcile по id)" as Win
+  rectangle "CanvasView" as Canvas
+  rectangle "Сцена: NodeItem / RelationItem" as Items
+  rectangle "Диалоги\n(Add/Open Node/Relation)" as Dlg
 }
 
 package "Storage" {
   rectangle "JsonStorage" as JsonS
 }
 
-Ctrl --> Cmd : запрос
+Win --> Ctrl : действие пользователя
+Ctrl --> Chron : Execute / Undo / Redo
+Chron --> Cmd : Do / Undo
 Cmd --> Graph : command-мутации
-Ctrl --> Algo : анализ
-Ctrl --> Layout : геометрия
+Ctrl --> Graph : read-модель
+Ctrl --> Algo : запросы анализа (циклы, R20)
+Algo --> Ctrl : подсказки (светлячки)
+Ctrl --> Win : NodeView / RelationView
+Ctrl --> Win : подсказки (светлячки)
+Win --> Items : reconcile (Change-in-place)
+Canvas --> Win : жесты (double-click, drag)
+Dlg --> Win : принятые значения
 JsonS --> Snapshot
-Canvas --> Ctrl : жест пользователя - отклик
 
 legend bottom
-  Ответственности (одной фразой):
-  Graph — хранить модель предметной области и
-  поддерживать корректное состояние карты знаний.
-  GraphSnapshot — переносить состояние Graph между
-  слоями без знания формата.
-  Layout — преобразовывать граф в пространственную
-  раскладку (выдавать координаты). Планируется.
-  Algorithms — анализировать структуру Graph:
-  DFS, PageRank, циклы. Планируется.
-  Canvas — планируется (этапы 2 и 4).
+  Состояние на 2026-10-28 (v0.2.0, базовый UI закрыт):
+  Graph — хранит модель и инварианты; единая точка
+  удаления Delete(node_ids, rel_ids) с каскадом.
+  CommandChronicle — летопись команд с курсором:
+  undo/redo двигают bookmark, вариант AnyCommand.
+  Controller — единственный посредник UI↔Graph:
+  мутации только через команды (инвариант 7),
+  чтение — через DTO NodeView/RelationView.
+  UI — MainWindow + CanvasView; ResyncScene
+  сопоставляет сцену с read-моделью по id и
+  обновляет живые айтемы через Change-in-place.
+  Layout и Algorithms — планируются (этап 3+);
+  Layout: Сугияма; Algorithms: DFS, циклы (R20).
 
   Зависимости читателей: Layout и Algorithms —
   клиенты Graph, Graph о них не знает (защита
