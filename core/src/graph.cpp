@@ -82,6 +82,10 @@ RelationId Graph::AddRelation(NodeId from, NodeId to, std::string type, std::str
     throw std::invalid_argument(
         "Graph::AddRelation tried to create relation with non-existent node to");
   }
+  if (next_id_relation_ > kMaxEntities) {
+    throw std::invalid_argument(
+        "Graph::AddRelation tried to create relation with id > kMaxEntities");
+  }
 
   // apply
   const RelationId id = next_id_relation_++;
@@ -184,44 +188,49 @@ std::optional<Position> Graph::MoveNode(NodeId id, Position pos) {
   return prev_pos;
 }
 
-std::vector<RelationId> Graph::DeleteNodes(const std::vector<NodeId>& ids) {
+std::vector<RelationId> Graph::Delete(const std::vector<NodeId>& node_ids,
+                                      const std::vector<RelationId>& rel_ids) {
   // validate
-  std::set<NodeId> unique;
-  for (const NodeId id : ids) {
+  std::set<NodeId> unique_n;
+  for (const NodeId id : node_ids) {
     if (!HasNode(id)) {
-      throw std::invalid_argument("Graph::DeleteNodes tried to delete non-existent Node");
+      throw std::invalid_argument("Graph::Delete tried to delete non-existent Node");
     }
-    unique.insert(id);
+    unique_n.insert(id);
+  }
+  std::set<RelationId> unique_r;
+  for (const RelationId id : rel_ids) {
+    if (!HasRelation(id)) {
+      throw std::invalid_argument("Graph::Delete tried to delete non-existent Relation");
+    }
+    unique_r.insert(id);
   }
   // apply
-  // NOTE: no insert_range / std::ranges::to — C++23 features missing from
-  // libstdc++ before GCC 14, and CI runs ubuntu-latest (GCC 13). Plain
-  // iterator insert + pair-ctor keep the same complexity and order.
-  std::set<RelationId> unique_r;
-  for (const NodeId id : unique) {
-    std::vector<RelationId> deleted = access_[id];
-    unique_r.insert(deleted.begin(), deleted.end());
-    DeleteRelations(deleted);  // by the invariant, only live relations are listed there
+  for (const NodeId id : unique_n) {
+    const std::vector<RelationId> incident(access_[id]);
+    unique_r.insert(incident.begin(),
+                    incident.end());  // by the invariant, only live relations are listed there
     access_.erase(id);
   }
+  EraseRelations(unique_r);
   return {unique_r.begin(), unique_r.end()};
 }
 
-void Graph::DeleteRelations(const std::vector<RelationId>& ids) {
-  // validate
-  std::set<RelationId> unique;
-  for (const RelationId id : ids) {
-    if (!HasRelation(id)) {
-      throw std::invalid_argument("Graph::DeleteRelations tried to delete non-existent Relation");
-    }
-    unique.insert(id);
-  }
-  // apply
-  for (const RelationId id : unique) {
+void Graph::EraseRelations(const std::set<RelationId>& unique_ids) {
+  // The liveness of every relation id and the uniqueness of the argument are
+  // validated by the caller (Delete). Endpoint liveness is NOT assumed: by
+  // the time Delete calls this, the deleted nodes are already gone from
+  // access_ — touching access_[dead] via operator[] would silently re-create
+  // an empty entry, and find() on it would return end(). Hence the guards.
+  for (const RelationId id : unique_ids) {
     const NodeId from = relations_[id - 1].from();
     const NodeId to = relations_[id - 1].to();
-    access_[from].erase(std::find(access_[from].begin(), access_[from].end(), id));
-    access_[to].erase(std::find(access_[to].begin(), access_[to].end(), id));
+    if (HasNode(from)) {
+      access_[from].erase(std::find(access_[from].begin(), access_[from].end(), id));
+    }
+    if (HasNode(to)) {
+      access_[to].erase(std::find(access_[to].begin(), access_[to].end(), id));
+    }
   }
 }
 

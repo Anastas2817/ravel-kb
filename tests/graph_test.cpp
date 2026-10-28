@@ -649,6 +649,116 @@ TEST(GraphDeleteNodes, DuplicateNodeIdsInArgument) {
   EXPECT_THROW(g.DeleteNodes({big}), std::invalid_argument);
 }
 
+TEST(GraphDelete, MixedSelectionOneGesture) {
+  // Выделение целиком (узлы + рёбра) — один вызов, одна запись для undo.
+  // Ребро, перечисленное явно и инцидентное удаляемому узлу, поглощается
+  // каскадом: бросок исключения здесь недопустим.
+  Graph g;
+  g.AddRelationType("has_special_case", "#000000", "solid", false, true);
+  g.AddRelationType("generalizes", "#000000", "solid", false, true);
+  g.AddNodeType("model", "#4a90d9", "rect", "#000000");
+  const NodeId a = g.AddNode("Числовой ряд", "model");
+  const NodeId b = g.AddNode("Функциональный ряд", "model");
+  const NodeId c = g.AddNode("Степенной ряд", "model");
+  const RelationId cascade = g.AddRelation(a, b, "has_special_case");
+  const RelationId untouched = g.AddRelation(b, c, "has_special_case");
+  const RelationId standalone = g.AddRelation(a, c, "generalizes");
+
+  const std::vector<RelationId> deleted = g.Delete({a}, {cascade, standalone});
+
+  EXPECT_FALSE(g.HasNode(a));
+  EXPECT_TRUE(g.HasNode(b) && g.HasNode(c));
+  EXPECT_FALSE(g.HasRelation(cascade));
+  EXPECT_FALSE(g.HasRelation(standalone));
+  EXPECT_TRUE(g.HasRelation(untouched));  // не входило в выделение
+  // Возврат — объединение явных и каскадных id, ровно что нужно Undo.
+  EXPECT_EQ(std::set<RelationId>(deleted.begin(), deleted.end()),
+            (std::set<RelationId>{cascade, standalone}));
+}
+
+TEST(GraphDelete, ReturnedIdsDriveFullUndo) {
+  // Контракт с DeleteCmd::Undo: возвращённое множество id + RestoreNodes
+  // восстанавливают выделение целиком за один шаг.
+  Graph g;
+  g.AddRelationType("has_special_case", "#000000", "solid", false, true);
+  g.AddRelationType("generalizes", "#000000", "solid", false, true);
+  g.AddNodeType("model", "#4a90d9", "rect", "#000000");
+  const NodeId a = g.AddNode("Числовой ряд", "model");
+  const NodeId b = g.AddNode("Функциональный ряд", "model");
+  const NodeId c = g.AddNode("Степенной ряд", "model");
+  const RelationId cascade = g.AddRelation(a, b, "has_special_case");
+  const RelationId untouched = g.AddRelation(b, c, "has_special_case");
+  const RelationId standalone = g.AddRelation(a, c, "generalizes");
+
+  const std::vector<RelationId> deleted = g.Delete({a}, {cascade, standalone});
+  g.RestoreNodes({a});
+  g.RestoreRelations(deleted);
+
+  EXPECT_TRUE(g.HasNode(a));
+  EXPECT_TRUE(g.HasRelation(cascade));
+  EXPECT_TRUE(g.HasRelation(standalone));
+  EXPECT_TRUE(g.HasRelation(untouched));
+  EXPECT_EQ(g.GetNeighbors(b), (std::set<NodeId>{a, c}));  // cascade + untouched
+}
+
+TEST(GraphDelete, DelegatesMatchSingleEntryPoint) {
+  // DeleteNodes/DeleteRelations — именованные делегаты к Delete, не копии:
+  // результат обязан совпадать с прямым вызовом Delete (сверка всей сессии).
+  auto build = [](Graph& g, NodeId& a, NodeId& b, RelationId& r) {
+    g.AddRelationType("has_special_case", "#000000", "solid", false, true);
+    g.AddNodeType("model", "#4a90d9", "rect", "#000000");
+    a = g.AddNode("Числовой ряд", "model");
+    b = g.AddNode("Функциональный ряд", "model");
+    r = g.AddRelation(a, b, "has_special_case");
+  };
+
+  Graph via_delegate;
+  NodeId a1 = 0;
+  NodeId b1 = 0;
+  RelationId r1 = 0;
+  build(via_delegate, a1, b1, r1);
+  via_delegate.DeleteNodes({a1});
+
+  Graph via_single;
+  NodeId a2 = 0;
+  NodeId b2 = 0;
+  RelationId r2 = 0;
+  build(via_single, a2, b2, r2);
+  via_single.Delete({a2}, {});
+
+  EXPECT_TRUE(via_delegate.SessionEqual(via_single));
+
+  Graph rel_delegate;
+  NodeId a3 = 0;
+  NodeId b3 = 0;
+  RelationId r3 = 0;
+  build(rel_delegate, a3, b3, r3);
+  rel_delegate.DeleteRelations({r3});
+
+  Graph rel_single;
+  NodeId a4 = 0;
+  NodeId b4 = 0;
+  RelationId r4 = 0;
+  build(rel_single, a4, b4, r4);
+  rel_single.Delete({}, {r4});
+
+  EXPECT_TRUE(rel_delegate.SessionEqual(rel_single));
+}
+
+TEST(GraphDelete, DeadIdThrows) {
+  // Граница контракта прежняя: id, мёртвый до вызова, — ошибка.
+  Graph g;
+  g.AddRelationType("has_special_case", "#000000", "solid", false, true);
+  g.AddNodeType("model", "#4a90d9", "rect", "#000000");
+  const NodeId a = g.AddNode("Числовой ряд", "model");
+  const NodeId b = g.AddNode("Функциональный ряд", "model");
+  const RelationId r = g.AddRelation(a, b, "has_special_case");
+
+  g.Delete({a}, {r});
+  EXPECT_THROW((void)g.Delete({a}, {}), std::invalid_argument);
+  EXPECT_THROW((void)g.Delete({}, {r}), std::invalid_argument);
+}
+
 TEST(GraphFromSnapshot, IdBeyondNextIdUnsorted) {
   // Правило 22: вход полный и валидный ровно в одном месте — узел id 7 при
   // next_id_node = 4. Порядок [1, 7, 3]: старая проверка через back() (id 3 < 4)

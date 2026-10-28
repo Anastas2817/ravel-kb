@@ -312,9 +312,22 @@ class Graph {
                               std::string description = "", double size = 1);
   std::optional<Position> MoveNode(NodeId id, Position pos);
   // implementation.md ("Deletion contract" section) - idempotence for delete*
-
-  std::vector<RelationId> DeleteNodes(const std::vector<NodeId>& ids);
-  void DeleteRelations(const std::vector<RelationId>& ids);
+  //
+  // Single deletion entry point: the whole selection (nodes + relations) is
+  // one gesture, one undo step. Relations incident to a deleted node are
+  // absorbed by the cascade even when listed explicitly. Returns the union
+  // of deleted relation ids (explicit + cascaded) — the undo surface.
+  std::vector<RelationId> Delete(const std::vector<NodeId>& node_ids,
+                                 const std::vector<RelationId>& rel_ids);
+  // Named delegates to Delete, not copies (implementation.md, rule 28 applied
+  // in reverse: one implementation, several intent-reading names). Keep them
+  // one line each — synchronization by construction.
+  std::vector<RelationId> DeleteNodes(const std::vector<NodeId>& ids) {
+    return Delete(ids, {});
+  }
+  void DeleteRelations(const std::vector<RelationId>& ids) {
+    (void)Delete({}, ids);
+  }
 
   /**
    * @brief Ids of all relations incident to a live node (incoming and
@@ -382,6 +395,11 @@ class Graph {
   [[nodiscard]] bool SessionEqual(const Graph& other) const;
 
  private:
+  // Raw apply of relation deletion: no validation (caller validated), ids must
+  // be unique. Private because the only legitimate caller is Delete — going
+  // through the public delegates would re-enter Delete and recurse.
+  void EraseRelations(const std::set<RelationId>& unique_ids);
+
   std::unordered_map<std::string, NodeType> ontology_node_;
   std::unordered_map<std::string, RelationType> ontology_relation_;
 
