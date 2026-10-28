@@ -177,9 +177,12 @@ void MainWindow::ResyncScene() {
     if (item->boundingRect() != rect) {
       item->SetRect(rect, view.size);
     }
-    if (item->title() != view.title || item->GetType() != view.type) {
-      item->Change(QString::fromStdString(view.title), QString::fromStdString(view.type),
-                   QString::fromStdString(view.color), view.shape,
+    // QString vs std::string has no operator!= (GCC/Qt6 on Linux) —
+    // convert once, use for both the guard and the update.
+    const QString title = QString::fromStdString(view.title);
+    const QString type = QString::fromStdString(view.type);
+    if (item->title() != title || item->GetType() != type) {
+      item->Change(title, type, QString::fromStdString(view.color), view.shape,
                    QString::fromStdString(view.frame_color));
     }
   }
@@ -213,9 +216,9 @@ void MainWindow::ResyncScene() {
     if (from_item != nullptr && to_item != nullptr) {
       rel->setLine(RelationLine(from_item, to_item));
     }
-    if (rel->GetType() != view.type) {
-      rel->Change(QString::fromStdString(view.type), QString::fromStdString(view.color), view.arrow,
-                  view.symmetric);
+    const QString rel_type = QString::fromStdString(view.type);
+    if (rel->GetType() != rel_type) {
+      rel->Change(rel_type, QString::fromStdString(view.color), view.arrow, view.symmetric);
     }
   }
   for (RelationItem* rel : rel_items) {
