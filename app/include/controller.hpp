@@ -49,8 +49,6 @@ class Controller {
                         double size = 1, std::optional<ravel::Position> position = std::nullopt);
   CommandResult AddRelation(ravel::NodeId from, ravel::NodeId to, std::string type,
                             std::string description = "");
-  CommandResult DeleteNodes(std::vector<ravel::NodeId> nodes);
-  CommandResult DeleteRelations(std::vector<ravel::RelationId> relations);
   CommandResult Delete(std::vector<ravel::NodeId> nodes, std::vector<ravel::RelationId> rels);
   CommandResult Undo();
   CommandResult Redo();

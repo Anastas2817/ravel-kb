@@ -52,7 +52,7 @@ TEST(AddRelationCmd, DoUndoRedo) {
   EXPECT_EQ(g.GetRelation(1).to(), to);
 }
 
-TEST(DeleteNodesCmd, DoUndoRedo) {
+TEST(DeleteCmd, NodesOnlyCascadeUndoRedo) {
   ravel::Graph g = MakeGraphWithTypes();
   const ravel::NodeId a = g.AddNode("A", "concept");
   const ravel::NodeId b = g.AddNode("B", "concept");
@@ -62,7 +62,7 @@ TEST(DeleteNodesCmd, DoUndoRedo) {
   const ravel::Graph before = g;
   ravel::app::CommandChronicle chronicle;
 
-  ravel::app::DeleteNodesCmd cmd{{b}, {}};
+  ravel::app::DeleteCmd cmd{{b}, {}, {}};
   ASSERT_TRUE(chronicle.Execute(cmd, g).has_value());
   EXPECT_FALSE(g.HasNode(b));
   EXPECT_FALSE(g.HasRelation(ab));  // cascade
@@ -80,7 +80,7 @@ TEST(DeleteNodesCmd, DoUndoRedo) {
   EXPECT_FALSE(g.HasRelation(bc));
 }
 
-TEST(DeleteRelationsCmd, DoUndoRedo) {
+TEST(DeleteCmd, RelationsOnlyUndoRedo) {
   ravel::Graph g = MakeGraphWithTypes();
   const ravel::NodeId from = g.AddNode("A", "concept");
   const ravel::NodeId to = g.AddNode("B", "concept");
@@ -88,7 +88,7 @@ TEST(DeleteRelationsCmd, DoUndoRedo) {
   const ravel::Graph before = g;
   ravel::app::CommandChronicle chronicle;
 
-  ravel::app::DeleteRelationsCmd cmd{{rid}};
+  ravel::app::DeleteCmd cmd{{}, {rid}, {}};
   ASSERT_TRUE(chronicle.Execute(cmd, g).has_value());
   EXPECT_FALSE(g.HasRelation(rid));
   EXPECT_TRUE(g.HasNode(from));

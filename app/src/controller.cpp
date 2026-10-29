@@ -86,16 +86,6 @@ CommandResult Controller::AddRelation(ravel::NodeId from, ravel::NodeId to, std:
   return s_.chronicle.Execute(cmd, s_.g);
 }
 
-CommandResult Controller::DeleteNodes(std::vector<ravel::NodeId> nodes) {
-  const ravel::app::DeleteNodesCmd cmd{std::move(nodes), {}};
-  return s_.chronicle.Execute(cmd, s_.g);
-}
-
-CommandResult Controller::DeleteRelations(std::vector<ravel::RelationId> relations) {
-  const ravel::app::DeleteRelationsCmd cmd{.ids = std::move(relations)};
-  return s_.chronicle.Execute(cmd, s_.g);
-}
-
 CommandResult Controller::Delete(std::vector<ravel::NodeId> nodes,
                                  std::vector<ravel::RelationId> rels) {
   const ravel::app::DeleteCmd cmd{std::move(nodes), std::move(rels), {}};

@@ -136,7 +136,7 @@ TEST_F(ControllerIoTest, CommandFlowAfterOpen) {
       << "open error=" << (open_res ? -1 : static_cast<int>(open_res.error()));
   ASSERT_TRUE(c.AddNode("n", "nt").has_value());
   ASSERT_TRUE(c.AddRelation(1, 1, "rt").has_value());
-  ASSERT_TRUE(c.DeleteRelations({1}).has_value());
+  ASSERT_TRUE(c.Delete({}, {1}).has_value());
   ASSERT_TRUE(c.Undo().has_value());  // delete отменён
   ASSERT_TRUE(c.Undo().has_value());  // relation убран
   ASSERT_TRUE(c.Redo().has_value());  // relation восстановлен (restore-путь)
@@ -245,7 +245,7 @@ TEST_F(ControllerIoTest, NodesFollowsDeleteAndUndo) {
   ASSERT_TRUE(c.AddNode("A", "nt").has_value());
   ASSERT_TRUE(c.AddNode("B", "nt").has_value());
 
-  ASSERT_TRUE(c.DeleteNodes({1}).has_value());
+  ASSERT_TRUE(c.Delete({1}, {}).has_value());
   {
     const std::vector<ravel::app::NodeView> nodes = c.Nodes();
     ASSERT_EQ(nodes.size(), 1);
@@ -324,7 +324,7 @@ TEST_F(ControllerIoTest, RelationsFollowsDeleteAndUndo) {
   ASSERT_TRUE(c.AddRelation(2, 3, "rt").has_value());
   ASSERT_TRUE(c.AddRelation(3, 1, "rt").has_value());
 
-  ASSERT_TRUE(c.DeleteRelations({2}).has_value());
+  ASSERT_TRUE(c.Delete({}, {2}).has_value());
   {
     const std::vector<ravel::app::RelationView> relations = c.Relations();
     ASSERT_EQ(relations.size(), 2);
@@ -370,7 +370,7 @@ TEST_F(ControllerIoTest, DeleteDeadIdThrowsInvalidArgument) {
   ASSERT_TRUE(c.AddNode("A", "nt").has_value());
 
   // Contract as it stands: core validates and throws, the command does not
-  // translate it into CommandError (DeleteNodesCmd behaves the same way).
+  // translate it into CommandError.
   // UI must only send live ids.
   EXPECT_THROW((void)c.Delete({42}, {}), std::invalid_argument);
 }

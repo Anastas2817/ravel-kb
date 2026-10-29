@@ -182,7 +182,7 @@ void RunFuzz(std::uint32_t seed) {
         victims.push_back(live[index]);
         live.erase(live.begin() + static_cast<std::ptrdiff_t>(index));
       }
-      ravel::app::DeleteNodesCmd cmd{victims, {}};
+      ravel::app::DeleteCmd cmd{victims, {}, {}};
       ASSERT_TRUE(chronicle.Execute(cmd, g).has_value()) << "seed " << seed << " op " << step;
       ++executed;
     } else if (dice < 75) {
@@ -197,7 +197,7 @@ void RunFuzz(std::uint32_t seed) {
         victims.push_back(live[index]);
         live.erase(live.begin() + static_cast<std::ptrdiff_t>(index));
       }
-      ravel::app::DeleteRelationsCmd cmd{victims};
+      ravel::app::DeleteCmd cmd{{}, victims, {}};
       ASSERT_TRUE(chronicle.Execute(cmd, g).has_value()) << "seed " << seed << " op " << step;
       ++executed;
     } else if (dice < 90) {
