@@ -117,10 +117,12 @@ Relation Graph::ChangeRelation(RelationId id, const std::string& type,
   return src;
 }
 
-std::vector<RelationId> Graph::ResolveRelationIds(NodeId from, NodeId to, const std::string& type) const {
+std::vector<RelationId> Graph::ResolveRelationIds(NodeId from, NodeId to,
+                                                  const std::string& type) const {
   // validate
   if (!HasNode(from) || !HasNode(to)) {
-    throw std::invalid_argument("Graph::ResolveRelationId tried to access Relation with non-existent from/to");
+    throw std::invalid_argument(
+        "Graph::ResolveRelationId tried to access Relation with non-existent from/to");
   }
   if (!ontology_relation_.contains(type)) {
     throw std::invalid_argument(
