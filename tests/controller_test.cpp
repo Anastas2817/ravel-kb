@@ -171,10 +171,6 @@ TEST_F(ControllerIoTest, NodeTypeNamesFromOntology) {
   ASSERT_TRUE(c.Open(good_path_).has_value());
   std::vector<std::string> names = c.NodeTypeNames();
   ASSERT_EQ(names.size(), 2);
-  // Порядок итерации по ontology_node_ (unordered_map) платформо-зависим:
-  // MSVC и libstdc++ раскладывают ключи по бакетам иначе. Сравниваем как
-  // множество — контракт NodeTypeNames порядок не специфицирует.
-  std::ranges::sort(names);
   EXPECT_EQ(names[0], "at");
   EXPECT_EQ(names[1], "nt");
 }

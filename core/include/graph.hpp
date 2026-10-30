@@ -15,7 +15,6 @@
 #include <string>
 #include <string_view>
 #include <type_traits>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -220,8 +219,8 @@ struct Position {  // DTO
 };
 
 struct GraphSnapshot {
-  std::unordered_map<std::string, NodeType> ontology_node;
-  std::unordered_map<std::string, RelationType> ontology_relation;
+  std::map<std::string, NodeType> ontology_node;
+  std::map<std::string, RelationType> ontology_relation;
 
   std::vector<Node> nodes;
   std::vector<Relation> relations;
@@ -239,13 +238,13 @@ class Graph {
   [[nodiscard]] NodeId next_id_relation() const noexcept {
     return next_id_relation_;
   }
-  [[nodiscard]] const std::unordered_map<std::string, NodeType>& ontology_node()
+  [[nodiscard]] const std::map<std::string, NodeType>& ontology_node()
       const noexcept {  /// @return Const
     /// reference to the type dictionary. Lifetime is bound to *this; do not store the reference
     /// beyond the Graph's lifetime.
     return ontology_node_;
   }
-  [[nodiscard]] const std::unordered_map<std::string, RelationType>& ontology_relation()
+  [[nodiscard]] const std::map<std::string, RelationType>& ontology_relation()
       const noexcept {  /// @return
     /// Const reference to the type dictionary. Lifetime is bound to *this; do not store the
     /// reference beyond the Graph's lifetime.
@@ -301,6 +300,7 @@ class Graph {
     return relations_[id - 1];
   }
   Relation ChangeRelation(RelationId id, const std::string& type, const std::string& description);
+  std::vector<RelationId> ResolveRelationIds(NodeId from, NodeId to, const std::string& type) const;
   // Composite convenience: AddNode + AddRelation(s) in one validated call.
   // A real UI scenario exists (create a node already linked), but the
   // composition itself does not need Graph's privacy — candidate for moving
@@ -400,8 +400,8 @@ class Graph {
   // through the public delegates would re-enter Delete and recurse.
   void EraseRelations(const std::set<RelationId>& unique_ids);
 
-  std::unordered_map<std::string, NodeType> ontology_node_;
-  std::unordered_map<std::string, RelationType> ontology_relation_;
+  std::map<std::string, NodeType> ontology_node_;
+  std::map<std::string, RelationType> ontology_relation_;
 
   // The type of every node and every relation is present in the ontology dictionaries.
   std::vector<Node> nodes_;
@@ -409,7 +409,8 @@ class Graph {
                                      // every live relation are live nodes.
 
   // For any relation r and any node x: r is listed in `access_[x]` if and only if x is from or to
-  // of r. `access_` holds entries exactly for live nodes: every live node has an entry (possibly
+  // of r, exactly once per endpoint (a self-loop is listed once). `access_` holds entries exactly
+  // for live nodes: every live node has an entry (possibly
   // with an empty vector), no deleted node has one.
   std::map<NodeId, std::vector<RelationId>>
       access_;  // deterministic is necessary for serialization

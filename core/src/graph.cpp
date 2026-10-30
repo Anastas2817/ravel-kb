@@ -91,7 +91,9 @@ RelationId Graph::AddRelation(NodeId from, NodeId to, std::string type, std::str
   const RelationId id = next_id_relation_++;
   relations_.emplace_back(id, from, to, std::move(type), std::move(description));
   access_[from].push_back(id);
-  access_[to].push_back(id);
+  if (to != from) {
+    access_[to].push_back(id);
+  }
   return id;
 }
 
@@ -113,6 +115,26 @@ Relation Graph::ChangeRelation(RelationId id, const std::string& type,
   }
   relations_[id - 1] = Relation(id, src.from(), src.to(), type, description);
   return src;
+}
+
+std::vector<RelationId> Graph::ResolveRelationIds(NodeId from, NodeId to, const std::string& type) const {
+  // validate
+  if (!HasNode(from) || !HasNode(to)) {
+    throw std::invalid_argument("Graph::ResolveRelationId tried to access Relation with non-existent from/to");
+  }
+  if (!ontology_relation_.contains(type)) {
+    throw std::invalid_argument(
+        "Graph::ResolveRelationId tried to access Relation with non-existent type");
+  }
+
+  // apply
+  std::vector<RelationId> result;
+  for (const RelationId id : access_.at(from)) {
+    if (relations_[id - 1].to() == to && relations_[id - 1].type() == type) {
+      result.push_back(id);
+    }
+  }
+  return result;
 }
 
 NodeId Graph::AddNodeWithRelations(std::string title, const std::string& type,
@@ -228,7 +250,7 @@ void Graph::EraseRelations(const std::set<RelationId>& unique_ids) {
     if (HasNode(from)) {
       access_[from].erase(std::find(access_[from].begin(), access_[from].end(), id));
     }
-    if (HasNode(to)) {
+    if (to != from && HasNode(to)) {
       access_[to].erase(std::find(access_[to].begin(), access_[to].end(), id));
     }
   }
@@ -265,7 +287,9 @@ void Graph::RestoreRelations(std::vector<RelationId> ids) {
   // apply
   for (const RelationId id : unique) {
     access_[relations_[id - 1].from()].push_back(id);
-    access_[relations_[id - 1].to()].push_back(id);
+    if (relations_[id - 1].to() != relations_[id - 1].from()) {
+      access_[relations_[id - 1].to()].push_back(id);
+    }
   }
 }
 
@@ -376,7 +400,9 @@ Graph Graph::FromSnapshot(  // NOLINT(readability-function-cognitive-complexity)
   for (const Relation& relation : src.relations) {
     g.relations_[relation.id() - 1] = relation;
     g.access_[relation.from()].push_back(relation.id());
-    g.access_[relation.to()].push_back(relation.id());
+    if (relation.to() != relation.from()) {
+      g.access_[relation.to()].push_back(relation.id());
+    }
   }
 
   return g;

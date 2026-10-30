@@ -195,11 +195,11 @@ TEST(GraphFromSnapshot, ValidGraphWithCorrectInvariantsAndHoles) {
   EXPECT_EQ(g.next_id_node(), src.next_id_node);
   EXPECT_EQ(g.next_id_relation(), src.next_id_relation);
 
-  std::unordered_map<std::string, NodeType> right_node_types;
+  std::map<std::string, NodeType> right_node_types;
   right_node_types.emplace("model", NodeType("#000000", "rect", "#000000"));
   EXPECT_EQ(g.ontology_node(), right_node_types);
 
-  std::unordered_map<std::string, RelationType> right_relation_types;
+  std::map<std::string, RelationType> right_relation_types;
   right_relation_types.emplace("has_special_case", RelationType("#000000", "solid", false, true));
   EXPECT_EQ(g.ontology_relation(), right_relation_types);
 
@@ -249,9 +249,9 @@ TEST(GraphFromSnapshot, EmptySnapshot) {
   Graph g = Graph::FromSnapshot(src);
   EXPECT_EQ(g.next_id_node(), 1);
   EXPECT_EQ(g.next_id_relation(), 1);
-  const std::unordered_map<std::string, NodeType> empty_node_type;
+  const std::map<std::string, NodeType> empty_node_type;
   EXPECT_EQ(g.ontology_node(), empty_node_type);
-  const std::unordered_map<std::string, RelationType> empty_relation_type;
+  const std::map<std::string, RelationType> empty_relation_type;
   EXPECT_EQ(g.ontology_relation(), empty_relation_type);
   EXPECT_FALSE(g.HasNode(1));
   EXPECT_FALSE(g.HasRelation(1));
@@ -568,8 +568,8 @@ TEST(GraphToSnapshot, ValidGraphSnapshotWithHoles) {
 
   NodeId right_next_id_node = src.next_id_node();
   NodeId right_next_id_relation = src.next_id_relation();
-  std::unordered_map<std::string, NodeType> right_ontology_node = src.ontology_node();
-  std::unordered_map<std::string, RelationType> right_ontology_relation = src.ontology_relation();
+  std::map<std::string, NodeType> right_ontology_node = src.ontology_node();
+  std::map<std::string, RelationType> right_ontology_relation = src.ontology_relation();
   std::vector<Node> right_nodes;
   std::vector<std::optional<ravel::Position>> right_positions;
   right_nodes.emplace_back(node1, "Числовой ряд", "model");
