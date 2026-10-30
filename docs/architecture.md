@@ -155,7 +155,7 @@ ravel-pkm/
 │                    # controller_test, property_test, example_file_test
 ├── fuzz/            # libFuzzer-таргет (опция RAVEL_BUILD_FUZZ, нужен Clang)
 ├── examples/        # example.ravel.json, spec.ravel.json — эталоны ручной проверки UI
-├── docs/            # spec, architecture, roadmap, perspectives, research, c1_scope,
+├── docs/            # spec, architecture, tech_stack, roadmap, perspectives, research, c1_scope,
 │                    # implementation, metaphors, advisors; assets/ (в т.ч. C4)
 │   └── assets/c4/   # C1.png … C4.png — источник истины по архитектуре
 ├── .github/         # CI (матрица core без Qt, format, architecture, sanitizers,
@@ -289,17 +289,10 @@ ravel-pkm/
 эстетика, а то, что сломалось бы без него. Даты — когда причина впервые
 материализовалась.
 
-| Решение | Причина появления |
-|---|---|
-| CI-матрица core: MSVC/GCC × Debug/Release + clang-cl | Программа отладки ≠ программе релиза, компилятор автора ≠ компилятору CI (implementation.md правила 25, 34); clang-cl — вторая STL/фронтенд на тот же код. Красная Ubuntu-матрица 2026-10-14/17 |
-| Санитайзеры ASan+UBSan отдельным job'ом | Ручное индексирование `id − 1` по плотным векторам: off-by-one читается как «работает» на отладочной куче и взрывается у пользователя |
-| clang-format 19.1.5 через pip-venv (CI = локальный `.fmt-venv`) | Версии форматируют по-разному: без пина «у меня зелёное, в CI красное» |
-| clang-tidy + `.clang-tidy` + `--warnings-as-errors=*`, пин 19.1.0.1 в `.tidy-venv` | Классы ошибок, которые тесты ловят плохо (throw-by-value, неинициализированность, const); гейт держит baseline чистым, пин лечит расхождение версий |
-| libFuzzer-таргет `fuzz/` (посев из `examples/`) | Валидация снапшота ручная и длинная — её ломают malformed-входы; property-тесты штатные пути покрывают, мутации — нет |
-| Coverage-гейт gcovr `--fail-under-line` | Порог покрытия ратифицирует измеренное, а не желаемое: регресс покрытия виден в CI, а не по ощущениям |
-| Архитектурный тест `check_ui_includes.sh` | Инвариант 7 в машинном виде: ui включает только фасад app; срабатывание = сигнал расширить read-API Controller, а не ослабить проверку |
-| `include(CTest)` + `add_subdirectory(tests)` без guard `EXISTS` | Пропажа каталога тестов должна ронять configure, а не молча отключать тесты (2026-10-16: перенос tests/ в docs/ выпал из-за guard'а) |
-| GoogleTest: `find_package` с FetchContent-фолбэком, пин v1.14.0 | CI без предустановленного gtest; пин тега — воспроизводимость |
-| `RAVEL_REPO_ROOT` для тестов на golden-файлы | cwd бинаря при запуске ctest не гарантирован — тесты должны находить `examples/` из любого каталога |
-| Сохранение через temp-файл + `rename` | Краш посередине записи не должен оставлять битый файл на месте целевого |
-| `.editorconfig` | Единый стиль концов строк/отступов между VS, VS Code и прочими редакторами — формат-гейт ловит C++, но не JSON/доки |
+Полная таблица «решение → причина», сквозная логика инфраструктуры (три
+кластера гарантий) и рассмотренные альтернативы живут в
+[tech_stack.md](tech_stack.md) §6–§8 — вместе с обоснованием выбора C++23,
+Qt 6 Widgets и nlohmann/json от требований (§1–§5, §7). Разнесение
+намеренное: architecture фиксирует структуру и причины абстракций, а выбор
+технологий и инфраструктурные решения — один документ (2026-10-30, перенос
+таблицы из этого раздела).

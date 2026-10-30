@@ -131,6 +131,7 @@ ctest --test-dir build -C Release --output-on-failure
 | [docs/advisors.md](docs/advisors.md) | «легенда света»: визуальная грамматика слоя advisors — советы без вердиктов (calm technology) |
 | [docs/implementation.md](docs/implementation.md) | эмпирические правила и решения R1–R20: почему код устроен именно так |
 | [docs/architecture.md](docs/architecture.md) | слои, обоснования абстракций, инварианты, паттерны |
+| [docs/tech_stack.md](docs/tech_stack.md) | обоснование выбора технологий: требования → критерии → C++23 / Qt 6 Widgets / nlohmann/json, инфраструктура «решение → причина», отклонённые альтернативы |
 | [docs/assets/c4/](docs/assets/c4/) | C4-диаграммы архитектуры (C1–C4); [docs/c1_scope.md](docs/c1_scope.md) — дополнение к C1: назначение, акторы, сценарии, границы системы |
 | [docs/adr/](docs/adr/README.md) | ключевые архитектурные решения (ADR; рекомендованы, не обязательны) |
 | [docs/spec.md](docs/spec.md) | концепция, связанные работы, модель данных, семантическая раскладка — самый строгий документ |
