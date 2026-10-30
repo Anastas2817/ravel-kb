@@ -77,7 +77,7 @@ jobs:
       CXXFLAGS: ${{ matrix.cxx_flags }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # VS-генератор не требует vcvars (в отличие от Ninja из build_dev.bat)
       - name: Configure
@@ -104,7 +104,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # qt6-base-dev — Widgets + CMake-конфиги Qt6; qt6-base-dev-tools —
       # moc/uic для automoc; libgl1-mesa-dev — заголовки OpenGL, без них
@@ -128,7 +128,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Пин через venv + pip: бинарь совпадает с локальным из VS 2022 (19.1.5).
       # Версии clang-format форматируют по-разному — пин обязателен, иначе
@@ -148,7 +148,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Инвариант 7 в машинном виде: ui зависит только от фасада app.
       # Транзитивное включение (ui -> controller.hpp -> graph.hpp) разрешено —
@@ -166,7 +166,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Флаги через -D, а не env CXXFLAGS: санитайзеры обязаны дойти и до
       # компиляции, и до линковки (gtest/тесты). env CXXFLAGS в CMake влияет
@@ -195,7 +195,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install gcovr
         run: python3 -m pip install --user gcovr
@@ -241,7 +241,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install clang + clang-tidy (pinned 19.1.0.1)
         run: |
@@ -274,7 +274,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install clang 19 (apt.llvm.org)
         # Стоковый clang ubuntu-latest (18) + libstdc++-14: <expected>
@@ -312,7 +312,7 @@ jobs:
       # Краш-артефакты (crash-*, корпус с находкой) — только при падении.
       - name: Upload artifacts
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: fuzz-artifacts
           path: |
