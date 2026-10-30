@@ -1,0 +1,23 @@
+# Dependabot version updates.
+#
+# Что покрыто: GitHub Actions (экосистема "github-actions" видит используемые
+# actions в workflows). Предлагает PR'ы при выходе новых версий action'ов.
+#
+# Что НЕ покрыто намеренно: C++-зависимости (GoogleTest, nlohmann/json) —
+# они подтягиваются через CMake FetchContent с пинами тегов
+# (tests/CMakeLists.txt, корневой CMakeLists.txt), GitHub их не индексирует.
+# Их актуальность сверяется вручную раз в семестр или отдельным CI-шагом.
+#
+# Для работы файла в репозитории должны быть включены тумблеры:
+# Settings → Code security and analysis → Dependency graph
+# (для публичных репозиториев обычно уже включён; показывает в том числе
+# GitHub Actions) и Dependabot version updates.
+# Dependabot alerts для этого стека малоинформативны — включать необязательно.
+
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 3
