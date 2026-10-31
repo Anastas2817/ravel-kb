@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cstdint>
-#include <functional>
 #include <limits>
 #include <ranges>
 #include <string>
@@ -43,9 +42,27 @@ std::vector<std::vector<NodeId>> BuildAdjacency(const Graph& g, const std::strin
   return adj;
 }
 
+// One tick of the odometer: advance the last position that still has
+// options and reset the positions right of it; false = product exhausted.
+bool Advance(std::vector<RelationId>& combo, std::vector<size_t>& index,
+             const std::vector<std::vector<RelationId>>& choices) {
+  for (size_t over = choices.size(); over-- > 0;) {
+    if (++index[over] < choices[over].size()) {
+      combo[over] = choices[over][index[over]];
+      for (size_t i = over + 1; i < choices.size(); ++i) {
+        index[i] = 0;
+        combo[i] = choices[i][0];
+      }
+      return true;
+    }
+  }
+  return false;
+}
+
 // Resolves every path edge into candidate relation ids and appends one
 // CycleHint per combination: parallel relations of the same type
-// materialize into separate hints.
+// materialize into separate hints. The product is walked as an odometer:
+// start from the first candidate of each edge, then advance until exhausted.
 void EmitHints(const Graph& g, const std::string& key, const std::vector<Edge>& path,
                NodeId back_from, NodeId back_to, std::vector<CycleHint>& result) {
   std::vector<std::vector<RelationId>> choices;
@@ -56,17 +73,17 @@ void EmitHints(const Graph& g, const std::string& key, const std::vector<Edge>& 
   choices.push_back(g.ResolveRelationIds(back_from, back_to, key));
 
   std::vector<RelationId> combo(choices.size());
-  const std::function<void(size_t)> build = [&](size_t i) {
-    if (i == choices.size()) {
-      result.push_back(CycleHint{key, combo});
-      return;
+  std::vector<size_t> index(choices.size(), 0);
+  for (size_t i = 0; i < choices.size(); ++i) {
+    if (choices[i].empty()) {
+      return;  // no relation realizes this edge — nothing to materialize
     }
-    for (const RelationId id : choices[i]) {
-      combo[i] = id;
-      build(i + 1);
-    }
-  };
-  build(0);
+    combo[i] = choices[i][0];
+  }
+  result.push_back(CycleHint{key, combo});
+  while (Advance(combo, index, choices)) {
+    result.push_back(CycleHint{key, combo});
+  }
 }
 
 // Back edge (v -> u) with u on the current DFS stack: reconstruct the chain
